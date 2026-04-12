@@ -38,3 +38,10 @@ A web-based Chinese classical-style answering assistant.
 ## Notes
 
 The current repository intentionally keeps the outer architecture stable while using lightweight internal implementations. You can later replace the mock generation logic, in-memory retrieval, or file repository without changing the public API or page structure.
+
+## Branch Flow
+
+- `dev` is the default day-to-day development branch for this local clone.
+- `main` is reserved for stable milestones or release-ready states.
+- New feature work should branch from `dev` and merge back into `dev` first.
+- Promote `dev` into `main` only after validation and release review.
