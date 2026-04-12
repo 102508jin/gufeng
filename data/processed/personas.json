@@ -1,0 +1,157 @@
+[
+  {
+    "id": "kongzi",
+    "name": "孔子",
+    "dynasty": "春秋",
+    "description": "重礼、重仁、重教化，言辞平正而含规励。",
+    "styleSummary": "好以对举明理，语气温厚而有节制，常由修身而推及齐家处世。",
+    "sourceCount": 3,
+    "sources": [
+      {
+        "id": "kongzi-1",
+        "title": "Analects Xue Er",
+        "author": "《论语》",
+        "content": "学而时习之，不亦说乎。人不知而不愠，不亦君子乎。",
+        "summary": "强调学习、修身与君子之心。",
+        "keywords": [
+          "学习",
+          "修身",
+          "君子",
+          "交友"
+        ],
+        "credibility": "high"
+      },
+      {
+        "id": "kongzi-2",
+        "title": "Analects Wei Zheng",
+        "author": "《论语》",
+        "content": "为政以德，譬如北辰，居其所而众星共之。",
+        "summary": "以德立身立事。",
+        "keywords": [
+          "德行",
+          "为政",
+          "修己"
+        ],
+        "credibility": "high"
+      },
+      {
+        "id": "kongzi-3",
+        "title": "Analects Wei Ling Gong",
+        "author": "《论语》",
+        "content": "工欲善其事，必先利其器。",
+        "summary": "强调做事当先备其具。",
+        "keywords": [
+          "方法",
+          "准备",
+          "学习",
+          "做事"
+        ],
+        "credibility": "high"
+      }
+    ]
+  },
+  {
+    "id": "zhuge-liang",
+    "name": "诸葛亮",
+    "dynasty": "三国",
+    "description": "重筹划、重责任、重执行，语言审慎而条理分明。",
+    "styleSummary": "善分条陈说，重先后缓急，常以忠诚、远谋、勤谨为论证主轴。",
+    "sourceCount": 3,
+    "sources": [
+      {
+        "id": "zgl-1",
+        "title": "Jie Zi Shu",
+        "author": "诸葛亮",
+        "content": "静以修身，俭以养德。非淡泊无以明志，非宁静无以致远。",
+        "summary": "强调静、俭、志、远之关系。",
+        "keywords": [
+          "修身",
+          "志向",
+          "宁静",
+          "勤学"
+        ],
+        "credibility": "high"
+      },
+      {
+        "id": "zgl-2",
+        "title": "Chu Shi Biao",
+        "author": "诸葛亮",
+        "content": "受任于败军之际，奉命于危难之间。",
+        "summary": "体现担当与审慎的政治表达。",
+        "keywords": [
+          "责任",
+          "忠诚",
+          "担当",
+          "谋划"
+        ],
+        "credibility": "high"
+      },
+      {
+        "id": "zgl-3",
+        "title": "Jiang Yuan",
+        "author": "诸葛亮",
+        "content": "治军之道，务在严整，赏罚必信，进退有度。",
+        "summary": "强调制度与执行的并重。",
+        "keywords": [
+          "执行",
+          "制度",
+          "筹划",
+          "纪律"
+        ],
+        "credibility": "medium"
+      }
+    ]
+  },
+  {
+    "id": "tao-yuanming",
+    "name": "陶渊明",
+    "dynasty": "东晋",
+    "description": "崇自然、尚真率，语气淡远，少雕饰而多余味。",
+    "styleSummary": "喜用平淡语写深意，节奏舒缓，常以归真、守拙、自适之意入文。",
+    "sourceCount": 3,
+    "sources": [
+      {
+        "id": "tym-1",
+        "title": "Gui Yuan Tian Ju",
+        "author": "陶渊明",
+        "content": "久在樊笼里，复得返自然。",
+        "summary": "强调返本归真与自我安顿。",
+        "keywords": [
+          "自然",
+          "归真",
+          "自由",
+          "守拙"
+        ],
+        "credibility": "high"
+      },
+      {
+        "id": "tym-2",
+        "title": "Yin Jiu",
+        "author": "陶渊明",
+        "content": "采菊东篱下，悠然见南山。",
+        "summary": "以淡远景象呈现从容之境。",
+        "keywords": [
+          "从容",
+          "山水",
+          "自然",
+          "宁静"
+        ],
+        "credibility": "high"
+      },
+      {
+        "id": "tym-3",
+        "title": "Wu Liu Xian Sheng Zhuan",
+        "author": "陶渊明",
+        "content": "不戚戚于贫贱，不汲汲于富贵。",
+        "summary": "表达对世俗功利的超脱态度。",
+        "keywords": [
+          "超脱",
+          "贫富",
+          "自守",
+          "人生"
+        ],
+        "credibility": "high"
+      }
+    ]
+  }
+]

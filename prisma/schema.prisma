@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Persona {
+  id           String          @id
+  name         String
+  dynasty      String?
+  description  String
+  styleSummary String
+  createdAt    DateTime        @default(now())
+  sources      PersonaSource[]
+}
+
+model PersonaSource {
+  id          String   @id
+  personaId   String
+  title       String
+  author      String?
+  content     String
+  sourceType  String   @default("text")
+  credibility String   @default("medium")
+  createdAt   DateTime @default(now())
+  persona     Persona  @relation(fields: [personaId], references: [id], onDelete: Cascade)
+}
+
+model KnowledgeSource {
+  id          String   @id
+  title       String
+  category    String
+  author      String?
+  content     String
+  sourceType  String   @default("text")
+  credibility String   @default("medium")
+  createdAt   DateTime @default(now())
+}
+
+model DocumentChunk {
+  id           String   @id
+  sourceId     String
+  sourceKind   String
+  chunkText    String
+  embeddingKey String?
+  metadataJson String?
+  createdAt    DateTime @default(now())
+}
+
+model GenerationLog {
+  id              String   @id
+  query           String
+  normalizedQuery String
+  personaId       String?
+  responseSummary String?
+  createdAt       DateTime @default(now())
+}
