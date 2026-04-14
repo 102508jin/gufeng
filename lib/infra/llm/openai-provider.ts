@@ -39,7 +39,7 @@ export class OpenAiProvider implements ModelProvider {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI request failed with status ${response.status}`);
+      throw new Error(`OpenAI \u8bf7\u6c42\u5931\u8d25\uff0c\u72b6\u6001\u7801 ${response.status}`);
     }
 
     const payload = openAiResponseSchema.parse(await response.json());
@@ -47,7 +47,10 @@ export class OpenAiProvider implements ModelProvider {
   }
 
   async generateStructured<T>(prompt: string, schema: ZodType<T>, options?: ModelOptions): Promise<T> {
-    const responseText = await this.generateText(`${prompt}\n\n请仅输出 JSON，不要输出额外说明。`, options);
+    const responseText = await this.generateText(
+      `${prompt}\n\n\u8bf7\u4ec5\u8f93\u51fa JSON\uff0c\u4e0d\u8981\u8f93\u51fa\u989d\u5916\u8bf4\u660e\u3002`,
+      options
+    );
     const jsonText = extractJsonBlock(responseText);
     return schema.parse(JSON.parse(jsonText));
   }

@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           ok: false,
-          error: "Invalid request payload.",
+          error: "\u8bf7\u6c42\u53c2\u6570\u4e0d\u5408\u6cd5\u3002",
           issues: cause.issues.map((issue) => issue.message)
         },
         { status: 400 }
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: cause instanceof Error ? cause.message : "Unknown generation error."
+        error: cause instanceof Error ? cause.message : "\u751f\u6210\u65f6\u53d1\u751f\u672a\u77e5\u9519\u8bef\u3002"
       },
       { status: 500 }
     );

@@ -10,6 +10,49 @@ import type { RetrievedChunk, SourceRef } from "@/lib/types/retrieval";
 import { createId } from "@/lib/utils/ids";
 import { toExcerpt } from "@/lib/utils/text";
 
+function formatIntent(intent: string): string {
+  switch (intent) {
+    case "advice":
+      return "\u6c42\u7b56";
+    case "judgement":
+      return "\u5224\u65ad";
+    case "reflection":
+      return "\u7701\u601d";
+    case "planning":
+      return "\u7b79\u5212";
+    default:
+      return intent;
+  }
+}
+
+function formatTone(tone: string): string {
+  switch (tone) {
+    case "measured":
+      return "\u5e73\u5b9e";
+    case "soothing":
+      return "\u5bbd\u6170";
+    case "instructive":
+      return "\u529d\u52c9";
+    case "urgent":
+      return "\u5207\u76f4";
+    default:
+      return tone;
+  }
+}
+
+function formatProvider(provider: string): string {
+  switch (provider) {
+    case "ollama":
+      return "\u672c\u5730 Ollama";
+    case "openai":
+      return "OpenAI \u63a5\u53e3";
+    case "mock":
+      return "\u6f14\u793a\u6a21\u5f0f";
+    default:
+      return provider;
+  }
+}
+
 function toSourceRefs(chunks: RetrievedChunk[]): SourceRef[] {
   return chunks.map((chunk) => ({
     id: chunk.id,
@@ -83,13 +126,13 @@ export class GenerateService {
       retrievalRefs: sharedSources,
       debug: {
         normalizationNotes: [
-          `intent=${normalized.intent}`,
-          `tone=${normalized.tone}`,
-          `topics=${normalized.topics.join(",") || "none"}`
+          `\u610f\u56fe\uff1a${formatIntent(normalized.intent)}`,
+          `\u8bed\u6c14\uff1a${formatTone(normalized.tone)}`,
+          `\u4e3b\u9898\uff1a${normalized.topics.join("\u3001") || "\u672a\u8bc6\u522b"}`
         ],
         personaApplied: Boolean(persona),
         retrievalHitCount: sharedSources.length,
-        provider: this.modelProvider.kind
+        provider: formatProvider(this.modelProvider.kind)
       }
     };
   }

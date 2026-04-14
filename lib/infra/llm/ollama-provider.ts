@@ -52,7 +52,7 @@ async function requestOllama(prompt: string, options?: ModelOptions, format?: "j
   });
 
   if (!response.ok) {
-    throw new Error(`Ollama request failed with status ${response.status}`);
+    throw new Error(`Ollama \u8bf7\u6c42\u5931\u8d25\uff0c\u72b6\u6001\u7801 ${response.status}`);
   }
 
   return ollamaResponseSchema.parse(await response.json()).response;
