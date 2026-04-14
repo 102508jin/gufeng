@@ -15,44 +15,67 @@ const variantsSchema = z.array(
   })
 );
 
+const text = {
+  period: "\u3002",
+  genericPrefix: "\u7b54\u66f0\uff1a",
+  confuciusPrefix: "\u5b50\u66f0\uff1a",
+  zhugePrefix: "\u4eae\u4ee5\u4e3a\uff1a",
+  taoPrefix: "\u4f59\u8c13\uff1a",
+  noPersona: "\u672a\u6307\u5b9a\u89d2\u8272\uff0c\u91c7\u7528\u901a\u7528\u6587\u8a00\u8bed\u6c14\u3002",
+  confuciusNote: "\u91c7\u7528\u5b54\u5b50\u5f0f\u6e29\u539a\u529d\u52c9\u8bed\u6c14\u3002",
+  zhugeNote: "\u91c7\u7528\u8bf8\u845b\u4eae\u5f0f\u7b79\u5212\u5206\u660e\u8bed\u6c14\u3002",
+  taoNote: "\u91c7\u7528\u9676\u6e0a\u660e\u5f0f\u5e73\u6de1\u758f\u6717\u8bed\u6c14\u3002",
+  balancedPrefix: "\u592b",
+  deliberativePrefix: "\u76d6",
+  balancedNote: "\u8bed\u6c14\u51dd\u7ec3\uff0c\u91cd\u5728\u529d\u52c9\u3002",
+  deliberativeNote: "\u5c42\u5c42\u7533\u8bf4\uff0c\u5f3a\u8c03\u56e0\u679c\u4e0e\u6b21\u7b2c\u3002",
+  personaSuffix: "\u98ce\u683c\u7248"
+} as const;
+
 export interface ClassicalGenerator {
   generate(context: GenerationContext): Promise<GeneratedVariantDraft[]>;
 }
 
 function joinAsClassical(lines: string[], prefix: string): string {
-  return `${prefix}${lines.map((line) => classicalizeText(line)).join("。")}`
-    .replace(/。。+/gu, "。")
-    .replace(/。$/u, "")
-    .concat("。");
+  const body = lines
+    .map((line) => classicalizeText(line))
+    .filter(Boolean)
+    .join(text.period);
+
+  return `${prefix}${body}`
+    .replace(/\u3002\u3002+/gu, text.period)
+    .replace(/^\u3002/u, "")
+    .replace(/\u3002$/u, "")
+    .concat(text.period);
 }
 
 function buildPersonaStyledText(lines: string[], context: GenerationContext): { text: string; notes: string[] } {
   if (!context.persona) {
     return {
-      text: joinAsClassical(lines, "答曰："),
-      notes: ["No persona selected; using a generic classical tone."]
+      text: joinAsClassical(lines, text.genericPrefix),
+      notes: [text.noPersona]
     };
   }
 
   switch (context.persona.id) {
     case "kongzi":
       return {
-        text: joinAsClassical(lines, "子曰："),
-        notes: ["Modeled with a Confucian didactic cadence.", context.persona.styleSummary]
+        text: joinAsClassical(lines, text.confuciusPrefix),
+        notes: [text.confuciusNote, context.persona.styleSummary]
       };
     case "zhuge-liang":
       return {
-        text: joinAsClassical(lines, "亮以为："),
-        notes: ["Modeled with Zhuge Liang style planning language.", context.persona.styleSummary]
+        text: joinAsClassical(lines, text.zhugePrefix),
+        notes: [text.zhugeNote, context.persona.styleSummary]
       };
     case "tao-yuanming":
       return {
-        text: joinAsClassical(lines, "余谓："),
-        notes: ["Modeled with Tao Yuanming style calm distance.", context.persona.styleSummary]
+        text: joinAsClassical(lines, text.taoPrefix),
+        notes: [text.taoNote, context.persona.styleSummary]
       };
     default:
       return {
-        text: joinAsClassical(lines, "答曰："),
+        text: joinAsClassical(lines, text.genericPrefix),
         notes: [context.persona.styleSummary]
       };
   }
@@ -67,8 +90,8 @@ function buildDeterministicVariants(context: GenerationContext): GeneratedVarian
       return {
         title: preset.title,
         tone: preset.tone,
-        classicalText: joinAsClassical(lines, "夫"),
-        styleNotes: ["Compact exhortative style."]
+        classicalText: joinAsClassical(lines, text.balancedPrefix),
+        styleNotes: [text.balancedNote]
       };
     }
 
@@ -76,14 +99,14 @@ function buildDeterministicVariants(context: GenerationContext): GeneratedVarian
       return {
         title: preset.title,
         tone: preset.tone,
-        classicalText: joinAsClassical(lines, "盖"),
-        styleNotes: ["Expanded argument with causal progression."]
+        classicalText: joinAsClassical(lines, text.deliberativePrefix),
+        styleNotes: [text.deliberativeNote]
       };
     }
 
     const personaStyled = buildPersonaStyledText(lines, context);
     return {
-      title: context.persona ? `${context.persona.name} Style` : preset.title,
+      title: context.persona ? `${context.persona.name}${text.personaSuffix}` : preset.title,
       tone: preset.tone,
       classicalText: personaStyled.text,
       styleNotes: personaStyled.notes
@@ -136,7 +159,7 @@ function parsePlainTextVariants(input: string, context: GenerationContext): Gene
     const fallback = deterministic[index] ?? deterministic[deterministic.length - 1];
     const title = section.match(/^TITLE:\s*(.+)$/imu)?.[1]?.trim() ?? fallback.title;
     const tone = mapTone(section.match(/^TONE:\s*(.+)$/imu)?.[1]?.trim(), fallback.tone);
-    const text = section.match(/^TEXT:\s*([\s\S]*?)(?:\nNOTES:|$)/imu)?.[1]?.trim() ?? fallback.classicalText;
+    const textBody = section.match(/^TEXT:\s*([\s\S]*?)(?:\nNOTES:|$)/imu)?.[1]?.trim() ?? fallback.classicalText;
     const notesRaw = section.match(/^NOTES:\s*(.+)$/imu)?.[1]?.trim();
     const styleNotes = notesRaw
       ? notesRaw.split("|").map((note) => note.trim()).filter(Boolean)
@@ -145,7 +168,7 @@ function parsePlainTextVariants(input: string, context: GenerationContext): Gene
     return {
       title,
       tone,
-      classicalText: text.endsWith("。") ? text : `${text}。`,
+      classicalText: textBody.endsWith(text.period) ? textBody : `${textBody}${text.period}`,
       styleNotes
     };
   });
@@ -172,10 +195,10 @@ export class DefaultClassicalGenerator implements ClassicalGenerator {
         });
       } catch {
         try {
-          const text = await this.modelProvider.generateText(buildPlainTextFallbackPrompt(context), {
+          const textResponse = await this.modelProvider.generateText(buildPlainTextFallbackPrompt(context), {
             temperature: 0.5
           });
-          return parsePlainTextVariants(text, context);
+          return parsePlainTextVariants(textResponse, context);
         } catch {
           return buildDeterministicVariants(context);
         }

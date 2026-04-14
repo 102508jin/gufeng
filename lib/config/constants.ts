@@ -5,9 +5,9 @@ export const DEFAULT_EXPLANATION_MODES: ExplanationMode[] = ["literal", "free", 
 export const MAX_VARIANTS_COUNT = 4;
 
 export const VARIANT_PRESETS: Array<{ tone: VariantTone; title: string }> = [
-  { tone: "balanced", title: "Balanced Classical" },
-  { tone: "deliberative", title: "Deliberative Classical" },
-  { tone: "persona", title: "Persona Style" }
+  { tone: "balanced", title: "\u6301\u91cd\u7248" },
+  { tone: "deliberative", title: "\u7533\u8bba\u7248" },
+  { tone: "persona", title: "\u89d2\u8272\u7248" }
 ];
 
 export const COMMON_TOPICS = [

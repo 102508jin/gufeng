@@ -4,7 +4,7 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     data: {
-      status: "healthy",
+      status: "\u6b63\u5e38",
       timestamp: new Date().toISOString()
     }
   });
