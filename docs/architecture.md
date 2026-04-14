@@ -1,5 +1,7 @@
 # Architecture
 
+[Chinese version](./architecture.zh-CN.md)
+
 The project uses a stable five-layer structure:
 
 - `app/` and `components/` handle presentation and route wiring.

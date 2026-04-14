@@ -1,5 +1,7 @@
 # Data Ingestion
 
+[Chinese version](./data-ingestion.zh-CN.md)
+
 The repository currently ships with processed sample data under `data/processed/`.
 
 Future ingestion workflow:

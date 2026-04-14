@@ -1,5 +1,7 @@
 # Contributing
 
+[Chinese version](./CONTRIBUTING.zh-CN.md)
+
 1. Keep the public request and response types stable.
 2. Prefer extending `lib/domain/` or `lib/infra/` over adding logic to route handlers.
 3. Keep persona data and knowledge data source-attributed.

@@ -1,6 +1,6 @@
 # Wenyan Agent
 
-[中文说明](./README.zh-CN.md)
+[Chinese README](./README.zh-CN.md)
 
 Wenyan Agent is a Next.js application for generating classical Chinese answers from vernacular or classical Chinese input. It normalizes the user question first, then returns multiple classical-style variants together with modern Chinese explanations, line-by-line glosses, and persona-flavored outputs.
 
@@ -128,10 +128,12 @@ cmd /c npm run reindex
 
 ## Documentation
 
+- Chinese translations are available for the contributor guide, architecture notes, API notes, data-ingestion notes, and the license note.
 - [Architecture](./docs/architecture.md)
 - [API Notes](./docs/api.md)
 - [Data Ingestion](./docs/data-ingestion.md)
 - [Contributing](./CONTRIBUTING.md)
+- [Chinese License Note](./LICENSE.zh-CN.md)
 
 ## Development Flow
 
