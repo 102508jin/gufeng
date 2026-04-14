@@ -1,31 +1,83 @@
 import type { GeneratedVariantDraft, GenerationContext } from "@/lib/types/generation";
 
+function formatSourceBlock(context: GenerationContext): string {
+  if (!context.sourceChunks.length) {
+    return "- No external supporting snippets were retrieved.";
+  }
+
+  return context.sourceChunks
+    .map((chunk) => `- ${chunk.title}: ${chunk.summary ?? chunk.content}`)
+    .join("\n");
+}
+
 export function buildNormalizationPrompt(input: string, mode: string): string {
   return [
-    "你是中文语义归一化助手。",
-    `输入模式：${mode}`,
-    "请将用户输入整理为简洁明确的现代汉语问句，并提炼意图、语气与主题。",
-    `原始输入：${input}`
+    "You normalize Chinese user queries for a classical-Chinese answering assistant.",
+    "The user input may be vernacular Chinese or classical Chinese.",
+    "Return one JSON object only.",
+    "Rules:",
+    '- "detectedMode" must be either "vernacular" or "classical".',
+    '- "normalizedQuery" must be one concise modern Chinese question.',
+    '- "intent" should be a short English label such as advice, judgement, reflection, planning.',
+    '- "tone" should be a short English label such as measured, soothing, instructive, urgent.',
+    '- "topics" should contain 2 to 8 short Chinese topic phrases when possible.',
+    "Do not add markdown fences or extra commentary.",
+    "",
+    "Expected JSON shape:",
+    '{"detectedMode":"vernacular","normalizedQuery":"...","intent":"advice","tone":"measured","topics":["..."]}',
+    "",
+    `Input mode hint: ${mode}`,
+    `User input: ${input}`
   ].join("\n");
 }
 
 export function buildGenerationPrompt(context: GenerationContext): string {
+  const personaLine = context.persona
+    ? `${context.persona.name} | ${context.personaSummary ?? context.persona.styleSummary}`
+    : "none";
+
   return [
-    "你是文言文回答智能体。",
-    "请先理解现代汉语中间稿，再输出多个文言文回答版本。",
-    `问题中间稿：${context.normalized.normalizedQuery}`,
-    `主题：${context.normalized.topics.join("、") || "未标注"}`,
-    context.persona ? `人物风格：${context.persona.name}。${context.personaSummary ?? context.persona.styleSummary}` : "人物风格：无",
-    `知识片段：${context.sourceChunks.map((chunk) => `${chunk.title}：${chunk.summary ?? chunk.content}`).join(" | ")}`,
-    `输出数量：${context.variantsCount}`
+    "You generate classical Chinese answers for a Chinese writing assistant.",
+    `Return exactly ${context.variantsCount} items as a JSON array only.`,
+    "Rules for each item:",
+    '- "title" must be a short modern Chinese label.',
+    '- "tone" must be one of: balanced, deliberative, persona.',
+    '- "classicalText" must be written in Chinese classical style and must directly answer the question.',
+    '- "classicalText" must stay in Chinese only. Do not use English.',
+    '- "styleNotes" must be 1 to 3 short modern Chinese notes.',
+    "- Keep each answer readable, compact, and useful.",
+    "- If a persona is provided, reflect that persona's reasoning style without pretending to quote a fake original text.",
+    "Do not add markdown fences or extra commentary.",
+    "",
+    "Expected JSON shape:",
+    '[{"title":"稳志版","tone":"balanced","classicalText":"...","styleNotes":["..."]}]',
+    "",
+    `Normalized modern Chinese question: ${context.normalized.normalizedQuery}`,
+    `Topics: ${context.normalized.topics.join(", ") || "none"}`,
+    `Intent: ${context.normalized.intent}`,
+    `Tone hint: ${context.normalized.tone}`,
+    `Persona: ${personaLine}`,
+    "Supporting source snippets:",
+    formatSourceBlock(context)
   ].join("\n");
 }
 
 export function buildExplanationPrompt(variant: GeneratedVariantDraft, normalizedQuery: string): string {
   return [
-    "你是文言文解析助手。",
-    `原始现代汉语问题：${normalizedQuery}`,
-    `待解析文言文：${variant.classicalText}`,
-    "请输出逐句解析、意译解析与关键词注释。"
+    "You explain classical Chinese answers in modern Chinese.",
+    "Return one JSON object only.",
+    "Rules:",
+    '- "literalExplanation" must be a close modern Chinese explanation.',
+    '- "freeExplanation" must be a smoother paraphrase in modern Chinese.',
+    '- "glossExplanation" must summarize key wording and rhetoric in modern Chinese.',
+    '- "lineByLinePairs" must align classical segments with modern Chinese segments.',
+    '- Each lineByLinePairs item may include short modern Chinese notes.',
+    "Do not add markdown fences or extra commentary.",
+    "",
+    "Expected JSON shape:",
+    '{"literalExplanation":"...","freeExplanation":"...","glossExplanation":"...","lineByLinePairs":[{"classicalSegment":"...","vernacularSegment":"...","notes":["..."]}]}',
+    "",
+    `Original modern Chinese question: ${normalizedQuery}`,
+    `Classical Chinese answer: ${variant.classicalText}`
   ].join("\n");
 }

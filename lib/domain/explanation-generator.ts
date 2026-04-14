@@ -19,31 +19,31 @@ const explanationSchema = z.object({
 });
 
 const REVERSE_REPLACEMENTS: Array<[string, string]> = [
-  ["\u543e\u8f88", "\u6211\u4eec"],
-  ["\u5176\u5fc3", "\u5185\u5fc3"],
-  ["\u4f55\u4ee5", "\u4e3a\u4ec0\u4e48"],
-  ["\u82e5\u4f55", "\u5982\u4f55"],
-  ["\u5f53", "\u5e94\u5f53"],
-  ["\u6bcb", "\u4e0d\u8981"],
-  ["\u4e0d\u53ef", "\u4e0d\u80fd"],
-  ["\u6cbb\u5b66", "\u5b66\u4e60"],
-  ["\u53cb\u670b", "\u670b\u53cb"],
-  ["\u5bf8\u9634", "\u65f6\u95f4"],
-  ["\u6301\u6052", "\u575a\u6301"],
-  ["\u52e4\u52c9", "\u52aa\u529b"],
-  ["\u6240\u5411", "\u76ee\u6807"],
-  ["\u5176\u6cd5", "\u65b9\u6cd5"],
-  ["\u5176\u4e8b", "\u4e8b\u60c5"],
-  ["\u5fd7", "\u5fd7\u5411"],
-  ["\u614e\u601d", "\u614e\u91cd\u601d\u8003"],
-  ["\u7b03\u884c", "\u786e\u5b9e\u53bb\u505a"],
-  ["\u5b88", "\u5b88\u4f4f"],
-  ["\u7701", "\u53cd\u7701"],
-  ["\u7acb\u5373\u8d77\u884c", "\u9a6c\u4e0a\u5f00\u59cb\u884c\u52a8"]
+  ["吾辈", "我们"],
+  ["其心", "内心"],
+  ["何以", "为什么"],
+  ["若何", "如何"],
+  ["当", "应当"],
+  ["毋", "不要"],
+  ["不可", "不能"],
+  ["治学", "学习"],
+  ["友朋", "朋友"],
+  ["寸阴", "时间"],
+  ["持恒", "坚持"],
+  ["勤勉", "努力"],
+  ["所向", "目标"],
+  ["其法", "方法"],
+  ["其事", "事情"],
+  ["志", "志向"],
+  ["慎思", "慎重思考"],
+  ["笃行", "确实去做"],
+  ["守", "守住"],
+  ["省", "反省"],
+  ["立即起行", "马上开始行动"]
 ];
 
 function vernacularizeSegment(segment: string): string {
-  let output = segment.replace(/^(?:\u592b|\u76d6|\u5b50\u66f0\uff1a|\u4eae\u4ee5\u4e3a\uff1a|\u4f59\u8c13\uff1a|\u7b54\u66f0\uff1a)/u, "").trim();
+  let output = segment.replace(/^(?:夫|盖|子曰：|亮以为：|余谓：|答曰：)/u, "").trim();
   for (const [from, to] of REVERSE_REPLACEMENTS) {
     output = output.replaceAll(from, to);
   }
@@ -52,19 +52,42 @@ function vernacularizeSegment(segment: string): string {
 
 function buildNotes(segment: string): string[] {
   const notes: string[] = [];
-  if (segment.includes("\u76d6")) {
-    notes.push("\u76d6: introduces a reasoned judgement.");
+  if (segment.includes("盖")) {
+    notes.push("盖: introduces a reasoned judgement.");
   }
-  if (segment.includes("\u592b")) {
-    notes.push("\u592b: a sentence-opening particle for argument. ");
+  if (segment.includes("夫")) {
+    notes.push("夫: a sentence-opening particle for argument.");
   }
-  if (segment.includes("\u6bcb")) {
-    notes.push("\u6bcb: do not.");
+  if (segment.includes("毋")) {
+    notes.push("毋: do not.");
   }
-  if (segment.includes("\u5fd7")) {
-    notes.push("\u5fd7: aspiration or settled direction.");
+  if (segment.includes("志")) {
+    notes.push("志: aspiration or settled direction.");
   }
-  return notes.map((note) => note.trim());
+  return notes;
+}
+
+function buildFallbackExplanation(draft: GeneratedVariantDraft, normalizedQuery: string): ExplanationResult {
+  const segments = splitChineseSentences(draft.classicalText);
+  const lineByLinePairs: LinePair[] = segments.map((segment) => ({
+    classicalSegment: segment,
+    vernacularSegment: vernacularizeSegment(segment),
+    notes: buildNotes(segment)
+  }));
+
+  const literalExplanation = lineByLinePairs.map((pair) => pair.vernacularSegment).join(" ");
+  const freeExplanation = `${normalizedQuery} ${lineByLinePairs.map((pair) => pair.vernacularSegment).join("；")}`;
+  const glossExplanation = lineByLinePairs
+    .flatMap((pair) => pair.notes ?? [])
+    .filter(Boolean)
+    .join("；") || "Uses compact classical particles and advisory vocabulary.";
+
+  return {
+    literalExplanation,
+    freeExplanation,
+    glossExplanation,
+    lineByLinePairs
+  };
 }
 
 export interface ExplanationGenerator {
@@ -84,34 +107,17 @@ export class DefaultExplanationGenerator implements ExplanationGenerator {
     explanationModes: ExplanationMode[];
   }): Promise<ExplanationResult> {
     if (this.modelProvider.kind !== "mock") {
-      return this.modelProvider.generateStructured(
-        buildExplanationPrompt(params.draft, params.context.normalized.normalizedQuery),
-        explanationSchema,
-        { temperature: 0.4 }
-      );
+      try {
+        return await this.modelProvider.generateStructured(
+          buildExplanationPrompt(params.draft, params.context.normalized.normalizedQuery),
+          explanationSchema,
+          { temperature: 0.4 }
+        );
+      } catch {
+        return buildFallbackExplanation(params.draft, params.context.normalized.normalizedQuery);
+      }
     }
 
-    const segments = splitChineseSentences(params.draft.classicalText);
-    const lineByLinePairs: LinePair[] = segments.map((segment) => ({
-      classicalSegment: segment,
-      vernacularSegment: vernacularizeSegment(segment),
-      notes: buildNotes(segment)
-    }));
-
-    const literalExplanation = lineByLinePairs.map((pair) => pair.vernacularSegment).join(" ");
-    const freeExplanation = `${params.context.normalized.normalizedQuery}。${lineByLinePairs
-      .map((pair) => pair.vernacularSegment)
-      .join("；")}`;
-    const glossExplanation = lineByLinePairs
-      .flatMap((pair) => pair.notes ?? [])
-      .filter(Boolean)
-      .join("；") || "Uses compact classical particles and advisory vocabulary.";
-
-    return {
-      literalExplanation,
-      freeExplanation,
-      glossExplanation,
-      lineByLinePairs
-    };
+    return buildFallbackExplanation(params.draft, params.context.normalized.normalizedQuery);
   }
 }
