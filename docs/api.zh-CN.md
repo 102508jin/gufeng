@@ -1,10 +1,10 @@
-# API
+# API &#x8BF4;&#x660E;
 
-[Chinese version](./api.zh-CN.md)
+[English version](./api.md)
 
 ## POST /api/generate
 
-Request body:
+&#x8BF7;&#x6C42;&#x4F53; &#x793A;&#x4F8B;:
 
 ```json
 {
@@ -16,7 +16,7 @@ Request body:
 }
 ```
 
-Response shape:
+&#x4E3B;&#x8981; &#x8FD4;&#x56DE; &#x5B57;&#x6BB5;:
 
 - `normalizedQuery`
 - `detectedInputMode`
@@ -27,12 +27,12 @@ Response shape:
 
 ## GET /api/personas
 
-Returns all available persona profiles from the local corpus.
+&#x8FD4;&#x56DE; &#x672C;&#x5730; corpus &#x4E2D; &#x53EF;&#x7528; &#x7684; persona profile.
 
 ## POST /api/knowledge/reindex
 
-Rebuilds the local index state file from the processed corpus.
+&#x6839;&#x636E; processed corpus &#x91CD;&#x5EFA; &#x672C;&#x5730; index state file.
 
 ## GET /api/health
 
-Returns a health status and timestamp.
+&#x8FD4;&#x56DE; &#x670D;&#x52A1; &#x72B6;&#x6001; &#x548C; timestamp.
