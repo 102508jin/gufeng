@@ -11,7 +11,8 @@ Wenyan Agent is a Next.js application for generating classical Chinese answers f
 - Generates multiple classical Chinese answer variants.
 - Returns literal explanation, free explanation, and gloss-style notes.
 - Supports persona-style output based on local historical source snippets.
-- Can run with a mock provider, a local Ollama model, or an OpenAI-compatible API.
+- Can run with `mock`, local Ollama, OpenAI-compatible APIs, or Anthropic / Claude.
+- Supports per-request driver switching from the UI and API.
 - Ships with a Chinese UI and Chinese-facing output labels.
 
 ## Current Status
@@ -36,18 +37,20 @@ cmd /c npm install
 Copy-Item .env.example .env
 ```
 
-3. Choose a provider in `.env`.
+3. Choose a default provider in `.env`.
 
 Mock demo:
 
 ```env
 MODEL_PROVIDER=mock
+DEFAULT_PROVIDER_ID=mock
 ```
 
 Local Ollama:
 
 ```env
 MODEL_PROVIDER=ollama
+DEFAULT_PROVIDER_ID=ollama
 OLLAMA_BASE_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=qwen3:4b
 MODEL_NAME=qwen3:4b
@@ -57,9 +60,27 @@ OpenAI-compatible API:
 
 ```env
 MODEL_PROVIDER=openai
+DEFAULT_PROVIDER_ID=openai
 OPENAI_API_KEY=your_api_key
 OPENAI_API_BASE_URL=https://api.openai.com/v1
 MODEL_NAME=gpt-4.1-mini
+```
+
+Anthropic / Claude:
+
+```env
+MODEL_PROVIDER=anthropic
+DEFAULT_PROVIDER_ID=anthropic
+ANTHROPIC_API_KEY=your_api_key
+ANTHROPIC_BASE_URL=https://api.anthropic.com/v1
+ANTHROPIC_MODEL=claude-3-5-sonnet-latest
+```
+
+Optional extra runtime-selectable profiles:
+
+```env
+MODEL_PROFILES_JSON=[{"id":"vllm","label":"vLLM","driver":"openai-compatible","baseUrl":"http://127.0.0.1:8000/v1","model":"Qwen/Qwen3-4B-Instruct"},{"id":"sglang","label":"SGLang","driver":"openai-compatible","baseUrl":"http://127.0.0.1:30000/v1","model":"Qwen/Qwen3-4B-Instruct"}]
+DEFAULT_PROVIDER_ID=vllm
 ```
 
 4. If you use Ollama, prepare the model first.
@@ -104,15 +125,30 @@ cmd /c npm run reindex
 
 ## Environment Variables
 
-- `MODEL_PROVIDER`: `mock`, `ollama`, or `openai`
+- `MODEL_PROVIDER`: legacy-compatible default driver selector
+- `DEFAULT_PROVIDER_ID`: default runtime profile id
+- `MODEL_PROFILES_JSON`: optional JSON array for extra runtime-selectable profiles
 - `MODEL_NAME`: model name for API providers
+- `OPENAI_PROVIDER_LABEL`: UI label for the built-in OpenAI-compatible slot
 - `OPENAI_API_BASE_URL`: base URL for an OpenAI-compatible endpoint
 - `OPENAI_API_KEY`: API key for OpenAI-compatible access
+- `OLLAMA_PROVIDER_LABEL`: UI label for the built-in Ollama slot
 - `OLLAMA_BASE_URL`: local Ollama server address
 - `OLLAMA_MODEL`: local Ollama model name
+- `ANTHROPIC_PROVIDER_LABEL`: UI label for the built-in Anthropic slot
+- `ANTHROPIC_BASE_URL`: Anthropic-compatible base URL
+- `ANTHROPIC_API_KEY`: API key for Anthropic access
+- `ANTHROPIC_MODEL`: Anthropic model name
 - `DATABASE_URL`: reserved for future persistence work
 - `DEFAULT_VARIANTS_COUNT`: default number of generated variants
 - `DEFAULT_EXPLANATION_MODES`: comma-separated explanation modes
+
+## Driver Notes
+
+- `openai-compatible` covers OpenAI-style `/chat/completions` endpoints, including custom API gateways and local engines that expose the same protocol.
+- `ollama` uses `/api/generate`.
+- `anthropic` uses `/v1/messages`.
+- `GET /api/providers` returns the runtime-selectable driver list for the frontend.
 
 ## Project Structure
 

@@ -10,7 +10,8 @@
 - &#x5148;&#x505A; &#x95EE;&#x9898; &#x5F52;&#x4E00;&#x5316;
 - &#x518D; &#x751F;&#x6210; &#x591A;&#x7248; &#x6587;&#x8A00; &#x56DE;&#x7B54;
 - &#x9644;&#x5E26; &#x9010;&#x53E5; &#x89E3;&#x6790;, &#x610F;&#x8BD1; &#x9610;&#x91CA;, &#x8BCD;&#x4E49; &#x6CE8;&#x91CA;
-- &#x53EF;&#x5207;&#x6362; `mock`, `ollama`, `openai` provider
+- &#x53EF;&#x5207;&#x6362; `mock`, `ollama`, `openai-compatible`, `anthropic` provider
+- &#x652F;&#x6301; &#x5728; UI &#x548C; API &#x4E2D; &#x6309; &#x8BF7;&#x6C42; &#x9009;&#x62E9; &#x6A21;&#x578B;&#x9A71;&#x52A8;
 
 ## &#x5FEB;&#x901F;&#x5F00;&#x59CB;
 
@@ -26,17 +27,46 @@ cmd /c npm install
 Copy-Item .env.example .env
 ```
 
-3. &#x9009;&#x62E9; provider
+3. &#x5728; `.env` &#x4E2D; &#x8BBE;&#x5B9A; &#x9ED8;&#x8BA4; provider
 
 ```env
 MODEL_PROVIDER=mock
+DEFAULT_PROVIDER_ID=mock
 ```
 
 ```env
 MODEL_PROVIDER=ollama
+DEFAULT_PROVIDER_ID=ollama
 OLLAMA_BASE_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=qwen3:4b
 MODEL_NAME=qwen3:4b
+```
+
+```env
+MODEL_PROVIDER=openai
+DEFAULT_PROVIDER_ID=openai
+OPENAI_API_KEY=your_api_key
+OPENAI_API_BASE_URL=https://api.openai.com/v1
+MODEL_NAME=gpt-4.1-mini
+```
+
+```env
+MODEL_PROVIDER=anthropic
+DEFAULT_PROVIDER_ID=anthropic
+ANTHROPIC_API_KEY=your_api_key
+ANTHROPIC_BASE_URL=https://api.anthropic.com/v1
+ANTHROPIC_MODEL=claude-3-5-sonnet-latest
+```
+
+## Provider Profiles
+
+`DEFAULT_PROVIDER_ID` &#x7528;&#x4E8E; &#x6307;&#x5B9A; &#x9ED8;&#x8BA4; &#x6A21;&#x578B;&#x914D;&#x7F6E;.
+
+`MODEL_PROFILES_JSON` &#x53EF;&#x4EE5; &#x8865;&#x5145; &#x989D;&#x5916; &#x7684; &#x53EF;&#x5207;&#x6362; provider, &#x4F8B;&#x5982; vLLM &#x6216; SGLang:
+
+```env
+MODEL_PROFILES_JSON=[{"id":"vllm","label":"vLLM","driver":"openai-compatible","baseUrl":"http://127.0.0.1:8000/v1","model":"Qwen/Qwen3-4B-Instruct"},{"id":"sglang","label":"SGLang","driver":"openai-compatible","baseUrl":"http://127.0.0.1:30000/v1","model":"Qwen/Qwen3-4B-Instruct"}]
+DEFAULT_PROVIDER_ID=vllm
 ```
 
 4. &#x5982;&#x679C; &#x4F7F;&#x7528; Ollama, &#x5148; &#x542F;&#x52A8; &#x670D;&#x52A1; &#x5E76; &#x51C6;&#x5907; &#x6A21;&#x578B;

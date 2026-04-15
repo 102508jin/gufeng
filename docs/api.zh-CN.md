@@ -11,6 +11,7 @@
   "query": "\u6700\u8fd1\u603b\u662f\u62d6\u5ef6\uff0c\u600e\u4e48\u575a\u6301\u8ba1\u5212\uff1f",
   "inputMode": "auto",
   "personaId": "zhuge-liang",
+  "providerId": "ollama",
   "variantsCount": 3,
   "explanationModes": ["literal", "free", "gloss"]
 }
@@ -28,6 +29,10 @@
 ## GET /api/personas
 
 &#x8FD4;&#x56DE; &#x672C;&#x5730; corpus &#x4E2D; &#x53EF;&#x7528; &#x7684; persona profile.
+
+## GET /api/providers
+
+&#x8FD4;&#x56DE; &#x524D;&#x7AEF; &#x53EF;&#x5207;&#x6362; &#x7684; &#x6A21;&#x578B; profile &#x5217;&#x8868;, &#x6BCF;&#x9879; &#x5305;&#x542B; `id`, `label`, `driver`, `model`, `configured`, `isDefault`.
 
 ## POST /api/knowledge/reindex
 

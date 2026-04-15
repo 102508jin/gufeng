@@ -8,6 +8,7 @@ import { DEFAULT_EXPLANATION_MODES, DEFAULT_VARIANTS_COUNT } from "@/lib/config/
 import type { ApiResult } from "@/lib/types/api";
 import type { ExplanationMode, GenerateResponse, InputMode } from "@/lib/types/generation";
 import type { PersonaProfile } from "@/lib/types/persona";
+import type { PublicModelProfile } from "@/lib/types/provider";
 
 const starterQuestion =
   "\u6700\u8fd1\u603b\u89c9\u5f97\u8ba1\u5212\u5f88\u591a\u5374\u603b\u62d6\u5ef6\uff0c\u5e94\u8be5\u600e\u6837\u7a33\u4f4f\u5fc3\u5fd7\u5e76\u771f\u6b63\u884c\u52a8\u8d77\u6765\uff1f";
@@ -15,9 +16,11 @@ const starterQuestion =
 const text = {
   providerOllama: "\u672c\u5730 Ollama",
   providerOpenai: "OpenAI \u63a5\u53e3",
+  providerAnthropic: "Claude / Anthropic",
   providerMock: "\u6f14\u793a\u6a21\u5f0f",
   providerUnknown: "\u672a\u77e5",
   loadPersonasFailed: "\u89d2\u8272\u5217\u8868\u52a0\u8f7d\u5931\u8d25\u3002",
+  loadProvidersFailed: "\u6a21\u578b\u9a71\u52a8\u5217\u8868\u52a0\u8f7d\u5931\u8d25\u3002",
   generationFailed: "\u751f\u6210\u5931\u8d25\u3002",
   heroEyebrow: "\u53e4\u98ce\u95ee\u7b54",
   heroTitle: "\u6587\u8a00\u6587\u56de\u7b54\u667a\u80fd\u4f53",
@@ -38,9 +41,12 @@ const text = {
 const providerLabels: Record<string, string> = {
   ollama: text.providerOllama,
   openai: text.providerOpenai,
+  "openai-compatible": text.providerOpenai,
+  anthropic: text.providerAnthropic,
   mock: text.providerMock,
   [text.providerOllama]: text.providerOllama,
   [text.providerOpenai]: text.providerOpenai,
+  [text.providerAnthropic]: text.providerAnthropic,
   [text.providerMock]: text.providerMock
 };
 
@@ -58,7 +64,9 @@ export function Workspace() {
   const [variantsCount, setVariantsCount] = useState(DEFAULT_VARIANTS_COUNT);
   const [explanationModes, setExplanationModes] = useState<ExplanationMode[]>(DEFAULT_EXPLANATION_MODES);
   const [personaId, setPersonaId] = useState("");
+  const [providerId, setProviderId] = useState("");
   const [personas, setPersonas] = useState<PersonaProfile[]>([]);
+  const [providers, setProviders] = useState<PublicModelProfile[]>([]);
   const [result, setResult] = useState<GenerateResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,21 +74,42 @@ export function Workspace() {
   useEffect(() => {
     let cancelled = false;
 
-    async function loadPersonas() {
+    async function loadInitialData() {
       try {
-        const response = await fetch("/api/personas");
-        const payload = (await response.json()) as ApiResult<PersonaProfile[]>;
-        if (!cancelled && payload.ok) {
-          setPersonas(payload.data);
+        const [personaResponse, providerResponse] = await Promise.all([
+          fetch("/api/personas"),
+          fetch("/api/providers")
+        ]);
+        const personaPayload = (await personaResponse.json()) as ApiResult<PersonaProfile[]>;
+        const providerPayload = (await providerResponse.json()) as ApiResult<PublicModelProfile[]>;
+
+        if (!personaPayload.ok) {
+          throw new Error(personaPayload.error || text.loadPersonasFailed);
+        }
+
+        if (!providerPayload.ok) {
+          throw new Error(providerPayload.error || text.loadProvidersFailed);
+        }
+
+        if (!cancelled) {
+          setPersonas(personaPayload.data);
+          setProviders(providerPayload.data);
+
+          const defaultProvider = providerPayload.data.find((provider) => provider.isDefault && provider.configured)
+            ?? providerPayload.data.find((provider) => provider.configured);
+
+          if (defaultProvider) {
+            setProviderId(defaultProvider.id);
+          }
         }
       } catch (cause) {
         if (!cancelled) {
-          setError(cause instanceof Error ? cause.message : text.loadPersonasFailed);
+          setError(cause instanceof Error ? cause.message : text.loadProvidersFailed);
         }
       }
     }
 
-    void loadPersonas();
+    void loadInitialData();
     return () => {
       cancelled = true;
     };
@@ -100,6 +129,7 @@ export function Workspace() {
           query,
           inputMode,
           personaId: personaId || null,
+          providerId: providerId || null,
           variantsCount,
           explanationModes
         })
@@ -133,13 +163,16 @@ export function Workspace() {
           variantsCount={variantsCount}
           explanationModes={explanationModes}
           personaId={personaId}
+          providerId={providerId}
           personas={personas}
+          providers={providers}
           disabled={isSubmitting}
           onQueryChange={setQuery}
           onInputModeChange={setInputMode}
           onVariantsCountChange={setVariantsCount}
           onExplanationModesChange={setExplanationModes}
           onPersonaChange={setPersonaId}
+          onProviderChange={setProviderId}
           onSubmit={() => {
             void handleSubmit();
           }}

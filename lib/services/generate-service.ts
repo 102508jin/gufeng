@@ -5,6 +5,7 @@ import { DefaultInputNormalizer } from "@/lib/domain/input-normalizer";
 import { LocalPersonaRetriever } from "@/lib/domain/persona-retriever";
 import { LocalSourceRetriever } from "@/lib/domain/source-retriever";
 import { createModelProvider } from "@/lib/infra/llm/model-provider";
+import { resolveModelProfile } from "@/lib/infra/llm/provider-registry";
 import type { GenerateRequest, GenerateResponse, VariantResult } from "@/lib/types/generation";
 import type { RetrievedChunk, SourceRef } from "@/lib/types/retrieval";
 import { createId } from "@/lib/utils/ids";
@@ -45,7 +46,10 @@ function formatProvider(provider: string): string {
     case "ollama":
       return "\u672c\u5730 Ollama";
     case "openai":
+    case "openai-compatible":
       return "OpenAI \u63a5\u53e3";
+    case "anthropic":
+      return "Claude / Anthropic";
     case "mock":
       return "\u6f14\u793a\u6a21\u5f0f";
     default:
@@ -65,16 +69,17 @@ function toSourceRefs(chunks: RetrievedChunk[]): SourceRef[] {
 }
 
 export class GenerateService {
-  private readonly modelProvider = createModelProvider();
-  private readonly normalizer = new DefaultInputNormalizer(this.modelProvider);
   private readonly sourceRetriever = new LocalSourceRetriever();
   private readonly personaRetriever = new LocalPersonaRetriever();
-  private readonly classicalGenerator = new DefaultClassicalGenerator(this.modelProvider);
-  private readonly explanationGenerator = new DefaultExplanationGenerator(this.modelProvider);
 
   async generate(request: GenerateRequest): Promise<GenerateResponse> {
+    const profile = resolveModelProfile(request.providerId);
+    const modelProvider = createModelProvider(profile);
+    const normalizer = new DefaultInputNormalizer(modelProvider);
+    const classicalGenerator = new DefaultClassicalGenerator(modelProvider);
+    const explanationGenerator = new DefaultExplanationGenerator(modelProvider);
     const variantsCount = Math.min(Math.max(request.variantsCount, 1), MAX_VARIANTS_COUNT);
-    const normalized = await this.normalizer.normalize(request.query, request.inputMode);
+    const normalized = await normalizer.normalize(request.query, request.inputMode);
     const persona = request.personaId
       ? await this.personaRetriever.getPersonaProfile(request.personaId)
       : null;
@@ -94,12 +99,12 @@ export class GenerateService {
       variantsCount
     };
 
-    const drafts = await this.classicalGenerator.generate(context);
+    const drafts = await classicalGenerator.generate(context);
     const sharedSources = [...personaChunks, ...sourceChunks];
 
     const variants: VariantResult[] = [];
     for (const draft of drafts) {
-      const explanation = await this.explanationGenerator.explain({
+      const explanation = await explanationGenerator.explain({
         draft,
         context,
         explanationModes: request.explanationModes
@@ -132,7 +137,8 @@ export class GenerateService {
         ],
         personaApplied: Boolean(persona),
         retrievalHitCount: sharedSources.length,
-        provider: formatProvider(this.modelProvider.kind)
+        provider: profile.label || formatProvider(modelProvider.kind),
+        providerId: profile.id
       }
     };
   }

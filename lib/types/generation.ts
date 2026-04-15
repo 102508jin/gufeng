@@ -10,6 +10,7 @@ export type GenerateRequest = {
   query: string;
   inputMode: InputMode;
   personaId?: string | null;
+  providerId?: string | null;
   variantsCount: number;
   explanationModes: ExplanationMode[];
 };
@@ -43,6 +44,7 @@ export type GenerateResponse = {
     personaApplied?: boolean;
     retrievalHitCount?: number;
     provider?: string;
+    providerId?: string;
   };
 };
 

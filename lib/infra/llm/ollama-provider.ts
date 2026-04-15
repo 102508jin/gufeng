@@ -1,7 +1,7 @@
 import { z, type ZodType } from "zod";
 
-import { env } from "@/lib/config/env";
 import type { ModelOptions, ModelProvider } from "@/lib/infra/llm/model-provider";
+import type { ModelProfile } from "@/lib/types/provider";
 
 const ollamaResponseSchema = z.object({
   response: z.string()
@@ -32,14 +32,15 @@ function extractJsonBlock(input: string): string {
   return withoutThinkTag.slice(start, end + 1).trim();
 }
 
-async function requestOllama(prompt: string, options?: ModelOptions, format?: "json") {
-  const response = await fetch(`${env.ollamaBaseUrl}/api/generate`, {
+async function requestOllama(profile: ModelProfile, prompt: string, options?: ModelOptions, format?: "json") {
+  const response = await fetch(`${profile.baseUrl}/api/generate`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      ...profile.headers
     },
     body: JSON.stringify({
-      model: env.ollamaModel,
+      model: profile.model,
       system: options?.systemPrompt,
       prompt,
       stream: false,
@@ -79,12 +80,15 @@ function unwrapStructuredCandidate(input: unknown): unknown {
 export class OllamaProvider implements ModelProvider {
   kind = "ollama";
 
+  constructor(private readonly profile: ModelProfile) {}
+
   async generateText(prompt: string, options?: ModelOptions): Promise<string> {
-    return requestOllama(prompt, options);
+    return requestOllama(this.profile, prompt, options);
   }
 
   async generateStructured<T>(prompt: string, schema: ZodType<T>, options?: ModelOptions): Promise<T> {
     const responseText = await requestOllama(
+      this.profile,
       `${prompt}\n\nReturn JSON only. Do not add markdown fences or extra commentary.`,
       {
         ...options,
