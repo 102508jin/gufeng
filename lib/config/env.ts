@@ -4,11 +4,19 @@ const rawExplanationModes = process.env.DEFAULT_EXPLANATION_MODES?.split(",").ma
 
 export const env = {
   modelProvider: process.env.MODEL_PROVIDER ?? "mock",
+  defaultProviderId: process.env.DEFAULT_PROVIDER_ID ?? process.env.MODEL_PROVIDER ?? "mock",
+  modelProfilesJson: process.env.MODEL_PROFILES_JSON ?? "",
   modelName: process.env.MODEL_NAME ?? "gpt-4.1-mini",
   openAiBaseUrl: process.env.OPENAI_API_BASE_URL ?? "https://api.openai.com/v1",
   openAiApiKey: process.env.OPENAI_API_KEY ?? "",
+  openAiLabel: process.env.OPENAI_PROVIDER_LABEL ?? "OpenAI \u517c\u5bb9\u63a5\u53e3",
   ollamaBaseUrl: process.env.OLLAMA_BASE_URL ?? "http://127.0.0.1:11434",
   ollamaModel: process.env.OLLAMA_MODEL ?? "qwen2.5:7b",
+  ollamaLabel: process.env.OLLAMA_PROVIDER_LABEL ?? "\u672c\u5730 Ollama",
+  anthropicBaseUrl: process.env.ANTHROPIC_BASE_URL ?? "https://api.anthropic.com/v1",
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
+  anthropicModel: process.env.ANTHROPIC_MODEL ?? "claude-3-5-sonnet-latest",
+  anthropicLabel: process.env.ANTHROPIC_PROVIDER_LABEL ?? "Claude / Anthropic",
   defaultVariantsCount: Number(process.env.DEFAULT_VARIANTS_COUNT ?? DEFAULT_VARIANTS_COUNT),
   defaultExplanationModes: rawExplanationModes?.length ? rawExplanationModes : DEFAULT_EXPLANATION_MODES
 };

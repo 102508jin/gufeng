@@ -1,10 +1,10 @@
 import type { ZodType } from "zod";
 
-import { env } from "@/lib/config/env";
-import { logger } from "@/lib/infra/logger";
+import { AnthropicProvider } from "@/lib/infra/llm/anthropic-provider";
 import { MockModelProvider } from "@/lib/infra/llm/mock-provider";
 import { OllamaProvider } from "@/lib/infra/llm/ollama-provider";
 import { OpenAiProvider } from "@/lib/infra/llm/openai-provider";
+import type { ModelProfile } from "@/lib/types/provider";
 
 export type ModelOptions = {
   temperature?: number;
@@ -17,17 +17,15 @@ export interface ModelProvider {
   generateStructured<T>(prompt: string, schema: ZodType<T>, options?: ModelOptions): Promise<T>;
 }
 
-export function createModelProvider(): ModelProvider {
-  switch (env.modelProvider) {
-    case "openai": {
-      if (!env.openAiApiKey) {
-        logger.warn("\u672a\u68c0\u6d4b\u5230 OPENAI_API_KEY\uff0c\u5df2\u56de\u9000\u5230\u6f14\u793a\u6a21\u578b\u3002");
-        return new MockModelProvider();
-      }
-      return new OpenAiProvider();
-    }
+export function createModelProvider(profile: ModelProfile): ModelProvider {
+  switch (profile.driver) {
+    case "openai-compatible":
+      return new OpenAiProvider(profile);
+    case "anthropic":
+      return new AnthropicProvider(profile);
     case "ollama":
-      return new OllamaProvider();
+      return new OllamaProvider(profile);
+    case "mock":
     default:
       return new MockModelProvider();
   }

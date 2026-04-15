@@ -3,12 +3,11 @@ import { z, type ZodType } from "zod";
 import type { ModelOptions, ModelProvider } from "@/lib/infra/llm/model-provider";
 import type { ModelProfile } from "@/lib/types/provider";
 
-const openAiResponseSchema = z.object({
-  choices: z.array(
+const anthropicResponseSchema = z.object({
+  content: z.array(
     z.object({
-      message: z.object({
-        content: z.string().nullable()
-      })
+      type: z.string(),
+      text: z.string().optional()
     })
   )
 });
@@ -18,40 +17,41 @@ function extractJsonBlock(input: string): string {
   return fencedMatch?.[1]?.trim() ?? input.trim();
 }
 
-export class OpenAiProvider implements ModelProvider {
-  kind = "openai-compatible";
+export class AnthropicProvider implements ModelProvider {
+  kind = "anthropic";
 
   constructor(private readonly profile: ModelProfile) {}
 
   async generateText(prompt: string, options?: ModelOptions): Promise<string> {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.profile.headers
-    };
-
-    if (this.profile.apiKey) {
-      headers.Authorization = `Bearer ${this.profile.apiKey}`;
-    }
-
-    const response = await fetch(`${this.profile.baseUrl}/chat/completions`, {
+    const response = await fetch(`${this.profile.baseUrl}/messages`, {
       method: "POST",
-      headers,
+      headers: {
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
+        "x-api-key": this.profile.apiKey ?? "",
+        ...this.profile.headers
+      },
       body: JSON.stringify({
         model: this.profile.model,
+        system: options?.systemPrompt,
         temperature: options?.temperature ?? 0.6,
+        max_tokens: 1200,
         messages: [
-          options?.systemPrompt ? { role: "system", content: options.systemPrompt } : null,
           { role: "user", content: prompt }
-        ].filter(Boolean)
+        ]
       })
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI \u8bf7\u6c42\u5931\u8d25\uff0c\u72b6\u6001\u7801 ${response.status}`);
+      throw new Error(`Anthropic \u8bf7\u6c42\u5931\u8d25\uff0c\u72b6\u6001\u7801 ${response.status}`);
     }
 
-    const payload = openAiResponseSchema.parse(await response.json());
-    return payload.choices[0]?.message.content ?? "";
+    const payload = anthropicResponseSchema.parse(await response.json());
+    return payload.content
+      .filter((item) => item.type === "text")
+      .map((item) => item.text ?? "")
+      .join("")
+      .trim();
   }
 
   async generateStructured<T>(prompt: string, schema: ZodType<T>, options?: ModelOptions): Promise<T> {

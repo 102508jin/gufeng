@@ -1,6 +1,7 @@
 import { PersonaSelector } from "@/components/persona-selector";
 import type { ExplanationMode, InputMode } from "@/lib/types/generation";
 import type { PersonaProfile } from "@/lib/types/persona";
+import type { PublicModelProfile } from "@/lib/types/provider";
 
 type ChatInputProps = {
   query: string;
@@ -8,13 +9,16 @@ type ChatInputProps = {
   variantsCount: number;
   explanationModes: ExplanationMode[];
   personaId: string;
+  providerId: string;
   personas: PersonaProfile[];
+  providers: PublicModelProfile[];
   disabled?: boolean;
   onQueryChange: (value: string) => void;
   onInputModeChange: (value: InputMode) => void;
   onVariantsCountChange: (value: number) => void;
   onExplanationModesChange: (value: ExplanationMode[]) => void;
   onPersonaChange: (value: string) => void;
+  onProviderChange: (value: string) => void;
   onSubmit: () => void;
 };
 
@@ -28,6 +32,9 @@ const text = {
   auto: "\u81ea\u52a8\u8bc6\u522b",
   vernacular: "\u767d\u8bdd\u6587",
   classical: "\u6587\u8a00\u6587",
+  providerLabel: "\u6a21\u578b\u9a71\u52a8",
+  providerDefault: "\u8ddf\u968f\u9ed8\u8ba4\u914d\u7f6e",
+  providerNotReady: "\u672a\u914d\u7f6e",
   variantsLabel: "\u751f\u6210\u7248\u672c",
   explanationLabel: "\u89e3\u6790\u7c7b\u578b",
   generating: "\u751f\u6210\u4e2d...",
@@ -105,6 +112,24 @@ export function ChatInput(props: ChatInputProps) {
       </div>
 
       <PersonaSelector personas={props.personas} value={props.personaId} onChange={props.onPersonaChange} />
+
+      <label className="field-group">
+        <span className="field-label">{text.providerLabel}</span>
+        <select
+          className="field-input field-select"
+          value={props.providerId}
+          onChange={(event) => props.onProviderChange(event.target.value)}
+          disabled={props.disabled}
+        >
+          <option value="">{text.providerDefault}</option>
+          {props.providers.map((provider) => (
+            <option key={provider.id} value={provider.id} disabled={!provider.configured}>
+              {provider.label}
+              {provider.configured ? "" : `\uff08${text.providerNotReady}\uff09`}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <div className="field-group">
         <span className="field-label">{text.explanationLabel}</span>
