@@ -19,3 +19,10 @@ Current placeholder scripts:
 - `npm run reindex`
 
 These scripts currently validate and rewrite the sample dataset so the file format stays stable while the corpus is still small.
+
+## Current Knowledge Retrieval
+
+- `LocalSourceRetriever` loads local knowledge entries through `dataRepository.listKnowledge()` and ranks them with `InMemoryVectorStore`.
+- `/api/knowledge/search?q=...&topK=...` can be used to preview RAG matches before generation.
+- `/api/knowledge/reindex` writes `data/processed/index-state.json` as the rebuild state for the sample corpus.
+- The current implementation is still in-memory; a future external vector database should preserve the `SourceRetriever` contract and replace only the adapter under `lib/infra/vector/`.

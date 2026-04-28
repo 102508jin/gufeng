@@ -13,9 +13,22 @@
   "personaId": "zhuge-liang",
   "providerId": "ollama",
   "variantsCount": 3,
-  "explanationModes": ["literal", "free", "gloss"]
+  "explanationModes": ["literal", "free", "gloss"],
+  "aiIntervention": "balanced",
+  "retrievalMode": "auto",
+  "userContext": {
+    "displayName": "沈一",
+    "useCase": "课堂讲解",
+    "preference": "先给可执行建议, 解释保持简洁"
+  }
 }
 ```
+
+新增可选字段:
+
+- `aiIntervention`: AI 介入强度, 可选 `conservative`, `balanced`, `creative`, 默认 `balanced`
+- `retrievalMode`: 知识库检索深度, 可选 `off`, `focused`, `auto`, `broad`, 默认 `auto`
+- `userContext`: 本地用户画像, 支持 `displayName`, `useCase`, `preference`
 
 &#x4E3B;&#x8981; &#x8FD4;&#x56DE; &#x5B57;&#x6BB5;:
 
@@ -25,6 +38,8 @@
 - `variants[]`
 - `retrievalRefs[]`
 - `debug`
+
+`debug` 会返回 `aiIntervention`, `retrievalMode`, `userContextApplied`, 便于排查本次生成是否使用了用户偏好和 RAG 设置.
 
 ## GET /api/personas
 
@@ -37,6 +52,23 @@
 ## POST /api/knowledge/reindex
 
 &#x6839;&#x636E; processed corpus &#x91CD;&#x5EFA; &#x672C;&#x5730; index state file.
+
+## GET /api/knowledge/search
+
+按查询词检索本地知识库, 用于生成前预检 RAG 命中来源.
+
+Query 参数:
+
+- `q`: 必填, 检索文本
+- `topK`: 可选, 1 到 10, 默认 5
+
+示例:
+
+```text
+/api/knowledge/search?q=拖延%20自律&topK=4
+```
+
+返回 `SourceRef[]`, 包含 `title`, `excerpt`, `score`, `sourceType`.
 
 ## GET /api/health
 

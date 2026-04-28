@@ -1,8 +1,16 @@
-import type { ExplanationMode, VariantTone } from "@/lib/types/generation";
+import type { AiInterventionMode, ExplanationMode, RetrievalMode, VariantTone } from "@/lib/types/generation";
 
 export const DEFAULT_VARIANTS_COUNT = 3;
 export const DEFAULT_EXPLANATION_MODES: ExplanationMode[] = ["literal", "free", "gloss"];
 export const MAX_VARIANTS_COUNT = 4;
+export const DEFAULT_AI_INTERVENTION: AiInterventionMode = "balanced";
+export const DEFAULT_RETRIEVAL_MODE: RetrievalMode = "auto";
+export const RETRIEVAL_TOP_K: Record<RetrievalMode, number> = {
+  off: 0,
+  focused: 2,
+  auto: 4,
+  broad: 6
+};
 
 export const VARIANT_PRESETS: Array<{ tone: VariantTone; title: string }> = [
   { tone: "balanced", title: "\u6301\u91cd\u7248" },

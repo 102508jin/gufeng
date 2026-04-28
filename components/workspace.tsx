@@ -4,14 +4,28 @@ import { useEffect, useState } from "react";
 
 import { ChatInput } from "@/components/chat-input";
 import { VariantCard } from "@/components/variant-card";
-import { DEFAULT_EXPLANATION_MODES, DEFAULT_VARIANTS_COUNT } from "@/lib/config/constants";
+import {
+  DEFAULT_AI_INTERVENTION,
+  DEFAULT_EXPLANATION_MODES,
+  DEFAULT_RETRIEVAL_MODE,
+  DEFAULT_VARIANTS_COUNT
+} from "@/lib/config/constants";
 import type { ApiResult } from "@/lib/types/api";
-import type { ExplanationMode, GenerateResponse, InputMode } from "@/lib/types/generation";
+import type {
+  AiInterventionMode,
+  ExplanationMode,
+  GenerateResponse,
+  InputMode,
+  RetrievalMode,
+  UserContext
+} from "@/lib/types/generation";
 import type { PersonaProfile } from "@/lib/types/persona";
 import type { PublicModelProfile } from "@/lib/types/provider";
+import type { SourceRef } from "@/lib/types/retrieval";
 
 const starterQuestion =
   "\u6700\u8fd1\u603b\u89c9\u5f97\u8ba1\u5212\u5f88\u591a\u5374\u603b\u62d6\u5ef6\uff0c\u5e94\u8be5\u600e\u6837\u7a33\u4f4f\u5fc3\u5fd7\u5e76\u771f\u6b63\u884c\u52a8\u8d77\u6765\uff1f";
+const userContextStorageKey = "wenyan-agent:user-context:v1";
 
 const text = {
   providerOllama: "\u672c\u5730 Ollama",
@@ -22,16 +36,26 @@ const text = {
   loadPersonasFailed: "\u89d2\u8272\u5217\u8868\u52a0\u8f7d\u5931\u8d25\u3002",
   loadProvidersFailed: "\u6a21\u578b\u9a71\u52a8\u5217\u8868\u52a0\u8f7d\u5931\u8d25\u3002",
   generationFailed: "\u751f\u6210\u5931\u8d25\u3002",
+  knowledgeSearchFailed: "\u77e5\u8bc6\u5e93\u68c0\u7d22\u5931\u8d25\u3002",
   heroEyebrow: "\u53e4\u98ce\u95ee\u7b54",
   heroTitle: "\u6587\u8a00\u6587\u56de\u7b54\u667a\u80fd\u4f53",
-  heroCopy: "\u652f\u6301\u767d\u8bdd\u4e0e\u6587\u8a00\u8f93\u5165\uff0c\u751f\u6210\u591a\u7248\u6587\u8a00\u7b54\u590d\u548c\u89e3\u6790\u3002",
+  heroCopy: "\u767d\u8bdd\u6216\u6587\u8a00\u63d0\u95ee\uff0c\u53ef\u9009\u89d2\u8272\u98ce\u683c\u3001AI \u4ecb\u5165\u5f3a\u5ea6\u4e0e\u672c\u5730 RAG \u77e5\u8bc6\u5e93\u3002",
   normalizedQuery: "\u5f52\u4e00\u5316\u95ee\u9898",
   detectedMode: "\u8bc6\u522b\u8f93\u5165",
   provider: "\u6a21\u578b\u63d0\u4f9b\u65b9",
   persona: "\u5f53\u524d\u89d2\u8272",
+  aiIntervention: "AI \u4ecb\u5165",
+  retrievalMode: "\u77e5\u8bc6\u5e93",
   classical: "\u6587\u8a00\u6587",
   vernacular: "\u767d\u8bdd\u6587",
   genericPersona: "\u901a\u7528\u6587\u8a00\u8bed\u6c14",
+  conservative: "\u7a33\u59a5",
+  balanced: "\u5e73\u8861",
+  creative: "\u521b\u4f5c",
+  retrievalOff: "\u5173\u95ed",
+  retrievalFocused: "\u7cbe\u51c6",
+  retrievalAuto: "\u6807\u51c6",
+  retrievalBroad: "\u5e7f\u641c",
   previewEyebrow: "\u7ed3\u679c\u9884\u89c8",
   previewTitle: "\u8f93\u5165\u95ee\u9898\u540e\u5373\u53ef\u751f\u6210\u6587\u8a00\u7b54\u590d\u3002",
   previewCopy: "\u8f93\u5165\u95ee\u9898\u540e\u5373\u53ef\u751f\u6210\u6587\u8a00\u7b54\u590d\uff0c\u5e76\u67e5\u770b\u9010\u53e5\u89e3\u6790\u4e0e\u53c2\u8003\u6765\u6e90\u3002",
@@ -58,18 +82,82 @@ function formatProvider(provider?: string) {
   return providerLabels[provider] ?? provider;
 }
 
+function formatAiIntervention(mode?: AiInterventionMode) {
+  switch (mode) {
+    case "conservative":
+      return text.conservative;
+    case "creative":
+      return text.creative;
+    default:
+      return text.balanced;
+  }
+}
+
+function formatRetrievalMode(mode?: RetrievalMode) {
+  switch (mode) {
+    case "off":
+      return text.retrievalOff;
+    case "focused":
+      return text.retrievalFocused;
+    case "broad":
+      return text.retrievalBroad;
+    default:
+      return text.retrievalAuto;
+  }
+}
+
+function parseStoredUserContext(value: string | null): UserContext {
+  if (!value) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(value) as Partial<UserContext>;
+    return {
+      displayName: typeof parsed.displayName === "string" ? parsed.displayName : "",
+      useCase: typeof parsed.useCase === "string" ? parsed.useCase : "",
+      preference: typeof parsed.preference === "string" ? parsed.preference : ""
+    };
+  } catch {
+    return {};
+  }
+}
+
+function readStoredUserContext(): UserContext {
+  try {
+    return parseStoredUserContext(window.localStorage.getItem(userContextStorageKey));
+  } catch {
+    return {};
+  }
+}
+
+function writeStoredUserContext(userContext: UserContext) {
+  try {
+    window.localStorage.setItem(userContextStorageKey, JSON.stringify(userContext));
+  } catch {
+    // User preferences are progressive enhancement; generation should still work without storage.
+  }
+}
+
 export function Workspace() {
   const [query, setQuery] = useState(starterQuestion);
   const [inputMode, setInputMode] = useState<InputMode>("auto");
   const [variantsCount, setVariantsCount] = useState(DEFAULT_VARIANTS_COUNT);
   const [explanationModes, setExplanationModes] = useState<ExplanationMode[]>(DEFAULT_EXPLANATION_MODES);
+  const [aiIntervention, setAiIntervention] = useState<AiInterventionMode>(DEFAULT_AI_INTERVENTION);
+  const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>(DEFAULT_RETRIEVAL_MODE);
+  const [userContext, setUserContext] = useState<UserContext>({});
+  const [hasLoadedUserContext, setHasLoadedUserContext] = useState(false);
   const [personaId, setPersonaId] = useState("");
   const [providerId, setProviderId] = useState("");
   const [personas, setPersonas] = useState<PersonaProfile[]>([]);
   const [providers, setProviders] = useState<PublicModelProfile[]>([]);
+  const [knowledgeRefs, setKnowledgeRefs] = useState<SourceRef[]>([]);
+  const [knowledgeError, setKnowledgeError] = useState<string | null>(null);
   const [result, setResult] = useState<GenerateResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSearchingKnowledge, setIsSearchingKnowledge] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -115,6 +203,19 @@ export function Workspace() {
     };
   }, []);
 
+  useEffect(() => {
+    setUserContext(readStoredUserContext());
+    setHasLoadedUserContext(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedUserContext) {
+      return;
+    }
+
+    writeStoredUserContext(userContext);
+  }, [hasLoadedUserContext, userContext]);
+
   const handleSubmit = async () => {
     setError(null);
     setIsSubmitting(true);
@@ -131,7 +232,10 @@ export function Workspace() {
           personaId: personaId || null,
           providerId: providerId || null,
           variantsCount,
-          explanationModes
+          explanationModes,
+          aiIntervention,
+          retrievalMode,
+          userContext
         })
       });
 
@@ -145,6 +249,29 @@ export function Workspace() {
       setError(cause instanceof Error ? cause.message : text.generationFailed);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleKnowledgeSearch = async () => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      return;
+    }
+
+    setKnowledgeError(null);
+    setIsSearchingKnowledge(true);
+
+    try {
+      const response = await fetch(`/api/knowledge/search?q=${encodeURIComponent(trimmedQuery)}&topK=4`);
+      const payload = (await response.json()) as ApiResult<SourceRef[]>;
+      if (!payload.ok) {
+        throw new Error(payload.error);
+      }
+      setKnowledgeRefs(payload.data);
+    } catch (cause) {
+      setKnowledgeError(cause instanceof Error ? cause.message : text.knowledgeSearchFailed);
+    } finally {
+      setIsSearchingKnowledge(false);
     }
   };
 
@@ -162,17 +289,29 @@ export function Workspace() {
           inputMode={inputMode}
           variantsCount={variantsCount}
           explanationModes={explanationModes}
+          aiIntervention={aiIntervention}
+          retrievalMode={retrievalMode}
+          userContext={userContext}
           personaId={personaId}
           providerId={providerId}
           personas={personas}
           providers={providers}
+          knowledgeRefs={knowledgeRefs}
+          knowledgeError={knowledgeError}
+          knowledgeSearching={isSearchingKnowledge}
           disabled={isSubmitting}
           onQueryChange={setQuery}
           onInputModeChange={setInputMode}
           onVariantsCountChange={setVariantsCount}
           onExplanationModesChange={setExplanationModes}
+          onAiInterventionChange={setAiIntervention}
+          onRetrievalModeChange={setRetrievalMode}
+          onUserContextChange={setUserContext}
           onPersonaChange={setPersonaId}
           onProviderChange={setProviderId}
+          onKnowledgeSearch={() => {
+            void handleKnowledgeSearch();
+          }}
           onSubmit={() => {
             void handleSubmit();
           }}
@@ -200,6 +339,14 @@ export function Workspace() {
                   <article>
                     <p className="eyebrow">{text.persona}</p>
                     <p>{result.persona?.name ?? text.genericPersona}</p>
+                  </article>
+                  <article>
+                    <p className="eyebrow">{text.aiIntervention}</p>
+                    <p>{formatAiIntervention(result.debug?.aiIntervention)}</p>
+                  </article>
+                  <article>
+                    <p className="eyebrow">{text.retrievalMode}</p>
+                    <p>{formatRetrievalMode(result.debug?.retrievalMode)}</p>
                   </article>
                 </div>
                 {result.debug?.normalizationNotes?.length ? (

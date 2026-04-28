@@ -5,6 +5,14 @@ export type InputMode = "auto" | "vernacular" | "classical";
 export type DetectedInputMode = "vernacular" | "classical";
 export type ExplanationMode = "literal" | "free" | "gloss";
 export type VariantTone = "balanced" | "deliberative" | "persona";
+export type AiInterventionMode = "conservative" | "balanced" | "creative";
+export type RetrievalMode = "off" | "focused" | "auto" | "broad";
+
+export type UserContext = {
+  displayName?: string;
+  useCase?: string;
+  preference?: string;
+};
 
 export type GenerateRequest = {
   query: string;
@@ -13,6 +21,9 @@ export type GenerateRequest = {
   providerId?: string | null;
   variantsCount: number;
   explanationModes: ExplanationMode[];
+  aiIntervention?: AiInterventionMode;
+  retrievalMode?: RetrievalMode;
+  userContext?: UserContext | null;
 };
 
 export type LinePair = {
@@ -45,6 +56,9 @@ export type GenerateResponse = {
     retrievalHitCount?: number;
     provider?: string;
     providerId?: string;
+    aiIntervention?: AiInterventionMode;
+    retrievalMode?: RetrievalMode;
+    userContextApplied?: boolean;
   };
 };
 
@@ -64,6 +78,9 @@ export type GenerationContext = {
   personaChunks: RetrievedChunk[];
   sourceChunks: RetrievedChunk[];
   variantsCount: number;
+  aiIntervention: AiInterventionMode;
+  retrievalMode: RetrievalMode;
+  userContext: UserContext | null;
 };
 
 export type GeneratedVariantDraft = {

@@ -19,3 +19,10 @@
 - `npm run reindex`
 
 &#x8FD9;&#x4E9B; script &#x76EE;&#x524D; &#x4E3B;&#x8981; &#x7528;&#x6765; &#x6821;&#x9A8C; &#x5E76; &#x91CD;&#x5199; sample dataset, &#x4EE5; &#x4FDD;&#x6301; &#x6587;&#x4EF6; &#x683C;&#x5F0F; &#x7A33;&#x5B9A;.
+
+## 当前知识库检索
+
+- `LocalSourceRetriever` 会从 `dataRepository.listKnowledge()` 读取本地知识条目, 再交给 `InMemoryVectorStore` 排序.
+- `/api/knowledge/search?q=...&topK=...` 可用于生成前验证 RAG 命中片段.
+- `/api/knowledge/reindex` 会写入 `data/processed/index-state.json`, 用于记录当前样例 corpus 的重建状态.
+- 当前实现仍是内存检索; 后续接入外部向量库时应保持 `SourceRetriever` 接口不变, 只替换 `lib/infra/vector/` 适配器.

@@ -1,6 +1,10 @@
 import type { GeneratedVariantDraft, GenerationContext } from "@/lib/types/generation";
 
 function formatSourceBlock(context: GenerationContext): string {
+  if (context.retrievalMode === "off") {
+    return "- Knowledge retrieval is disabled for this request.";
+  }
+
   if (!context.sourceChunks.length) {
     return "- No external supporting snippets were retrieved.";
   }
@@ -8,6 +12,31 @@ function formatSourceBlock(context: GenerationContext): string {
   return context.sourceChunks
     .map((chunk) => `- ${chunk.title}: ${chunk.summary ?? chunk.content}`)
     .join("\n");
+}
+
+function formatUserContextBlock(context: GenerationContext): string {
+  if (!context.userContext) {
+    return "none";
+  }
+
+  const items = [
+    context.userContext.displayName ? `Name: ${context.userContext.displayName}` : null,
+    context.userContext.useCase ? `Use case: ${context.userContext.useCase}` : null,
+    context.userContext.preference ? `Preference: ${context.userContext.preference}` : null
+  ].filter(Boolean);
+
+  return items.length ? items.join("\n") : "none";
+}
+
+function formatAiInterventionGuide(context: GenerationContext): string {
+  switch (context.aiIntervention) {
+    case "conservative":
+      return "Stay close to the question and retrieved sources. Prefer compact, cautious advice and avoid adding new claims.";
+    case "creative":
+      return "Use richer rhetoric and more distinctive structure while staying useful. Do not invent fake citations or claims.";
+    default:
+      return "Balance practical reasoning with the retrieved sources. Keep the answer polished but not over-styled.";
+  }
 }
 
 export function buildNormalizationPrompt(input: string, mode: string): string {
@@ -56,6 +85,10 @@ export function buildGenerationPrompt(context: GenerationContext): string {
     `Topics: ${context.normalized.topics.join(", ") || "none"}`,
     `Intent: ${context.normalized.intent}`,
     `Tone hint: ${context.normalized.tone}`,
+    `AI intervention mode: ${context.aiIntervention}`,
+    `AI intervention guide: ${formatAiInterventionGuide(context)}`,
+    "User context:",
+    formatUserContextBlock(context),
     `Persona: ${personaLine}`,
     "Supporting source snippets:",
     formatSourceBlock(context)

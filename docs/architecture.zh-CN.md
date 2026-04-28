@@ -11,3 +11,20 @@
 - `data/processed/` : &#x5B58;&#x653E; &#x672C;&#x5730; RAG &#x79CD;&#x5B50; &#x8BED;&#x6599;
 
 &#x9ED8;&#x8BA4; runtime &#x4F7F;&#x7528; `mock` provider, &#x56E0;&#x6B64; &#x5728; API key &#x6216; &#x672C;&#x5730; model &#x672A;&#x914D;&#x7F6E; &#x65F6; &#x4E5F;&#x80FD; &#x8DD1;&#x901A; &#x5B8C;&#x6574; &#x6D41;&#x7A0B;. &#x5207;&#x6362; &#x5230; OpenAI-compatible &#x6216; Ollama &#x65F6;, &#x4E3B;&#x8981; &#x53EA;&#x9700; &#x8C03;&#x6574; env &#x548C; provider &#x5C42;.
+
+## 当前用户链路
+
+1. `components/workspace.tsx` 维护问题、角色、provider、本地用户画像、AI 介入强度和 RAG 检索深度.
+2. 本地用户画像只保存在浏览器 `localStorage`, 不进入服务端持久化; 请求时作为 `userContext` 发送给 `/api/generate`.
+3. `/api/generate` 使用 `generateRequestSchema` 校验请求, 再交给 `GenerateService`.
+4. `GenerateService` 完成 provider 解析、输入归一化、persona 检索、知识库检索和生成/解释编排.
+5. `GenerationContext` 会携带 `aiIntervention`, `retrievalMode`, `userContext`, 由 prompt builder 和 generator 使用.
+6. `/api/knowledge/search` 复用 `KnowledgeService` 和 `LocalSourceRetriever`, 用于生成前预检知识库命中.
+
+## RAG 与 AI 介入
+
+- `retrievalMode=off` 时不召回知识库片段, 但仍可使用已选 persona 的风格片段.
+- `focused`, `auto`, `broad` 分别召回 2、4、6 条知识库片段.
+- `aiIntervention=conservative` 会降低模型温度并要求更贴近问题与来源.
+- `aiIntervention=creative` 会提高生成温度, 但仍要求不可伪造引用.
+- mock provider 走确定性 fallback, 仍会在 style notes 中反映介入强度.
