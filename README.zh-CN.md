@@ -12,6 +12,10 @@
 - &#x9644;&#x5E26; &#x9010;&#x53E5; &#x89E3;&#x6790;, &#x610F;&#x8BD1; &#x9610;&#x91CA;, &#x8BCD;&#x4E49; &#x6CE8;&#x91CA;
 - &#x53EF;&#x5207;&#x6362; `mock`, `ollama`, `openai-compatible`, `anthropic` provider
 - &#x652F;&#x6301; &#x5728; UI &#x548C; API &#x4E2D; &#x6309; &#x8BF7;&#x6C42; &#x9009;&#x62E9; &#x6A21;&#x578B;&#x9A71;&#x52A8;
+- 支持本地用户画像偏好, 自动保存到浏览器 `localStorage`
+- 支持 AI 介入强度: 稳妥 / 平衡 / 创作
+- 支持 RAG 知识库检索深度: 关闭 / 精准 / 标准 / 广搜
+- 支持在生成前通过 UI 或 `GET /api/knowledge/search` 预检知识库命中来源
 
 ## &#x5FEB;&#x901F;&#x5F00;&#x59CB;
 
@@ -100,6 +104,7 @@ cmd /c npm run start
 - [&#x67B6;&#x6784;&#x8BF4;&#x660E;](./docs/architecture.zh-CN.md)
 - [API &#x8BF4;&#x660E;](./docs/api.zh-CN.md)
 - [&#x6570;&#x636E;&#x5BFC;&#x5165; &#x8BF4;&#x660E;](./docs/data-ingestion.zh-CN.md)
+- [优化执行方案](./docs/optimization-plan.zh-CN.md)
 - [License &#x4E2D;&#x6587; &#x8BF4;&#x660E;](./LICENSE.zh-CN.md)
 
 ## &#x5206;&#x652F; &#x8BF4;&#x660E;

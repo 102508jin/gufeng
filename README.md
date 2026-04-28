@@ -13,6 +13,10 @@ Wenyan Agent is a Next.js application for generating classical Chinese answers f
 - Supports persona-style output based on local historical source snippets.
 - Can run with `mock`, local Ollama, OpenAI-compatible APIs, or Anthropic / Claude.
 - Supports per-request driver switching from the UI and API.
+- Stores a local user profile and response preferences in browser `localStorage`.
+- Adds per-request AI intervention control: conservative, balanced, or creative.
+- Adds RAG retrieval control: off, focused, standard, or broad.
+- Provides a knowledge-base preview flow through the UI and `GET /api/knowledge/search`.
 - Ships with a Chinese UI and Chinese-facing output labels.
 
 ## Current Status
@@ -168,6 +172,7 @@ cmd /c npm run reindex
 - [Architecture](./docs/architecture.md)
 - [API Notes](./docs/api.md)
 - [Data Ingestion](./docs/data-ingestion.md)
+- [Optimization Plan](./docs/optimization-plan.zh-CN.md)
 - [Contributing](./CONTRIBUTING.md)
 - [Chinese License Note](./LICENSE.zh-CN.md)
 

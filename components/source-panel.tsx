@@ -9,7 +9,8 @@ const text = {
   title: "\u53c2\u8003\u6765\u6e90",
   persona: "\u4eba\u7269\u8bed\u6599",
   knowledge: "\u77e5\u8bc6\u5e93",
-  details: "\u67e5\u770b\u53ec\u56de\u7247\u6bb5"
+  details: "\u67e5\u770b\u53ec\u56de\u7247\u6bb5",
+  score: "\u76f8\u5173\u5ea6"
 } as const;
 
 function formatSourceType(sourceType: SourceRef["sourceType"] | RetrievedChunk["sourceType"]) {
@@ -26,7 +27,10 @@ export function SourcePanel({ refs, retrievalRefs = [] }: SourcePanelProps) {
       <div className="source-list">
         {refs.map((refItem) => (
           <article key={refItem.id} className="source-card">
-            <p className="source-tag">{formatSourceType(refItem.sourceType)}</p>
+            <div className="source-card-header">
+              <p className="source-tag">{formatSourceType(refItem.sourceType)}</p>
+              <span className="source-score">{`${text.score} ${refItem.score.toFixed(2)}`}</span>
+            </div>
             <h5>{refItem.title}</h5>
             {refItem.author ? <p className="source-meta">{refItem.author}</p> : null}
             <p>{refItem.excerpt}</p>

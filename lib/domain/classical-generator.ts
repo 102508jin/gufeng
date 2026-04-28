@@ -29,7 +29,10 @@ const text = {
   deliberativePrefix: "\u76d6",
   balancedNote: "\u8bed\u6c14\u51dd\u7ec3\uff0c\u91cd\u5728\u529d\u52c9\u3002",
   deliberativeNote: "\u5c42\u5c42\u7533\u8bf4\uff0c\u5f3a\u8c03\u56e0\u679c\u4e0e\u6b21\u7b2c\u3002",
-  personaSuffix: "\u98ce\u683c\u7248"
+  personaSuffix: "\u98ce\u683c\u7248",
+  conservativeNote: "\u4ecb\u5165\u5f3a\u5ea6\u504f\u7a33\uff0c\u4f18\u5148\u8d34\u5408\u6765\u6e90\u4e0e\u539f\u95ee\u3002",
+  balancedInterventionNote: "\u4ecb\u5165\u5f3a\u5ea6\u5c45\u4e2d\uff0c\u517c\u987e\u5b9e\u7528\u4e0e\u6587\u6c14\u3002",
+  creativeNote: "\u4ecb\u5165\u5f3a\u5ea6\u504f\u521b\u4f5c\uff0c\u52a0\u5f3a\u4fee\u8f9e\u4e0e\u7ae0\u6cd5\u3002"
 } as const;
 
 export interface ClassicalGenerator {
@@ -81,9 +84,32 @@ function buildPersonaStyledText(lines: string[], context: GenerationContext): { 
   }
 }
 
+function getInterventionNote(context: GenerationContext): string {
+  switch (context.aiIntervention) {
+    case "conservative":
+      return text.conservativeNote;
+    case "creative":
+      return text.creativeNote;
+    default:
+      return text.balancedInterventionNote;
+  }
+}
+
+function getGenerationTemperature(context: GenerationContext): number {
+  switch (context.aiIntervention) {
+    case "conservative":
+      return 0.35;
+    case "creative":
+      return 0.85;
+    default:
+      return 0.65;
+  }
+}
+
 function buildDeterministicVariants(context: GenerationContext): GeneratedVariantDraft[] {
   const lines = draftModernAnswer(context.normalized.normalizedQuery, context.normalized.topics);
   const selectedPresets = VARIANT_PRESETS.slice(0, Math.max(1, context.variantsCount));
+  const interventionNote = getInterventionNote(context);
 
   return selectedPresets.map((preset) => {
     if (preset.tone === "balanced") {
@@ -91,7 +117,7 @@ function buildDeterministicVariants(context: GenerationContext): GeneratedVarian
         title: preset.title,
         tone: preset.tone,
         classicalText: joinAsClassical(lines, text.balancedPrefix),
-        styleNotes: [text.balancedNote]
+        styleNotes: [text.balancedNote, interventionNote]
       };
     }
 
@@ -100,7 +126,7 @@ function buildDeterministicVariants(context: GenerationContext): GeneratedVarian
         title: preset.title,
         tone: preset.tone,
         classicalText: joinAsClassical(lines, text.deliberativePrefix),
-        styleNotes: [text.deliberativeNote]
+        styleNotes: [text.deliberativeNote, interventionNote]
       };
     }
 
@@ -109,7 +135,7 @@ function buildDeterministicVariants(context: GenerationContext): GeneratedVarian
       title: context.persona ? `${context.persona.name}${text.personaSuffix}` : preset.title,
       tone: preset.tone,
       classicalText: personaStyled.text,
-      styleNotes: personaStyled.notes
+      styleNotes: [...personaStyled.notes, interventionNote]
     };
   });
 }
@@ -144,6 +170,10 @@ function buildPlainTextFallbackPrompt(context: GenerationContext): string {
     "",
     `Question: ${context.normalized.normalizedQuery}`,
     `Topics: ${context.normalized.topics.join(", ") || "none"}`,
+    `AI intervention mode: ${context.aiIntervention}`,
+    `User display name: ${context.userContext?.displayName ?? "none"}`,
+    `User use case: ${context.userContext?.useCase ?? "none"}`,
+    `User preference: ${context.userContext?.preference ?? "none"}`,
     `Persona: ${personaLine}`
   ].join("\n");
 }
@@ -191,12 +221,12 @@ export class DefaultClassicalGenerator implements ClassicalGenerator {
     if (this.modelProvider.kind !== "mock") {
       try {
         return await this.modelProvider.generateStructured(buildGenerationPrompt(context), variantsSchema, {
-          temperature: 0.7
+          temperature: getGenerationTemperature(context)
         });
       } catch {
         try {
           const textResponse = await this.modelProvider.generateText(buildPlainTextFallbackPrompt(context), {
-            temperature: 0.5
+            temperature: Math.max(0.3, getGenerationTemperature(context) - 0.15)
           });
           return parsePlainTextVariants(textResponse, context);
         } catch {

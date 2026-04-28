@@ -1,4 +1,9 @@
-import { MAX_VARIANTS_COUNT } from "@/lib/config/constants";
+import {
+  DEFAULT_AI_INTERVENTION,
+  DEFAULT_RETRIEVAL_MODE,
+  MAX_VARIANTS_COUNT,
+  RETRIEVAL_TOP_K
+} from "@/lib/config/constants";
 import { DefaultClassicalGenerator } from "@/lib/domain/classical-generator";
 import { DefaultExplanationGenerator } from "@/lib/domain/explanation-generator";
 import { DefaultInputNormalizer } from "@/lib/domain/input-normalizer";
@@ -6,7 +11,7 @@ import { LocalPersonaRetriever } from "@/lib/domain/persona-retriever";
 import { LocalSourceRetriever } from "@/lib/domain/source-retriever";
 import { createModelProvider } from "@/lib/infra/llm/model-provider";
 import { resolveModelProfile } from "@/lib/infra/llm/provider-registry";
-import type { GenerateRequest, GenerateResponse, VariantResult } from "@/lib/types/generation";
+import type { GenerateRequest, GenerateResponse, UserContext, VariantResult } from "@/lib/types/generation";
 import type { RetrievedChunk, SourceRef } from "@/lib/types/retrieval";
 import { createId } from "@/lib/utils/ids";
 import { toExcerpt } from "@/lib/utils/text";
@@ -68,6 +73,25 @@ function toSourceRefs(chunks: RetrievedChunk[]): SourceRef[] {
   }));
 }
 
+function cleanOptionalText(value: string | undefined): string | undefined {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
+}
+
+function normalizeUserContext(userContext?: UserContext | null): UserContext | null {
+  if (!userContext) {
+    return null;
+  }
+
+  const normalized = {
+    displayName: cleanOptionalText(userContext.displayName),
+    useCase: cleanOptionalText(userContext.useCase),
+    preference: cleanOptionalText(userContext.preference)
+  };
+
+  return normalized.displayName || normalized.useCase || normalized.preference ? normalized : null;
+}
+
 export class GenerateService {
   private readonly sourceRetriever = new LocalSourceRetriever();
   private readonly personaRetriever = new LocalPersonaRetriever();
@@ -79,6 +103,10 @@ export class GenerateService {
     const classicalGenerator = new DefaultClassicalGenerator(modelProvider);
     const explanationGenerator = new DefaultExplanationGenerator(modelProvider);
     const variantsCount = Math.min(Math.max(request.variantsCount, 1), MAX_VARIANTS_COUNT);
+    const aiIntervention = request.aiIntervention ?? DEFAULT_AI_INTERVENTION;
+    const retrievalMode = request.retrievalMode ?? DEFAULT_RETRIEVAL_MODE;
+    const sourceTopK = RETRIEVAL_TOP_K[retrievalMode] ?? RETRIEVAL_TOP_K[DEFAULT_RETRIEVAL_MODE];
+    const userContext = normalizeUserContext(request.userContext);
     const normalized = await normalizer.normalize(request.query, request.inputMode);
     const persona = request.personaId
       ? await this.personaRetriever.getPersonaProfile(request.personaId)
@@ -87,7 +115,7 @@ export class GenerateService {
     const [personaChunks, personaSummary, sourceChunks] = await Promise.all([
       request.personaId ? this.personaRetriever.retrievePersonaContext(request.personaId, normalized.normalizedQuery, 3) : Promise.resolve([]),
       request.personaId ? this.personaRetriever.buildStyleSummary(request.personaId, normalized.normalizedQuery) : Promise.resolve(null),
-      this.sourceRetriever.search(normalized.normalizedQuery, 4)
+      sourceTopK > 0 ? this.sourceRetriever.search(normalized.normalizedQuery, sourceTopK) : Promise.resolve([])
     ]);
 
     const context = {
@@ -96,7 +124,10 @@ export class GenerateService {
       personaSummary,
       personaChunks,
       sourceChunks,
-      variantsCount
+      variantsCount,
+      aiIntervention,
+      retrievalMode,
+      userContext
     };
 
     const drafts = await classicalGenerator.generate(context);
@@ -138,7 +169,10 @@ export class GenerateService {
         personaApplied: Boolean(persona),
         retrievalHitCount: sharedSources.length,
         provider: profile.label || formatProvider(modelProvider.kind),
-        providerId: profile.id
+        providerId: profile.id,
+        aiIntervention,
+        retrievalMode,
+        userContextApplied: Boolean(userContext)
       }
     };
   }
