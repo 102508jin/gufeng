@@ -25,9 +25,11 @@ import type { PersonaProfile } from "@/lib/types/persona";
 import type { PublicModelProfile } from "@/lib/types/provider";
 import type { SourceRef } from "@/lib/types/retrieval";
 import {
+  createLocalWorkspaceProfile,
   createFavoriteAnswer,
   createFavoriteKey,
   createHistoryEntry,
+  createProfileBackup,
   filterFavoriteAnswers,
   formatFavoriteMarkdown,
   formatGenerationJson,
@@ -35,11 +37,15 @@ import {
   formatSourcesMarkdown,
   formatVariantMarkdown,
   isFavoriteAnswer,
+  isLocalWorkspaceProfile,
   isQuestionHistoryEntry,
+  normalizeProfileName,
   parseJsonArray,
+  parseProfileBackup,
   toggleFavoriteAnswer,
   upsertHistoryEntry,
   type FavoriteAnswer,
+  type LocalWorkspaceProfile,
   type QuestionHistoryEntry
 } from "@/lib/utils/workspace-memory";
 
@@ -48,6 +54,8 @@ const starterQuestion =
 const userContextStorageKey = "wenyan-agent:user-context:v1";
 const historyStorageKey = "wenyan-agent:question-history:v1";
 const favoritesStorageKey = "wenyan-agent:favorites:v1";
+const profilesStorageKey = "wenyan-agent:profiles:v1";
+const activeProfileStorageKey = "wenyan-agent:active-profile:v1";
 
 const text = {
   providerOllama: "\u672c\u5730 Ollama",
@@ -66,6 +74,14 @@ const text = {
   favoriteRemoved: "\u5df2\u53d6\u6d88\u6536\u85cf\u3002",
   historyApplied: "\u5df2\u590d\u7528\u5386\u53f2\u914d\u7f6e\u3002",
   historyCleared: "\u5df2\u6e05\u7a7a\u5386\u53f2\u3002",
+  profileSwitched: "\u5df2\u5207\u6362\u672c\u5730\u914d\u7f6e\u6863\u3002",
+  profileCreated: "\u5df2\u65b0\u5efa\u672c\u5730\u914d\u7f6e\u6863\u3002",
+  profileRenamed: "\u5df2\u91cd\u547d\u540d\u672c\u5730\u914d\u7f6e\u6863\u3002",
+  profileDeleted: "\u5df2\u5220\u9664\u672c\u5730\u914d\u7f6e\u6863\u3002",
+  profileDeleteBlocked: "\u81f3\u5c11\u9700\u8981\u4fdd\u7559\u4e00\u4e2a\u672c\u5730\u914d\u7f6e\u6863\u3002",
+  profileBackupExported: "\u5df2\u5bfc\u51fa\u672c\u5730\u914d\u7f6e\u6863\u5907\u4efd\u3002",
+  profileBackupImported: "\u5df2\u5bfc\u5165\u672c\u5730\u914d\u7f6e\u6863\u5907\u4efd\u3002",
+  profileBackupInvalid: "\u5907\u4efd\u6587\u4ef6\u683c\u5f0f\u4e0d\u5408\u6cd5\u3002",
   queryTooShort: "\u63d0\u95ee\u8fc7\u77ed\uff0c\u5efa\u8bae\u8865\u5145\u80cc\u666f\u3002",
   queryTooLong: "\u63d0\u95ee\u8f83\u957f\uff0c\u5efa\u8bae\u538b\u7f29\u5230 800 \u5b57\u4ee5\u5185\u3002",
   preferenceEmpty: "\u53ef\u586b\u5199\u7528\u9014\u6216\u504f\u597d\uff0c\u4fbf\u4e8e\u8f93\u51fa\u66f4\u8d34\u5408\u573a\u666f\u3002",
@@ -199,6 +215,71 @@ function writeStorageValue(key: string, value: unknown) {
   }
 }
 
+function profileUserContextStorageKey(profileId: string) {
+  return `wenyan-agent:profile:${profileId}:user-context:v1`;
+}
+
+function profileHistoryStorageKey(profileId: string) {
+  return `wenyan-agent:profile:${profileId}:question-history:v1`;
+}
+
+function profileFavoritesStorageKey(profileId: string) {
+  return `wenyan-agent:profile:${profileId}:favorites:v1`;
+}
+
+function readStoredProfiles(): LocalWorkspaceProfile[] {
+  try {
+    return parseJsonArray(window.localStorage.getItem(profilesStorageKey), isLocalWorkspaceProfile);
+  } catch {
+    return [];
+  }
+}
+
+function readStoredActiveProfileId() {
+  try {
+    return window.localStorage.getItem(activeProfileStorageKey) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function readProfileUserContext(profileId: string, fallback: UserContext): UserContext {
+  try {
+    const stored = window.localStorage.getItem(profileUserContextStorageKey(profileId));
+    return stored ? parseStoredUserContext(stored) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function readProfileHistory(profileId: string, fallback: QuestionHistoryEntry[]): QuestionHistoryEntry[] {
+  try {
+    const stored = window.localStorage.getItem(profileHistoryStorageKey(profileId));
+    return stored ? parseJsonArray(stored, isQuestionHistoryEntry) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function readProfileFavorites(profileId: string, fallback: FavoriteAnswer[]): FavoriteAnswer[] {
+  try {
+    const stored = window.localStorage.getItem(profileFavoritesStorageKey(profileId));
+    return stored ? parseJsonArray(stored, isFavoriteAnswer) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function removeProfileStorage(profileId: string) {
+  try {
+    window.localStorage.removeItem(profileUserContextStorageKey(profileId));
+    window.localStorage.removeItem(profileHistoryStorageKey(profileId));
+    window.localStorage.removeItem(profileFavoritesStorageKey(profileId));
+  } catch {
+    // Local cleanup is best effort.
+  }
+}
+
 function createLocalId(prefix: string) {
   if (typeof window !== "undefined" && window.crypto?.randomUUID) {
     return `${prefix}_${window.crypto.randomUUID()}`;
@@ -219,6 +300,40 @@ function downloadTextFile(fileName: string, content: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
+function readInitialLocalWorkspace() {
+  const storedProfiles = readStoredProfiles();
+  const legacyUserContext = readStoredUserContext();
+  const legacyHistory = readStoredHistory();
+  const legacyFavorites = readStoredFavorites();
+
+  if (storedProfiles.length) {
+    const storedActiveProfileId = readStoredActiveProfileId();
+    const activeProfile = storedProfiles.find((profile) => profile.id === storedActiveProfileId) ?? storedProfiles[0];
+    return {
+      profiles: storedProfiles,
+      activeProfile,
+      userContext: readProfileUserContext(activeProfile.id, activeProfile.id === storedActiveProfileId ? {} : legacyUserContext),
+      historyEntries: readProfileHistory(activeProfile.id, []),
+      favorites: readProfileFavorites(activeProfile.id, [])
+    };
+  }
+
+  const createdAt = new Date().toISOString();
+  const profile = createLocalWorkspaceProfile({
+    id: createLocalId("profile"),
+    name: legacyUserContext.displayName || "本机用户",
+    createdAt
+  });
+
+  return {
+    profiles: [profile],
+    activeProfile: profile,
+    userContext: legacyUserContext,
+    historyEntries: legacyHistory,
+    favorites: legacyFavorites
+  };
+}
+
 export function Workspace() {
   const [query, setQuery] = useState(starterQuestion);
   const [inputMode, setInputMode] = useState<InputMode>("auto");
@@ -226,8 +341,10 @@ export function Workspace() {
   const [explanationModes, setExplanationModes] = useState<ExplanationMode[]>(DEFAULT_EXPLANATION_MODES);
   const [aiIntervention, setAiIntervention] = useState<AiInterventionMode>(DEFAULT_AI_INTERVENTION);
   const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>(DEFAULT_RETRIEVAL_MODE);
+  const [profiles, setProfiles] = useState<LocalWorkspaceProfile[]>([]);
+  const [activeProfileId, setActiveProfileId] = useState("");
+  const [profileNameDraft, setProfileNameDraft] = useState("");
   const [userContext, setUserContext] = useState<UserContext>({});
-  const [hasLoadedUserContext, setHasLoadedUserContext] = useState(false);
   const [hasLoadedMemory, setHasLoadedMemory] = useState(false);
   const [personaId, setPersonaId] = useState("");
   const [providerId, setProviderId] = useState("");
@@ -290,41 +407,37 @@ export function Workspace() {
   }, []);
 
   useEffect(() => {
-    setUserContext(readStoredUserContext());
-    setHasLoadedUserContext(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hasLoadedUserContext) {
-      return;
-    }
-
-    writeStoredUserContext(userContext);
-  }, [hasLoadedUserContext, userContext]);
-
-  useEffect(() => {
-    setHistoryEntries(readStoredHistory());
-    setFavorites(readStoredFavorites());
+    const initial = readInitialLocalWorkspace();
+    setProfiles(initial.profiles);
+    setActiveProfileId(initial.activeProfile.id);
+    setProfileNameDraft(initial.activeProfile.name);
+    setUserContext(initial.userContext);
+    setHistoryEntries(initial.historyEntries);
+    setFavorites(initial.favorites);
     setHasLoadedMemory(true);
   }, []);
 
   useEffect(() => {
-    if (!hasLoadedMemory) {
+    if (!hasLoadedMemory || !activeProfileId) {
       return;
     }
 
-    writeStorageValue(historyStorageKey, historyEntries);
-  }, [hasLoadedMemory, historyEntries]);
+    writeStorageValue(activeProfileStorageKey, activeProfileId);
+    writeStorageValue(profileUserContextStorageKey(activeProfileId), userContext);
+    writeStorageValue(profileHistoryStorageKey(activeProfileId), historyEntries);
+    writeStorageValue(profileFavoritesStorageKey(activeProfileId), favorites);
+  }, [activeProfileId, favorites, hasLoadedMemory, historyEntries, userContext]);
 
   useEffect(() => {
     if (!hasLoadedMemory) {
       return;
     }
 
-    writeStorageValue(favoritesStorageKey, favorites);
-  }, [favorites, hasLoadedMemory]);
+    writeStorageValue(profilesStorageKey, profiles);
+  }, [hasLoadedMemory, profiles]);
 
   const selectedProvider = providerId ? providers.find((provider) => provider.id === providerId) : null;
+  const activeProfile = profiles.find((profile) => profile.id === activeProfileId) ?? profiles[0] ?? null;
   const validationCandidates: Array<string | null> = [
     query.trim().length > 0 && query.trim().length < 8 ? text.queryTooShort : null,
     query.length > 800 ? text.queryTooLong : null,
@@ -333,6 +446,26 @@ export function Workspace() {
   ];
   const validationMessages = validationCandidates.filter((message): message is string => Boolean(message));
   const filteredFavorites = filterFavoriteAnswers(favorites, favoritePersonaFilter, favoriteTopicFilter);
+
+  const persistActiveProfile = () => {
+    if (!activeProfileId) {
+      return;
+    }
+
+    writeStorageValue(profileUserContextStorageKey(activeProfileId), userContext);
+    writeStorageValue(profileHistoryStorageKey(activeProfileId), historyEntries);
+    writeStorageValue(profileFavoritesStorageKey(activeProfileId), favorites);
+  };
+
+  const loadProfileData = (profile: LocalWorkspaceProfile) => {
+    setActiveProfileId(profile.id);
+    setProfileNameDraft(profile.name);
+    setUserContext(readProfileUserContext(profile.id, {}));
+    setHistoryEntries(readProfileHistory(profile.id, []));
+    setFavorites(readProfileFavorites(profile.id, []));
+    setFavoritePersonaFilter("");
+    setFavoriteTopicFilter("");
+  };
 
   const buildCurrentSettings = () => ({
     query,
@@ -487,6 +620,113 @@ export function Workspace() {
     setActionMessage(text.historyApplied);
   };
 
+  const handleSelectProfile = (profileId: string) => {
+    const profile = profiles.find((item) => item.id === profileId);
+    if (!profile || profile.id === activeProfileId) {
+      return;
+    }
+
+    persistActiveProfile();
+    loadProfileData(profile);
+    setActionMessage(text.profileSwitched);
+  };
+
+  const handleCreateProfile = () => {
+    persistActiveProfile();
+    const createdAt = new Date().toISOString();
+    const profile = createLocalWorkspaceProfile({
+      id: createLocalId("profile"),
+      name: `本机用户 ${profiles.length + 1}`,
+      createdAt
+    });
+
+    setProfiles((current) => [...current, profile]);
+    writeStorageValue(profileUserContextStorageKey(profile.id), {});
+    writeStorageValue(profileHistoryStorageKey(profile.id), []);
+    writeStorageValue(profileFavoritesStorageKey(profile.id), []);
+    loadProfileData(profile);
+    setActionMessage(text.profileCreated);
+  };
+
+  const handleRenameProfile = () => {
+    if (!activeProfile) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const name = normalizeProfileName(profileNameDraft, activeProfile.name);
+    setProfiles((current) => current.map((profile) => (
+      profile.id === activeProfile.id ? { ...profile, name, updatedAt: now } : profile
+    )));
+    setProfileNameDraft(name);
+    setActionMessage(text.profileRenamed);
+  };
+
+  const handleDeleteProfile = () => {
+    if (!activeProfile) {
+      return;
+    }
+
+    if (profiles.length <= 1) {
+      setActionMessage(text.profileDeleteBlocked);
+      return;
+    }
+
+    const remaining = profiles.filter((profile) => profile.id !== activeProfile.id);
+    const nextProfile = remaining[0];
+    removeProfileStorage(activeProfile.id);
+    setProfiles(remaining);
+    loadProfileData(nextProfile);
+    setActionMessage(text.profileDeleted);
+  };
+
+  const handleExportProfileBackup = () => {
+    if (!activeProfile) {
+      return;
+    }
+
+    const backup = createProfileBackup({
+      exportedAt: new Date().toISOString(),
+      profile: activeProfile,
+      userContext,
+      historyEntries,
+      favorites
+    });
+
+    downloadTextFile(
+      `${normalizeProfileName(activeProfile.name, "profile")}-backup.json`,
+      JSON.stringify(backup, null, 2),
+      "application/json;charset=utf-8"
+    );
+    setActionMessage(text.profileBackupExported);
+  };
+
+  const handleImportProfileBackup = async (file: File) => {
+    const backup = parseProfileBackup(await file.text());
+    if (!backup) {
+      setActionMessage(text.profileBackupInvalid);
+      return;
+    }
+
+    persistActiveProfile();
+    const now = new Date().toISOString();
+    const importedProfile = createLocalWorkspaceProfile({
+      id: createLocalId("profile"),
+      name: `${backup.profile.name} 导入`,
+      createdAt: now
+    });
+
+    setProfiles((current) => [...current, importedProfile]);
+    writeStorageValue(profileUserContextStorageKey(importedProfile.id), backup.userContext);
+    writeStorageValue(profileHistoryStorageKey(importedProfile.id), backup.historyEntries);
+    writeStorageValue(profileFavoritesStorageKey(importedProfile.id), backup.favorites);
+    loadProfileData(importedProfile);
+    setUserContext(backup.userContext);
+    setHistoryEntries(backup.historyEntries);
+    setFavorites(backup.favorites);
+    setActionMessage(text.profileBackupImported);
+  };
+
   return (
     <main className="page-shell">
       <section className="hero-panel">
@@ -532,11 +772,23 @@ export function Workspace() {
           />
 
           <WorkspaceMemoryPanel
+            profiles={profiles}
+            activeProfileId={activeProfileId}
+            profileNameDraft={profileNameDraft}
             historyEntries={historyEntries}
             favorites={filteredFavorites}
             personas={personas}
             personaFilter={favoritePersonaFilter}
             topicFilter={favoriteTopicFilter}
+            onProfileChange={handleSelectProfile}
+            onProfileNameDraftChange={setProfileNameDraft}
+            onCreateProfile={handleCreateProfile}
+            onRenameProfile={handleRenameProfile}
+            onDeleteProfile={handleDeleteProfile}
+            onExportProfileBackup={handleExportProfileBackup}
+            onImportProfileBackup={(file) => {
+              void handleImportProfileBackup(file);
+            }}
             onPersonaFilterChange={setFavoritePersonaFilter}
             onTopicFilterChange={setFavoriteTopicFilter}
             onUseHistory={handleUseHistory}

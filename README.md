@@ -18,6 +18,8 @@ Wenyan Agent is a Next.js application for generating classical Chinese answers f
 - Adds RAG retrieval control: off, focused, standard, or broad.
 - Provides a knowledge-base preview flow through the UI and `GET /api/knowledge/search`.
 - Adds local history, favorites, copy actions, and Markdown / JSON export.
+- Adds pure local profiles with isolated preferences, history, and favorites.
+- Supports local profile JSON backup export / import for offline migration.
 - `npm run dev` probes for an available port instead of assuming port 3000.
 - Ships with a Chinese UI and Chinese-facing output labels.
 

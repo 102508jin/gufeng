@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import type { ExplanationMode, GenerateResponse, VariantResult } from "@/lib/types/generation";
 import {
+  createLocalWorkspaceProfile,
   createFavoriteAnswer,
   createHistoryEntry,
+  createProfileBackup,
   filterFavoriteAnswers,
   formatGenerationMarkdown,
   isQuestionHistoryEntry,
+  parseProfileBackup,
   parseJsonArray,
   toggleFavoriteAnswer,
   upsertHistoryEntry,
@@ -124,5 +127,40 @@ describe("workspace memory utilities", () => {
 
     expect(markdown).toContain("夫志定而后行。");
     expect(markdown).toContain("自律与惜时表达");
+  });
+
+  it("round-trips local profile backups", () => {
+    const profile = createLocalWorkspaceProfile({
+      id: "profile-1",
+      name: "本机用户",
+      createdAt: new Date(0).toISOString()
+    });
+    const historyEntry = createHistoryEntry({
+      id: "history-valid",
+      createdAt: new Date(0).toISOString(),
+      settings,
+      result
+    });
+    const favorite = createFavoriteAnswer({
+      id: "favorite-1",
+      createdAt: new Date(0).toISOString(),
+      query: settings.query,
+      result,
+      variant
+    });
+    const backup = createProfileBackup({
+      exportedAt: new Date(1).toISOString(),
+      profile,
+      userContext: settings.userContext,
+      historyEntries: [historyEntry],
+      favorites: [favorite]
+    });
+
+    const parsed = parseProfileBackup(JSON.stringify(backup));
+
+    expect(parsed?.profile.name).toBe("本机用户");
+    expect(parsed?.historyEntries).toHaveLength(1);
+    expect(parsed?.favorites).toHaveLength(1);
+    expect(parseProfileBackup("{bad json")).toBeNull();
   });
 });
