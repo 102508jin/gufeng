@@ -24,10 +24,13 @@ The default runtime uses the `mock` provider so the end-to-end flow works before
 ## Local Workspace Memory
 
 - `lib/utils/workspace-memory.ts` owns history, favorites, export formatting, and storage guards.
+- User management is designed for pure local deployment: no login and no external server.
+- `LocalWorkspaceProfile` represents a local profile; each profile has isolated `userContext`, history, and favorites.
 - History keeps the latest 20 entries with the question, generation settings, persona, provider, topics, and normalized query.
 - Favorite answers store the classical text, explanations, sources, and topics; the UI can filter by persona and topic.
 - Current results can be exported as Markdown / JSON, and individual favorites can be exported as Markdown.
-- This remains anonymous local mode; a later server-side user system can replace persistence without changing the main UI path.
+- Profiles can be exported and imported as JSON backups for offline migration.
+- Legacy global `localStorage` data is migrated into the default profile on first load.
 
 ## Development Server Ports
 

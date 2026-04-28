@@ -1,12 +1,22 @@
 import type { PersonaProfile } from "@/lib/types/persona";
-import type { FavoriteAnswer, QuestionHistoryEntry } from "@/lib/utils/workspace-memory";
+import type { FavoriteAnswer, LocalWorkspaceProfile, QuestionHistoryEntry } from "@/lib/utils/workspace-memory";
 
 type WorkspaceMemoryPanelProps = {
+  profiles: LocalWorkspaceProfile[];
+  activeProfileId: string;
+  profileNameDraft: string;
   historyEntries: QuestionHistoryEntry[];
   favorites: FavoriteAnswer[];
   personas: PersonaProfile[];
   personaFilter: string;
   topicFilter: string;
+  onProfileChange: (value: string) => void;
+  onProfileNameDraftChange: (value: string) => void;
+  onCreateProfile: () => void;
+  onRenameProfile: () => void;
+  onDeleteProfile: () => void;
+  onExportProfileBackup: () => void;
+  onImportProfileBackup: (file: File) => void;
   onPersonaFilterChange: (value: string) => void;
   onTopicFilterChange: (value: string) => void;
   onUseHistory: (entry: QuestionHistoryEntry) => void;
@@ -20,6 +30,13 @@ type WorkspaceMemoryPanelProps = {
 const text = {
   eyebrow: "\u672c\u5730\u8bb0\u5fc6",
   title: "\u5386\u53f2\u4e0e\u6536\u85cf",
+  profileTitle: "\u672c\u5730\u914d\u7f6e\u6863",
+  profileName: "\u914d\u7f6e\u6863\u540d\u79f0",
+  createProfile: "\u65b0\u5efa",
+  renameProfile: "\u91cd\u547d\u540d",
+  deleteProfile: "\u5220\u9664",
+  exportProfile: "\u5907\u4efd",
+  importProfile: "\u5bfc\u5165",
   historyTitle: "\u6700\u8fd1\u63d0\u95ee",
   favoriteTitle: "\u6536\u85cf\u7b54\u590d",
   emptyHistory: "\u6682\u65e0\u5386\u53f2\u3002",
@@ -57,6 +74,62 @@ export function WorkspaceMemoryPanel(props: WorkspaceMemoryPanelProps) {
           <h2>{text.title}</h2>
         </div>
       </div>
+
+      <section className="memory-section">
+        <div className="memory-section-header">
+          <h3>{text.profileTitle}</h3>
+        </div>
+
+        <div className="profile-grid">
+          <select
+            className="field-input field-select"
+            value={props.activeProfileId}
+            onChange={(event) => props.onProfileChange(event.target.value)}
+          >
+            {props.profiles.map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.name}
+              </option>
+            ))}
+          </select>
+          <input
+            className="field-input"
+            value={props.profileNameDraft}
+            onChange={(event) => props.onProfileNameDraftChange(event.target.value)}
+            placeholder={text.profileName}
+            maxLength={40}
+          />
+        </div>
+
+        <div className="memory-actions">
+          <button type="button" className="ghost-button" onClick={props.onCreateProfile}>
+            {text.createProfile}
+          </button>
+          <button type="button" className="ghost-button" onClick={props.onRenameProfile}>
+            {text.renameProfile}
+          </button>
+          <button type="button" className="ghost-button" onClick={props.onDeleteProfile}>
+            {text.deleteProfile}
+          </button>
+          <button type="button" className="ghost-button" onClick={props.onExportProfileBackup}>
+            {text.exportProfile}
+          </button>
+          <label className="ghost-button file-button">
+            {text.importProfile}
+            <input
+              type="file"
+              accept="application/json,.json"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                  props.onImportProfileBackup(file);
+                  event.target.value = "";
+                }
+              }}
+            />
+          </label>
+        </div>
+      </section>
 
       <section className="memory-section">
         <div className="memory-section-header">

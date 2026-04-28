@@ -10,6 +10,23 @@ import type {
 import type { SourceRef } from "@/lib/types/retrieval";
 
 export const MAX_HISTORY_ENTRIES = 20;
+export const LOCAL_PROFILE_BACKUP_VERSION = 1;
+
+export type LocalWorkspaceProfile = {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LocalProfileBackup = {
+  version: typeof LOCAL_PROFILE_BACKUP_VERSION;
+  exportedAt: string;
+  profile: LocalWorkspaceProfile;
+  userContext: UserContext;
+  historyEntries: QuestionHistoryEntry[];
+  favorites: FavoriteAnswer[];
+};
 
 export type GenerationSettingsSnapshot = {
   query: string;
@@ -49,6 +66,28 @@ export type FavoriteAnswer = {
   sources: SourceRef[];
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object";
+}
+
+export function normalizeProfileName(value: string, fallback = "本机用户"): string {
+  const normalized = value.trim().replace(/\s+/gu, " ");
+  return normalized.slice(0, 40) || fallback;
+}
+
+export function createLocalWorkspaceProfile(params: {
+  id: string;
+  name: string;
+  createdAt: string;
+}): LocalWorkspaceProfile {
+  return {
+    id: params.id,
+    name: normalizeProfileName(params.name),
+    createdAt: params.createdAt,
+    updatedAt: params.createdAt
+  };
+}
+
 export function parseJsonArray<T>(value: string | null, guard: (item: unknown) => item is T): T[] {
   if (!value) {
     return [];
@@ -74,7 +113,7 @@ function isExplanationModeArray(value: unknown): value is ExplanationMode[] {
   return Array.isArray(value) && value.every((item) => item === "literal" || item === "free" || item === "gloss");
 }
 
-function isUserContext(value: unknown): value is UserContext {
+export function isUserContext(value: unknown): value is UserContext {
   if (!value || typeof value !== "object") {
     return true;
   }
@@ -83,6 +122,17 @@ function isUserContext(value: unknown): value is UserContext {
   return ["displayName", "useCase", "preference"].every(
     (key) => record[key] === undefined || typeof record[key] === "string"
   );
+}
+
+export function isLocalWorkspaceProfile(value: unknown): value is LocalWorkspaceProfile {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return typeof value.id === "string"
+    && typeof value.name === "string"
+    && typeof value.createdAt === "string"
+    && typeof value.updatedAt === "string";
 }
 
 export function isQuestionHistoryEntry(value: unknown): value is QuestionHistoryEntry {
@@ -107,11 +157,11 @@ export function isQuestionHistoryEntry(value: unknown): value is QuestionHistory
 }
 
 export function isFavoriteAnswer(value: unknown): value is FavoriteAnswer {
-  if (!value || typeof value !== "object") {
+  if (!isRecord(value)) {
     return false;
   }
 
-  const record = value as Record<string, unknown>;
+  const record = value;
   return typeof record.id === "string"
     && typeof record.favoriteKey === "string"
     && typeof record.createdAt === "string"
@@ -122,6 +172,47 @@ export function isFavoriteAnswer(value: unknown): value is FavoriteAnswer {
     && typeof record.variantTitle === "string"
     && typeof record.classicalText === "string"
     && Array.isArray(record.sources);
+}
+
+export function createProfileBackup(params: {
+  exportedAt: string;
+  profile: LocalWorkspaceProfile;
+  userContext: UserContext;
+  historyEntries: QuestionHistoryEntry[];
+  favorites: FavoriteAnswer[];
+}): LocalProfileBackup {
+  return {
+    version: LOCAL_PROFILE_BACKUP_VERSION,
+    exportedAt: params.exportedAt,
+    profile: params.profile,
+    userContext: params.userContext,
+    historyEntries: params.historyEntries,
+    favorites: params.favorites
+  };
+}
+
+export function isLocalProfileBackup(value: unknown): value is LocalProfileBackup {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return value.version === LOCAL_PROFILE_BACKUP_VERSION
+    && typeof value.exportedAt === "string"
+    && isLocalWorkspaceProfile(value.profile)
+    && isUserContext(value.userContext)
+    && Array.isArray(value.historyEntries)
+    && value.historyEntries.every(isQuestionHistoryEntry)
+    && Array.isArray(value.favorites)
+    && value.favorites.every(isFavoriteAnswer);
+}
+
+export function parseProfileBackup(value: string): LocalProfileBackup | null {
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return isLocalProfileBackup(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 export function extractTopics(result: GenerateResponse): string[] {
