@@ -16,6 +16,8 @@
 - 支持 AI 介入强度: 稳妥 / 平衡 / 创作
 - 支持 RAG 知识库检索深度: 关闭 / 精准 / 标准 / 广搜
 - 支持在生成前通过 UI 或 `GET /api/knowledge/search` 预检知识库命中来源
+- 支持本地历史、收藏、复制和 Markdown / JSON 导出
+- `npm run dev` 会自动探测空闲端口, 不再固定占用 3000
 
 ## &#x5FEB;&#x901F;&#x5F00;&#x59CB;
 
@@ -86,7 +88,13 @@ ollama pull qwen3:4b
 cmd /c npm run dev
 ```
 
-6. &#x6253;&#x5F00; `http://localhost:3000`
+启动脚本会优先尝试 `PORT` 或 `--port` 指定的端口, 如果已被占用会自动递增选择空闲端口.
+
+```powershell
+cmd /c npm run dev -- --port 3000
+```
+
+6. 按终端输出打开本地地址, 例如 `http://localhost:3000` 或自动选择的其他端口.
 
 ## Windows / PowerShell &#x8BF4;&#x660E;
 

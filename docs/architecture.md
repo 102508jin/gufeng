@@ -15,11 +15,25 @@ The default runtime uses the `mock` provider so the end-to-end flow works before
 ## Current User Flow
 
 1. `components/workspace.tsx` owns the question, persona, provider, local user profile, AI intervention level, and RAG retrieval depth.
-2. The local user profile is stored only in browser `localStorage`; each generation request sends it as `userContext`.
+2. The local user profile, recent question history, and favorite answers are stored only in browser `localStorage`; each generation request sends the profile as `userContext`.
 3. `/api/generate` validates the payload with `generateRequestSchema`, then delegates to `GenerateService`.
 4. `GenerateService` resolves the provider, normalizes input, retrieves persona context, searches the knowledge corpus, and orchestrates generation and explanation.
 5. `GenerationContext` carries `aiIntervention`, `retrievalMode`, and `userContext` for prompt building and fallback generation.
 6. `/api/knowledge/search` reuses `KnowledgeService` and `LocalSourceRetriever` so the UI can preview knowledge matches before generation.
+
+## Local Workspace Memory
+
+- `lib/utils/workspace-memory.ts` owns history, favorites, export formatting, and storage guards.
+- History keeps the latest 20 entries with the question, generation settings, persona, provider, topics, and normalized query.
+- Favorite answers store the classical text, explanations, sources, and topics; the UI can filter by persona and topic.
+- Current results can be exported as Markdown / JSON, and individual favorites can be exported as Markdown.
+- This remains anonymous local mode; a later server-side user system can replace persistence without changing the main UI path.
+
+## Development Server Ports
+
+- `npm run dev` executes `scripts/dev-server.ts`.
+- The script starts from `PORT` or `--port`, defaulting to 3000.
+- If the port is busy, it scans forward and passes the selected port to `next dev --port`.
 
 ## RAG and AI Intervention
 
