@@ -17,6 +17,8 @@ Wenyan Agent is a Next.js application for generating classical Chinese answers f
 - Adds per-request AI intervention control: conservative, balanced, or creative.
 - Adds RAG retrieval control: off, focused, standard, or broad.
 - Provides a knowledge-base preview flow through the UI and `GET /api/knowledge/search`.
+- Adds local history, favorites, copy actions, and Markdown / JSON export.
+- `npm run dev` probes for an available port instead of assuming port 3000.
 - Ships with a Chinese UI and Chinese-facing output labels.
 
 ## Current Status
@@ -100,7 +102,13 @@ ollama pull qwen3:4b
 cmd /c npm run dev
 ```
 
-6. Open the app in your browser.
+The script starts from `PORT` or `--port` when provided, then automatically falls forward if that port is busy.
+
+```powershell
+cmd /c npm run dev -- --port 3000
+```
+
+6. Open the local URL printed by the terminal.
 
 ```text
 http://localhost:3000

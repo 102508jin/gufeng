@@ -25,6 +25,7 @@ type ChatInputProps = {
   knowledgeRefs: SourceRef[];
   knowledgeError: string | null;
   knowledgeSearching: boolean;
+  validationMessages: string[];
   disabled?: boolean;
   onQueryChange: (value: string) => void;
   onInputModeChange: (value: InputMode) => void;
@@ -69,6 +70,7 @@ const text = {
   knowledgeSearching: "\u68c0\u7d22\u4e2d...",
   knowledgePreview: "\u547d\u4e2d\u6765\u6e90",
   sourceScore: "\u76f8\u5173\u5ea6",
+  validationTitle: "\u8868\u5355\u63d0\u793a",
   providerLabel: "\u6a21\u578b\u9a71\u52a8",
   providerDefault: "\u8ddf\u968f\u9ed8\u8ba4\u914d\u7f6e",
   providerNotReady: "\u672a\u914d\u7f6e",
@@ -135,6 +137,7 @@ export function ChatInput(props: ChatInputProps) {
           placeholder={text.placeholder}
           disabled={props.disabled}
           rows={6}
+          maxLength={1000}
         />
       </label>
 
@@ -324,6 +327,17 @@ export function ChatInput(props: ChatInputProps) {
       >
         {props.disabled ? text.generating : text.submit}
       </button>
+
+      {props.validationMessages.length ? (
+        <div className="validation-panel" role="status">
+          <p>{text.validationTitle}</p>
+          <ul>
+            {props.validationMessages.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -15,11 +15,25 @@
 ## 当前用户链路
 
 1. `components/workspace.tsx` 维护问题、角色、provider、本地用户画像、AI 介入强度和 RAG 检索深度.
-2. 本地用户画像只保存在浏览器 `localStorage`, 不进入服务端持久化; 请求时作为 `userContext` 发送给 `/api/generate`.
+2. 本地用户画像、最近提问历史和收藏回答只保存在浏览器 `localStorage`, 不进入服务端持久化; 请求时用户画像作为 `userContext` 发送给 `/api/generate`.
 3. `/api/generate` 使用 `generateRequestSchema` 校验请求, 再交给 `GenerateService`.
 4. `GenerateService` 完成 provider 解析、输入归一化、persona 检索、知识库检索和生成/解释编排.
 5. `GenerationContext` 会携带 `aiIntervention`, `retrievalMode`, `userContext`, 由 prompt builder 和 generator 使用.
 6. `/api/knowledge/search` 复用 `KnowledgeService` 和 `LocalSourceRetriever`, 用于生成前预检知识库命中.
+
+## 本地工作台记忆
+
+- `lib/utils/workspace-memory.ts` 负责历史、收藏、导出和序列化校验.
+- 历史记录最多保留 20 条, 包含问题、生成设置、角色、provider、主题和归一化问题.
+- 收藏回答保存文言正文、解释、来源和主题, UI 支持按角色与主题过滤.
+- 当前结果可导出 Markdown / JSON, 单条收藏可导出 Markdown.
+- 这些能力是匿名本地模式; 后续服务端用户体系可在不改变 UI 使用路径的前提下替换持久化层.
+
+## 开发服务端口
+
+- `npm run dev` 会执行 `scripts/dev-server.ts`.
+- 脚本从 `PORT` 或 `--port` 读取起始端口, 默认 3000.
+- 若端口被占用, 会继续探测后续端口并把可用端口传给 `next dev --port`.
 
 ## RAG 与 AI 介入
 
