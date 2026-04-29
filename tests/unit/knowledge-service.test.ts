@@ -11,5 +11,8 @@ describe("knowledge service", () => {
     expect(refs.length).toBeLessThanOrEqual(3);
     expect(refs[0].sourceType).toBe("knowledge");
     expect(refs[0].excerpt.length).toBeGreaterThan(0);
+    expect(refs[0].chunkId).toBeTruthy();
+    expect(refs[0].source).toBe("project-sample-corpus");
+    expect(refs[0].license).toBe("internal-sample");
   });
 });

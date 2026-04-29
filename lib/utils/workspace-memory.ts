@@ -328,8 +328,14 @@ export function formatSourcesMarkdown(sources: SourceRef[]): string {
   }
 
   return sources.map((source) => {
-    const author = source.author ? `, ${source.author}` : "";
-    return `- ${source.title}${author}: ${source.excerpt}`;
+    const metadata = [
+      source.author,
+      source.source,
+      source.chunkId ? `chunk ${source.chunkId}` : null,
+      source.license ? `license ${source.license}` : null
+    ].filter(Boolean);
+    const suffix = metadata.length ? ` (${metadata.join(", ")})` : "";
+    return `- ${source.title}${suffix}: ${source.excerpt}`;
   }).join("\n");
 }
 

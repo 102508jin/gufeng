@@ -1,4 +1,5 @@
 import type { SourceType } from "@/lib/types/retrieval";
+import type { SourceMetadata } from "@/lib/types/retrieval";
 
 export type SearchableDocument = {
   id: string;
@@ -8,7 +9,7 @@ export type SearchableDocument = {
   content: string;
   summary?: string;
   keywords: string[];
-  metadata: Record<string, string | number | boolean | null>;
+  metadata: SourceMetadata;
 };
 
 export type SearchResult = SearchableDocument & {

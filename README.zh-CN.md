@@ -79,6 +79,21 @@ DEFAULT_PROVIDER_ID=vllm
 
 自定义 profile 的密钥请使用 `apiKeyEnv` 引用环境变量; `MODEL_PROFILES_JSON` 中的内联 `apiKey` 会被忽略.
 
+## Embedding 配置
+
+默认 `EMBEDDING_PROVIDER=local`, 使用离线确定性的本地 hashing embedding, 不需要外部服务.
+
+如需使用 OpenAI-compatible embedding endpoint:
+
+```env
+EMBEDDING_PROVIDER=openai-compatible
+EMBEDDING_MODEL=text-embedding-3-small
+EMBEDDING_API_BASE_URL=https://api.openai.com/v1
+EMBEDDING_API_KEY=your_api_key
+```
+
+本地兼容服务可省略 `EMBEDDING_API_KEY`; 使用 `api.openai.com` 时必须配置 key.
+
 4. &#x5982;&#x679C; &#x4F7F;&#x7528; Ollama, &#x5148; &#x542F;&#x52A8; &#x670D;&#x52A1; &#x5E76; &#x51C6;&#x5907; &#x6A21;&#x578B;
 
 ```powershell
@@ -108,6 +123,9 @@ cmd /c npm run dev -- --port 3000
 cmd /c npm run dev
 cmd /c npm run build
 cmd /c npm run start
+cmd /c npm run test
+cmd /c npm run eval:quality
+cmd /c npm run verify
 ```
 
 ## &#x6587;&#x6863;&#x7D22;&#x5F15;
@@ -116,6 +134,7 @@ cmd /c npm run start
 - [&#x67B6;&#x6784;&#x8BF4;&#x660E;](./docs/architecture.zh-CN.md)
 - [API &#x8BF4;&#x660E;](./docs/api.zh-CN.md)
 - [&#x6570;&#x636E;&#x5BFC;&#x5165; &#x8BF4;&#x660E;](./docs/data-ingestion.zh-CN.md)
+- [部署检查清单](./docs/deployment.zh-CN.md)
 - [优化执行方案](./docs/optimization-plan.zh-CN.md)
 - [License &#x4E2D;&#x6587; &#x8BF4;&#x660E;](./LICENSE.zh-CN.md)
 

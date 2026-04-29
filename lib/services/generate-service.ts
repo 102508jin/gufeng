@@ -10,11 +10,13 @@ import { DefaultInputNormalizer } from "@/lib/domain/input-normalizer";
 import { LocalPersonaRetriever } from "@/lib/domain/persona-retriever";
 import { LocalSourceRetriever } from "@/lib/domain/source-retriever";
 import { createModelProvider } from "@/lib/infra/llm/model-provider";
+import { logger } from "@/lib/infra/logger";
 import { resolveModelProfile } from "@/lib/infra/llm/provider-registry";
 import type { GenerateRequest, GenerateResponse, UserContext, VariantResult } from "@/lib/types/generation";
-import type { RetrievedChunk, SourceRef } from "@/lib/types/retrieval";
+import type { ModelProfile } from "@/lib/types/provider";
+import type { RetrievedChunk } from "@/lib/types/retrieval";
 import { createId } from "@/lib/utils/ids";
-import { toExcerpt } from "@/lib/utils/text";
+import { toSourceRef } from "@/lib/utils/retrieval";
 
 function formatIntent(intent: string): string {
   switch (intent) {
@@ -62,17 +64,6 @@ function formatProvider(provider: string): string {
   }
 }
 
-function toSourceRefs(chunks: RetrievedChunk[]): SourceRef[] {
-  return chunks.map((chunk) => ({
-    id: chunk.id,
-    sourceType: chunk.sourceType,
-    title: chunk.title,
-    author: chunk.author,
-    excerpt: toExcerpt(chunk.summary ?? chunk.content),
-    score: chunk.score
-  }));
-}
-
 function cleanOptionalText(value: string | undefined): string | undefined {
   const normalized = value?.trim();
   return normalized ? normalized : undefined;
@@ -96,9 +87,47 @@ export class GenerateService {
   private readonly sourceRetriever = new LocalSourceRetriever();
   private readonly personaRetriever = new LocalPersonaRetriever();
 
+  constructor(
+    private readonly resolveProfile = resolveModelProfile,
+    private readonly makeModelProvider = createModelProvider
+  ) {}
+
   async generate(request: GenerateRequest): Promise<GenerateResponse> {
-    const profile = resolveModelProfile(request.providerId);
-    const modelProvider = createModelProvider(profile);
+    const profile = this.resolveProfile(request.providerId);
+    try {
+      return await this.generateWithProfile(request, profile);
+    } catch (error) {
+      if (profile.driver === "mock") {
+        throw error;
+      }
+
+      const fallbackProfile: ModelProfile = {
+        id: "mock",
+        label: "\u6f14\u793a\u6a21\u5f0f",
+        driver: "mock"
+      };
+      const fallbackReason = error instanceof Error ? error.message : String(error);
+      logger.warn("Primary model provider failed, falling back to mock provider.", {
+        providerId: profile.id,
+        error: fallbackReason
+      });
+
+      return this.generateWithProfile(request, fallbackProfile, {
+        primaryProviderId: profile.id,
+        fallbackReason
+      });
+    }
+  }
+
+  private async generateWithProfile(
+    request: GenerateRequest,
+    profile: ModelProfile,
+    fallback?: {
+      primaryProviderId: string;
+      fallbackReason: string;
+    }
+  ): Promise<GenerateResponse> {
+    const modelProvider = this.makeModelProvider(profile);
     const normalizer = new DefaultInputNormalizer(modelProvider);
     const classicalGenerator = new DefaultClassicalGenerator(modelProvider);
     const explanationGenerator = new DefaultExplanationGenerator(modelProvider);
@@ -150,7 +179,7 @@ export class GenerateService {
         glossExplanation: explanation.glossExplanation,
         lineByLinePairs: explanation.lineByLinePairs,
         styleNotes: draft.styleNotes,
-        sources: toSourceRefs(sharedSources.slice(0, 4))
+        sources: sharedSources.slice(0, 4).map(toSourceRef)
       });
     }
 
@@ -170,6 +199,9 @@ export class GenerateService {
         retrievalHitCount: sharedSources.length,
         provider: profile.label || formatProvider(modelProvider.kind),
         providerId: profile.id,
+        primaryProviderId: fallback?.primaryProviderId ?? profile.id,
+        fallbackProviderId: fallback ? profile.id : undefined,
+        fallbackReason: fallback?.fallbackReason,
         aiIntervention,
         retrievalMode,
         userContextApplied: Boolean(userContext)

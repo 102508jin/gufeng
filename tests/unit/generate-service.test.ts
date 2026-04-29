@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import { MockModelProvider } from "@/lib/infra/llm/mock-provider";
+import type { ModelProvider } from "@/lib/infra/llm/model-provider";
 import { GenerateService } from "@/lib/services/generate-service";
+import type { ModelProfile } from "@/lib/types/provider";
 
 describe("generate service", () => {
   it("returns variants and explanations in mock mode", async () => {
@@ -16,6 +19,8 @@ describe("generate service", () => {
     expect(result.variants.length).toBeGreaterThan(0);
     expect(result.normalizedQuery).toContain("\u62d6\u5ef6");
     expect(result.retrievalRefs.length).toBeGreaterThan(0);
+    expect(result.retrievalRefs.some((ref) => ref.metadata.license === "internal-sample")).toBe(true);
+    expect(result.variants[0].sources.some((source) => source.license === "internal-sample")).toBe(true);
   });
 
   it("applies user context and can disable knowledge retrieval", async () => {
@@ -39,5 +44,42 @@ describe("generate service", () => {
     expect(result.debug?.aiIntervention).toBe("conservative");
     expect(result.debug?.retrievalMode).toBe("off");
     expect(result.debug?.userContextApplied).toBe(true);
+  });
+
+  it("falls back to mock provider when a primary provider fails", async () => {
+    const failingProvider: ModelProvider = {
+      kind: "openai-compatible",
+      async generateText() {
+        throw new Error("primary unavailable");
+      },
+      async generateStructured() {
+        throw new Error("primary unavailable");
+      }
+    };
+    const failingProfile: ModelProfile = {
+      id: "failing-provider",
+      label: "Failing Provider",
+      driver: "openai-compatible",
+      model: "test",
+      baseUrl: "http://127.0.0.1:9999/v1"
+    };
+    const service = new GenerateService(
+      () => failingProfile,
+      (profile) => profile.driver === "mock" ? new MockModelProvider() : failingProvider
+    );
+
+    const result = await service.generate({
+      query: "如何减少拖延？",
+      inputMode: "auto",
+      variantsCount: 2,
+      explanationModes: ["literal"],
+      retrievalMode: "focused"
+    });
+
+    expect(result.variants).toHaveLength(2);
+    expect(result.debug?.providerId).toBe("mock");
+    expect(result.debug?.primaryProviderId).toBe("failing-provider");
+    expect(result.debug?.fallbackProviderId).toBe("mock");
+    expect(result.debug?.fallbackReason).toContain("primary unavailable");
   });
 });

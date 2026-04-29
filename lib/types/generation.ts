@@ -56,6 +56,9 @@ export type GenerateResponse = {
     retrievalHitCount?: number;
     provider?: string;
     providerId?: string;
+    primaryProviderId?: string;
+    fallbackProviderId?: string;
+    fallbackReason?: string;
     aiIntervention?: AiInterventionMode;
     retrievalMode?: RetrievalMode;
     userContextApplied?: boolean;
