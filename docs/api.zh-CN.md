@@ -53,6 +53,30 @@
 
 根据 processed corpus 重建本地 index state file 和持久化 vector index. 返回 `personas`, `knowledge`, `vectorDocuments`, `embeddingProvider`, `updatedAt`.
 
+## POST /api/knowledge/import
+
+把用户本地导入的知识文档写入 `data/raw/knowledge/user-imports.json`, 并重建 `data/processed/knowledge.json` 和 `data/processed/vector-index.json`.
+
+请求体:
+
+```json
+{
+  "documents": [
+    {
+      "title": "自律笔记",
+      "category": "discipline",
+      "source": "user-import",
+      "license": "user-provided",
+      "content": "用户导入的本地知识文本。",
+      "keywords": ["自律", "规划"],
+      "credibility": "medium"
+    }
+  ]
+}
+```
+
+返回 `imported`, `totalRawDocuments`, `processedChunks`, `vectorDocuments`, `updatedAt`.
+
 ## GET /api/knowledge/search
 
 按查询词检索本地知识库, 用于生成前预检 RAG 命中来源.

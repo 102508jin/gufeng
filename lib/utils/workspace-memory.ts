@@ -10,7 +10,9 @@ import type {
 import type { SourceRef } from "@/lib/types/retrieval";
 
 export const MAX_HISTORY_ENTRIES = 20;
+export const MAX_FEEDBACK_ENTRIES = 100;
 export const LOCAL_PROFILE_BACKUP_VERSION = 1;
+export type FeedbackRating = "useful" | "inaccurate" | "too-long" | "too-classical";
 
 export type LocalWorkspaceProfile = {
   id: string;
@@ -26,6 +28,7 @@ export type LocalProfileBackup = {
   userContext: UserContext;
   historyEntries: QuestionHistoryEntry[];
   favorites: FavoriteAnswer[];
+  feedbackEntries?: FeedbackEntry[];
 };
 
 export type GenerationSettingsSnapshot = {
@@ -64,6 +67,22 @@ export type FavoriteAnswer = {
   freeExplanation?: string;
   glossExplanation?: string;
   sources: SourceRef[];
+};
+
+export type FeedbackEntry = {
+  id: string;
+  feedbackKey: string;
+  createdAt: string;
+  rating: FeedbackRating;
+  query: string;
+  normalizedQuery: string;
+  variantId: string;
+  variantTitle: string;
+  personaId: string;
+  personaName?: string;
+  providerId?: string;
+  providerLabel?: string;
+  classicalText: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -111,6 +130,10 @@ function isStringArray(value: unknown): value is string[] {
 
 function isExplanationModeArray(value: unknown): value is ExplanationMode[] {
   return Array.isArray(value) && value.every((item) => item === "literal" || item === "free" || item === "gloss");
+}
+
+function isFeedbackRating(value: unknown): value is FeedbackRating {
+  return value === "useful" || value === "inaccurate" || value === "too-long" || value === "too-classical";
 }
 
 export function isUserContext(value: unknown): value is UserContext {
@@ -174,12 +197,30 @@ export function isFavoriteAnswer(value: unknown): value is FavoriteAnswer {
     && Array.isArray(record.sources);
 }
 
+export function isFeedbackEntry(value: unknown): value is FeedbackEntry {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return typeof value.id === "string"
+    && typeof value.feedbackKey === "string"
+    && typeof value.createdAt === "string"
+    && isFeedbackRating(value.rating)
+    && typeof value.query === "string"
+    && typeof value.normalizedQuery === "string"
+    && typeof value.variantId === "string"
+    && typeof value.variantTitle === "string"
+    && typeof value.personaId === "string"
+    && typeof value.classicalText === "string";
+}
+
 export function createProfileBackup(params: {
   exportedAt: string;
   profile: LocalWorkspaceProfile;
   userContext: UserContext;
   historyEntries: QuestionHistoryEntry[];
   favorites: FavoriteAnswer[];
+  feedbackEntries?: FeedbackEntry[];
 }): LocalProfileBackup {
   return {
     version: LOCAL_PROFILE_BACKUP_VERSION,
@@ -187,7 +228,8 @@ export function createProfileBackup(params: {
     profile: params.profile,
     userContext: params.userContext,
     historyEntries: params.historyEntries,
-    favorites: params.favorites
+    favorites: params.favorites,
+    feedbackEntries: params.feedbackEntries ?? []
   };
 }
 
@@ -203,7 +245,8 @@ export function isLocalProfileBackup(value: unknown): value is LocalProfileBacku
     && Array.isArray(value.historyEntries)
     && value.historyEntries.every(isQuestionHistoryEntry)
     && Array.isArray(value.favorites)
-    && value.favorites.every(isFavoriteAnswer);
+    && value.favorites.every(isFavoriteAnswer)
+    && (value.feedbackEntries === undefined || (Array.isArray(value.feedbackEntries) && value.feedbackEntries.every(isFeedbackEntry)));
 }
 
 export function parseProfileBackup(value: string): LocalProfileBackup | null {
@@ -294,6 +337,55 @@ export function createFavoriteAnswer(params: {
     glossExplanation: params.variant.glossExplanation,
     sources: params.variant.sources
   };
+}
+
+export function createFeedbackKey(params: {
+  normalizedQuery: string;
+  variantId: string;
+  classicalText: string;
+}): string {
+  return [
+    params.normalizedQuery.trim(),
+    params.variantId,
+    params.classicalText.replace(/\s+/gu, "")
+  ].join("|");
+}
+
+export function createFeedbackEntry(params: {
+  id: string;
+  createdAt: string;
+  query: string;
+  result: GenerateResponse;
+  variant: VariantResult;
+  rating: FeedbackRating;
+}): FeedbackEntry {
+  return {
+    id: params.id,
+    feedbackKey: createFeedbackKey({
+      normalizedQuery: params.result.normalizedQuery,
+      variantId: params.variant.id,
+      classicalText: params.variant.classicalText
+    }),
+    createdAt: params.createdAt,
+    rating: params.rating,
+    query: params.query,
+    normalizedQuery: params.result.normalizedQuery,
+    variantId: params.variant.id,
+    variantTitle: params.variant.title,
+    personaId: params.result.persona?.id ?? "",
+    personaName: params.result.persona?.name,
+    providerId: params.result.debug?.providerId,
+    providerLabel: params.result.debug?.provider,
+    classicalText: params.variant.classicalText
+  };
+}
+
+export function upsertFeedbackEntry(
+  entries: FeedbackEntry[],
+  entry: FeedbackEntry,
+  limit = MAX_FEEDBACK_ENTRIES
+): FeedbackEntry[] {
+  return [entry, ...entries.filter((item) => item.feedbackKey !== entry.feedbackKey)].slice(0, limit);
 }
 
 export function toggleFavoriteAnswer(favorites: FavoriteAnswer[], favorite: FavoriteAnswer): FavoriteAnswer[] {

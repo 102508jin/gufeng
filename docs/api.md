@@ -53,6 +53,30 @@ Returns all runtime-selectable model profiles for the frontend. Each item includ
 
 Rebuilds the local index state file and persisted vector index from the processed corpus. The response includes `personas`, `knowledge`, `vectorDocuments`, `embeddingProvider`, and `updatedAt`.
 
+## POST /api/knowledge/import
+
+Imports user-provided local knowledge documents into `data/raw/knowledge/user-imports.json`, rebuilds `data/processed/knowledge.json`, and refreshes `data/processed/vector-index.json`.
+
+Request body:
+
+```json
+{
+  "documents": [
+    {
+      "title": "Discipline Notes",
+      "category": "discipline",
+      "source": "user-import",
+      "license": "user-provided",
+      "content": "Imported local knowledge text.",
+      "keywords": ["discipline", "planning"],
+      "credibility": "medium"
+    }
+  ]
+}
+```
+
+Returns `imported`, `totalRawDocuments`, `processedChunks`, `vectorDocuments`, and `updatedAt`.
+
 ## GET /api/knowledge/search
 
 Searches the local knowledge corpus before generation so users can preview RAG matches.
