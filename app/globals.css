@@ -129,6 +129,7 @@ blockquote {
 .variant-card,
 .error-panel,
 .memory-panel,
+.knowledge-import-panel,
 .toast-panel {
   padding: 20px;
 }
@@ -216,6 +217,10 @@ blockquote {
   min-height: 150px;
 }
 
+.compact-textarea {
+  min-height: 110px;
+}
+
 .chip-row {
   display: flex;
   flex-wrap: wrap;
@@ -291,6 +296,14 @@ blockquote {
   margin-top: 16px;
 }
 
+.knowledge-import-actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  margin-top: 14px;
+}
+
 .validation-panel {
   margin-top: 14px;
   border: 1px solid rgba(143, 91, 41, 0.28);
@@ -353,6 +366,12 @@ blockquote {
 .inline-error {
   margin: 0;
   color: var(--danger);
+  font-size: 0.92rem;
+}
+
+.inline-success {
+  margin: 0;
+  color: var(--success);
   font-size: 0.92rem;
 }
 
@@ -450,6 +469,28 @@ blockquote {
 .variant-actions {
   justify-content: flex-start;
   margin-top: 14px;
+}
+
+.feedback-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.feedback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.feedback-active {
+  border-color: var(--success);
+  background: #e6f2ec;
+  color: var(--success);
 }
 
 .stack-section {
@@ -645,6 +686,7 @@ blockquote {
   .variant-card,
   .error-panel,
   .memory-panel,
+  .knowledge-import-panel,
   .toast-panel {
     padding: 16px;
   }
@@ -665,6 +707,7 @@ blockquote {
   .summary-grid,
   .explanation-grid,
   .knowledge-preview-item,
+  .knowledge-import-actions,
   .profile-grid,
   .memory-filter-grid,
   .memory-item {

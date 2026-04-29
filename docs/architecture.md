@@ -47,3 +47,5 @@ The default runtime uses the `mock` provider so the end-to-end flow works before
 - The mock provider remains deterministic and reflects the intervention level in style notes.
 - Knowledge retrieval uses the `EmbeddingProvider` abstraction. The default local hashing provider is offline and deterministic; OpenAI-compatible embedding endpoints can be enabled through env vars.
 - `npm run reindex` writes a local `data/processed/vector-index.json`; retrieval reuses indexed vectors only when provider fingerprint and document content hash still match.
+- The workspace knowledge-import panel writes user documents through `POST /api/knowledge/import`; it never accepts arbitrary filesystem paths from the browser.
+- Answer feedback is stored per local browser profile in `localStorage` and exported with profile backups.

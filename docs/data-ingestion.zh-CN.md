@@ -13,6 +13,8 @@
 5. 每条 processed record 都包含 `documentId`, `chunkId`, `chunkIndex`, source, license, era, credibility 和 update time.
 6. 运行 `npm run reindex` 生成 `data/processed/vector-index.json`, 用于持久化本地文档向量.
 
+用户也可以在工作台 UI 中导入本地文档. UI 会调用 `POST /api/knowledge/import`, 把文档追加到 `data/raw/knowledge/user-imports.json`, 并重建 processed corpus 和 vector index.
+
 可用 script:
 
 - `npm run ingest:personas`

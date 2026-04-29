@@ -13,6 +13,8 @@ Current knowledge ingestion workflow:
 5. Each processed record includes `documentId`, `chunkId`, `chunkIndex`, source, license, era, credibility, and update time.
 6. Run `npm run reindex` to build `data/processed/vector-index.json` for persisted local document vectors.
 
+Users can also import local documents from the workspace UI. The UI calls `POST /api/knowledge/import`, appends documents to `data/raw/knowledge/user-imports.json`, and rebuilds the processed corpus plus vector index.
+
 Available scripts:
 
 - `npm run ingest:personas`

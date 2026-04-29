@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { ChatInput } from "@/components/chat-input";
+import { KnowledgeImportPanel } from "@/components/knowledge-import-panel";
 import { VariantCard } from "@/components/variant-card";
 import { WorkspaceMemoryPanel } from "@/components/workspace-memory-panel";
 import {
@@ -24,8 +25,11 @@ import type {
 import type { PersonaProfile } from "@/lib/types/persona";
 import type { PublicModelProfile } from "@/lib/types/provider";
 import type { SourceRef } from "@/lib/types/retrieval";
+import type { KnowledgeImportInput, KnowledgeImportResult } from "@/lib/types/knowledge-import";
 import {
   createLocalWorkspaceProfile,
+  createFeedbackEntry,
+  createFeedbackKey,
   createFavoriteAnswer,
   createFavoriteKey,
   createHistoryEntry,
@@ -37,12 +41,16 @@ import {
   formatSourcesMarkdown,
   formatVariantMarkdown,
   isFavoriteAnswer,
+  isFeedbackEntry,
   isLocalWorkspaceProfile,
   isQuestionHistoryEntry,
   normalizeProfileName,
   parseJsonArray,
   parseProfileBackup,
   toggleFavoriteAnswer,
+  upsertFeedbackEntry,
+  type FeedbackEntry,
+  type FeedbackRating,
   upsertHistoryEntry,
   type FavoriteAnswer,
   type LocalWorkspaceProfile,
@@ -67,11 +75,14 @@ const text = {
   loadProvidersFailed: "\u6a21\u578b\u9a71\u52a8\u5217\u8868\u52a0\u8f7d\u5931\u8d25\u3002",
   generationFailed: "\u751f\u6210\u5931\u8d25\u3002",
   knowledgeSearchFailed: "\u77e5\u8bc6\u5e93\u68c0\u7d22\u5931\u8d25\u3002",
+  knowledgeImportFailed: "\u77e5\u8bc6\u5e93\u5bfc\u5165\u5931\u8d25\u3002",
+  knowledgeImported: "\u5df2\u5bfc\u5165\u77e5\u8bc6\u5e93\uff1a",
   copied: "\u5df2\u590d\u5236\u3002",
   copyFailed: "\u590d\u5236\u5931\u8d25\u3002",
   exported: "\u5df2\u5bfc\u51fa\u3002",
   favorited: "\u5df2\u6536\u85cf\u3002",
   favoriteRemoved: "\u5df2\u53d6\u6d88\u6536\u85cf\u3002",
+  feedbackSaved: "\u5df2\u8bb0\u5f55\u4f60\u7684\u53cd\u9988\u3002",
   historyApplied: "\u5df2\u590d\u7528\u5386\u53f2\u914d\u7f6e\u3002",
   historyCleared: "\u5df2\u6e05\u7a7a\u5386\u53f2\u3002",
   profileSwitched: "\u5df2\u5207\u6362\u672c\u5730\u914d\u7f6e\u6863\u3002",
@@ -227,6 +238,10 @@ function profileFavoritesStorageKey(profileId: string) {
   return `wenyan-agent:profile:${profileId}:favorites:v1`;
 }
 
+function profileFeedbackStorageKey(profileId: string) {
+  return `wenyan-agent:profile:${profileId}:feedback:v1`;
+}
+
 function readStoredProfiles(): LocalWorkspaceProfile[] {
   try {
     return parseJsonArray(window.localStorage.getItem(profilesStorageKey), isLocalWorkspaceProfile);
@@ -270,11 +285,21 @@ function readProfileFavorites(profileId: string, fallback: FavoriteAnswer[]): Fa
   }
 }
 
+function readProfileFeedback(profileId: string, fallback: FeedbackEntry[]): FeedbackEntry[] {
+  try {
+    const stored = window.localStorage.getItem(profileFeedbackStorageKey(profileId));
+    return stored ? parseJsonArray(stored, isFeedbackEntry) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function removeProfileStorage(profileId: string) {
   try {
     window.localStorage.removeItem(profileUserContextStorageKey(profileId));
     window.localStorage.removeItem(profileHistoryStorageKey(profileId));
     window.localStorage.removeItem(profileFavoritesStorageKey(profileId));
+    window.localStorage.removeItem(profileFeedbackStorageKey(profileId));
   } catch {
     // Local cleanup is best effort.
   }
@@ -314,7 +339,8 @@ function readInitialLocalWorkspace() {
       activeProfile,
       userContext: readProfileUserContext(activeProfile.id, activeProfile.id === storedActiveProfileId ? {} : legacyUserContext),
       historyEntries: readProfileHistory(activeProfile.id, []),
-      favorites: readProfileFavorites(activeProfile.id, [])
+      favorites: readProfileFavorites(activeProfile.id, []),
+      feedbackEntries: readProfileFeedback(activeProfile.id, [])
     };
   }
 
@@ -330,7 +356,8 @@ function readInitialLocalWorkspace() {
     activeProfile: profile,
     userContext: legacyUserContext,
     historyEntries: legacyHistory,
-    favorites: legacyFavorites
+    favorites: legacyFavorites,
+    feedbackEntries: []
   };
 }
 
@@ -352,15 +379,19 @@ export function Workspace() {
   const [providers, setProviders] = useState<PublicModelProfile[]>([]);
   const [historyEntries, setHistoryEntries] = useState<QuestionHistoryEntry[]>([]);
   const [favorites, setFavorites] = useState<FavoriteAnswer[]>([]);
+  const [feedbackEntries, setFeedbackEntries] = useState<FeedbackEntry[]>([]);
   const [favoritePersonaFilter, setFavoritePersonaFilter] = useState("");
   const [favoriteTopicFilter, setFavoriteTopicFilter] = useState("");
   const [knowledgeRefs, setKnowledgeRefs] = useState<SourceRef[]>([]);
   const [knowledgeError, setKnowledgeError] = useState<string | null>(null);
+  const [knowledgeImportError, setKnowledgeImportError] = useState<string | null>(null);
+  const [knowledgeImportSummary, setKnowledgeImportSummary] = useState<string | null>(null);
   const [result, setResult] = useState<GenerateResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingKnowledge, setIsSearchingKnowledge] = useState(false);
+  const [isImportingKnowledge, setIsImportingKnowledge] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -414,6 +445,7 @@ export function Workspace() {
     setUserContext(initial.userContext);
     setHistoryEntries(initial.historyEntries);
     setFavorites(initial.favorites);
+    setFeedbackEntries(initial.feedbackEntries);
     setHasLoadedMemory(true);
   }, []);
 
@@ -426,7 +458,8 @@ export function Workspace() {
     writeStorageValue(profileUserContextStorageKey(activeProfileId), userContext);
     writeStorageValue(profileHistoryStorageKey(activeProfileId), historyEntries);
     writeStorageValue(profileFavoritesStorageKey(activeProfileId), favorites);
-  }, [activeProfileId, favorites, hasLoadedMemory, historyEntries, userContext]);
+    writeStorageValue(profileFeedbackStorageKey(activeProfileId), feedbackEntries);
+  }, [activeProfileId, favorites, feedbackEntries, hasLoadedMemory, historyEntries, userContext]);
 
   useEffect(() => {
     if (!hasLoadedMemory) {
@@ -455,6 +488,7 @@ export function Workspace() {
     writeStorageValue(profileUserContextStorageKey(activeProfileId), userContext);
     writeStorageValue(profileHistoryStorageKey(activeProfileId), historyEntries);
     writeStorageValue(profileFavoritesStorageKey(activeProfileId), favorites);
+    writeStorageValue(profileFeedbackStorageKey(activeProfileId), feedbackEntries);
   };
 
   const loadProfileData = (profile: LocalWorkspaceProfile) => {
@@ -463,6 +497,7 @@ export function Workspace() {
     setUserContext(readProfileUserContext(profile.id, {}));
     setHistoryEntries(readProfileHistory(profile.id, []));
     setFavorites(readProfileFavorites(profile.id, []));
+    setFeedbackEntries(readProfileFeedback(profile.id, []));
     setFavoritePersonaFilter("");
     setFavoriteTopicFilter("");
   };
@@ -644,6 +679,7 @@ export function Workspace() {
     writeStorageValue(profileUserContextStorageKey(profile.id), {});
     writeStorageValue(profileHistoryStorageKey(profile.id), []);
     writeStorageValue(profileFavoritesStorageKey(profile.id), []);
+    writeStorageValue(profileFeedbackStorageKey(profile.id), []);
     loadProfileData(profile);
     setActionMessage(text.profileCreated);
   };
@@ -690,7 +726,8 @@ export function Workspace() {
       profile: activeProfile,
       userContext,
       historyEntries,
-      favorites
+      favorites,
+      feedbackEntries
     });
 
     downloadTextFile(
@@ -720,11 +757,60 @@ export function Workspace() {
     writeStorageValue(profileUserContextStorageKey(importedProfile.id), backup.userContext);
     writeStorageValue(profileHistoryStorageKey(importedProfile.id), backup.historyEntries);
     writeStorageValue(profileFavoritesStorageKey(importedProfile.id), backup.favorites);
+    writeStorageValue(profileFeedbackStorageKey(importedProfile.id), backup.feedbackEntries ?? []);
     loadProfileData(importedProfile);
     setUserContext(backup.userContext);
     setHistoryEntries(backup.historyEntries);
     setFavorites(backup.favorites);
+    setFeedbackEntries(backup.feedbackEntries ?? []);
     setActionMessage(text.profileBackupImported);
+  };
+
+  const handleImportKnowledge = async (documents: KnowledgeImportInput[]) => {
+    setKnowledgeImportError(null);
+    setKnowledgeImportSummary(null);
+    setIsImportingKnowledge(true);
+
+    try {
+      const response = await fetch("/api/knowledge/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ documents })
+      });
+      const payload = (await response.json()) as ApiResult<KnowledgeImportResult>;
+      if (!payload.ok) {
+        throw new Error(payload.error);
+      }
+
+      setKnowledgeRefs([]);
+      setKnowledgeImportSummary(`${text.knowledgeImported}${payload.data.imported} 篇，chunks=${payload.data.processedChunks}，vectors=${payload.data.vectorDocuments}`);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : text.knowledgeImportFailed;
+      setKnowledgeImportError(message);
+      throw new Error(message);
+    } finally {
+      setIsImportingKnowledge(false);
+    }
+  };
+
+  const handleSubmitFeedback = (variant: VariantResult, rating: FeedbackRating) => {
+    if (!result) {
+      return;
+    }
+
+    const entry = createFeedbackEntry({
+      id: createLocalId("feedback"),
+      createdAt: new Date().toISOString(),
+      query,
+      result,
+      variant,
+      rating
+    });
+
+    setFeedbackEntries((current) => upsertFeedbackEntry(current, entry));
+    setActionMessage(text.feedbackSaved);
   };
 
   return (
@@ -797,6 +883,14 @@ export function Workspace() {
             onUseFavoriteQuery={handleUseFavoriteQuery}
             onRemoveFavorite={(favoriteKey) => setFavorites((current) => current.filter((item) => item.favoriteKey !== favoriteKey))}
             onExportFavorite={handleExportFavorite}
+          />
+
+          <KnowledgeImportPanel
+            disabled={isSubmitting}
+            importing={isImportingKnowledge}
+            importError={knowledgeImportError}
+            importSummary={knowledgeImportSummary}
+            onImport={handleImportKnowledge}
           />
         </aside>
 
@@ -872,6 +966,12 @@ export function Workspace() {
                     void copyText(formatSourcesMarkdown(item.sources));
                   }}
                   onToggleFavorite={handleToggleFavorite}
+                  feedbackRating={feedbackEntries.find((entry) => entry.feedbackKey === createFeedbackKey({
+                    normalizedQuery: result.normalizedQuery,
+                    variantId: variant.id,
+                    classicalText: variant.classicalText
+                  }))?.rating}
+                  onSubmitFeedback={handleSubmitFeedback}
                 />
               ))}
             </>

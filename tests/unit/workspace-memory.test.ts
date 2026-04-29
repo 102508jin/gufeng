@@ -3,16 +3,20 @@ import { describe, expect, it } from "vitest";
 import type { ExplanationMode, GenerateResponse, VariantResult } from "@/lib/types/generation";
 import {
   createLocalWorkspaceProfile,
+  createFeedbackEntry,
   createFavoriteAnswer,
   createHistoryEntry,
   createProfileBackup,
+  createFeedbackKey,
   filterFavoriteAnswers,
   formatGenerationMarkdown,
   isQuestionHistoryEntry,
   parseProfileBackup,
   parseJsonArray,
   toggleFavoriteAnswer,
+  upsertFeedbackEntry,
   upsertHistoryEntry,
+  type FeedbackEntry,
   type QuestionHistoryEntry
 } from "@/lib/utils/workspace-memory";
 
@@ -148,12 +152,21 @@ describe("workspace memory utilities", () => {
       result,
       variant
     });
+    const feedback = createFeedbackEntry({
+      id: "feedback-1",
+      createdAt: new Date(0).toISOString(),
+      query: settings.query,
+      result,
+      variant,
+      rating: "useful"
+    });
     const backup = createProfileBackup({
       exportedAt: new Date(1).toISOString(),
       profile,
       userContext: settings.userContext,
       historyEntries: [historyEntry],
-      favorites: [favorite]
+      favorites: [favorite],
+      feedbackEntries: [feedback]
     });
 
     const parsed = parseProfileBackup(JSON.stringify(backup));
@@ -161,6 +174,33 @@ describe("workspace memory utilities", () => {
     expect(parsed?.profile.name).toBe("本机用户");
     expect(parsed?.historyEntries).toHaveLength(1);
     expect(parsed?.favorites).toHaveLength(1);
+    expect(parsed?.feedbackEntries).toHaveLength(1);
     expect(parseProfileBackup("{bad json")).toBeNull();
+  });
+
+  it("upserts one feedback entry per answer variant", () => {
+    const first = createFeedbackEntry({
+      id: "feedback-1",
+      createdAt: new Date(0).toISOString(),
+      query: settings.query,
+      result,
+      variant,
+      rating: "useful"
+    });
+    const second: FeedbackEntry = {
+      ...first,
+      id: "feedback-2",
+      rating: "too-long",
+      createdAt: new Date(1).toISOString()
+    };
+    const entries = [first, second].reduce<FeedbackEntry[]>((current, entry) => upsertFeedbackEntry(current, entry), []);
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0].rating).toBe("too-long");
+    expect(entries[0].feedbackKey).toBe(createFeedbackKey({
+      normalizedQuery: result.normalizedQuery,
+      variantId: variant.id,
+      classicalText: variant.classicalText
+    }));
   });
 });
