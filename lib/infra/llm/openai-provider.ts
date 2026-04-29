@@ -1,6 +1,7 @@
 import { z, type ZodType } from "zod";
 
 import type { ModelOptions, ModelProvider } from "@/lib/infra/llm/model-provider";
+import { createModelRequestSignal } from "@/lib/infra/llm/request-timeout";
 import type { ModelProfile } from "@/lib/types/provider";
 
 const openAiResponseSchema = z.object({
@@ -36,6 +37,7 @@ export class OpenAiProvider implements ModelProvider {
     const response = await fetch(`${this.profile.baseUrl}/chat/completions`, {
       method: "POST",
       headers,
+      signal: createModelRequestSignal(),
       body: JSON.stringify({
         model: this.profile.model,
         temperature: options?.temperature ?? 0.6,

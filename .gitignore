@@ -2,9 +2,13 @@
 .next-dev.log
 node_modules
 .env
-.env.local
+.env.*
+!.env.example
 dist
 coverage
 *.tsbuildinfo
+*.db
+*.sqlite
+*.sqlite3
 data/processed/index-state.json
 gcm-diagnose.log

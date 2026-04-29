@@ -39,13 +39,13 @@ Wenyan Agent is a Next.js application for generating classical Chinese answers f
 cmd /c npm install
 ```
 
-2. Copy the example environment file.
+2. Copy the example environment file for local secrets.
 
 ```powershell
-Copy-Item .env.example .env
+Copy-Item .env.example .env.local
 ```
 
-3. Choose a default provider in `.env`.
+3. Choose a default provider in `.env.local`.
 
 Mock demo:
 
@@ -90,6 +90,8 @@ Optional extra runtime-selectable profiles:
 MODEL_PROFILES_JSON=[{"id":"vllm","label":"vLLM","driver":"openai-compatible","baseUrl":"http://127.0.0.1:8000/v1","model":"Qwen/Qwen3-4B-Instruct"},{"id":"sglang","label":"SGLang","driver":"openai-compatible","baseUrl":"http://127.0.0.1:30000/v1","model":"Qwen/Qwen3-4B-Instruct"}]
 DEFAULT_PROVIDER_ID=vllm
 ```
+
+Custom profile secrets must be referenced with `apiKeyEnv`; inline `apiKey` values in `MODEL_PROFILES_JSON` are ignored.
 
 4. If you use Ollama, prepare the model first.
 
@@ -156,12 +158,14 @@ cmd /c npm run reindex
 - `DATABASE_URL`: reserved for future persistence work
 - `DEFAULT_VARIANTS_COUNT`: default number of generated variants
 - `DEFAULT_EXPLANATION_MODES`: comma-separated explanation modes
+- `MODEL_REQUEST_TIMEOUT_MS`: timeout for each external model request
 
 ## Driver Notes
 
 - `openai-compatible` covers OpenAI-style `/chat/completions` endpoints, including custom API gateways and local engines that expose the same protocol.
 - `ollama` uses `/api/generate`.
 - `anthropic` uses `/v1/messages`.
+- Custom profiles should use `apiKeyEnv` instead of inline `apiKey`.
 - `GET /api/providers` returns the runtime-selectable driver list for the frontend.
 
 ## Project Structure

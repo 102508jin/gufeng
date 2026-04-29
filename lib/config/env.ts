@@ -1,6 +1,11 @@
-import { DEFAULT_EXPLANATION_MODES, DEFAULT_VARIANTS_COUNT } from "@/lib/config/constants";
+import { DEFAULT_EXPLANATION_MODES, DEFAULT_MODEL_REQUEST_TIMEOUT_MS, DEFAULT_VARIANTS_COUNT } from "@/lib/config/constants";
 
 const rawExplanationModes = process.env.DEFAULT_EXPLANATION_MODES?.split(",").map((value) => value.trim()).filter(Boolean);
+
+function numberFromEnv(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
 
 export const env = {
   modelProvider: process.env.MODEL_PROVIDER ?? "mock",
@@ -18,5 +23,6 @@ export const env = {
   anthropicModel: process.env.ANTHROPIC_MODEL ?? "claude-3-5-sonnet-latest",
   anthropicLabel: process.env.ANTHROPIC_PROVIDER_LABEL ?? "Claude / Anthropic",
   defaultVariantsCount: Number(process.env.DEFAULT_VARIANTS_COUNT ?? DEFAULT_VARIANTS_COUNT),
-  defaultExplanationModes: rawExplanationModes?.length ? rawExplanationModes : DEFAULT_EXPLANATION_MODES
+  defaultExplanationModes: rawExplanationModes?.length ? rawExplanationModes : DEFAULT_EXPLANATION_MODES,
+  modelRequestTimeoutMs: numberFromEnv(process.env.MODEL_REQUEST_TIMEOUT_MS, DEFAULT_MODEL_REQUEST_TIMEOUT_MS)
 };

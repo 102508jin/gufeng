@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import path from "node:path";
 
-import { findAvailablePort, parseDevServerArgs } from "@/lib/utils/dev-server";
+import { buildNextDevArgs, LOCAL_DEV_HOST, findAvailablePort, parseDevServerArgs } from "@/lib/utils/dev-server";
 
 function resolveNextBinary(): string {
   const binaryName = process.platform === "win32" ? "next.cmd" : "next";
@@ -16,9 +16,9 @@ async function main() {
     console.log(`Port ${parsed.startPort} is busy. Using ${port} instead.`);
   }
 
-  console.log(`Starting Next.js dev server at http://localhost:${port}`);
+  console.log(`Starting Next.js dev server at http://${LOCAL_DEV_HOST}:${port}`);
 
-  const nextArgs = ["dev", "--port", String(port), ...parsed.nextArgs];
+  const nextArgs = buildNextDevArgs(port, parsed.nextArgs);
   const command = process.platform === "win32" ? "cmd.exe" : resolveNextBinary();
   const commandArgs = process.platform === "win32"
     ? ["/d", "/s", "/c", resolveNextBinary(), ...nextArgs]

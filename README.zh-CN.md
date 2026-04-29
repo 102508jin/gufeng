@@ -29,13 +29,13 @@
 cmd /c npm install
 ```
 
-2. &#x590D;&#x5236; `.env`
+2. &#x590D;&#x5236; `.env.local`
 
 ```powershell
-Copy-Item .env.example .env
+Copy-Item .env.example .env.local
 ```
 
-3. &#x5728; `.env` &#x4E2D; &#x8BBE;&#x5B9A; &#x9ED8;&#x8BA4; provider
+3. &#x5728; `.env.local` &#x4E2D; &#x8BBE;&#x5B9A; &#x9ED8;&#x8BA4; provider
 
 ```env
 MODEL_PROVIDER=mock
@@ -76,6 +76,8 @@ ANTHROPIC_MODEL=claude-3-5-sonnet-latest
 MODEL_PROFILES_JSON=[{"id":"vllm","label":"vLLM","driver":"openai-compatible","baseUrl":"http://127.0.0.1:8000/v1","model":"Qwen/Qwen3-4B-Instruct"},{"id":"sglang","label":"SGLang","driver":"openai-compatible","baseUrl":"http://127.0.0.1:30000/v1","model":"Qwen/Qwen3-4B-Instruct"}]
 DEFAULT_PROVIDER_ID=vllm
 ```
+
+自定义 profile 的密钥请使用 `apiKeyEnv` 引用环境变量; `MODEL_PROFILES_JSON` 中的内联 `apiKey` 会被忽略.
 
 4. &#x5982;&#x679C; &#x4F7F;&#x7528; Ollama, &#x5148; &#x542F;&#x52A8; &#x670D;&#x52A1; &#x5E76; &#x51C6;&#x5907; &#x6A21;&#x578B;
 
