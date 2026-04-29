@@ -1,6 +1,7 @@
 import { z, type ZodType } from "zod";
 
 import type { ModelOptions, ModelProvider } from "@/lib/infra/llm/model-provider";
+import { createModelRequestSignal } from "@/lib/infra/llm/request-timeout";
 import type { ModelProfile } from "@/lib/types/provider";
 
 const ollamaResponseSchema = z.object({
@@ -35,6 +36,7 @@ function extractJsonBlock(input: string): string {
 async function requestOllama(profile: ModelProfile, prompt: string, options?: ModelOptions, format?: "json") {
   const response = await fetch(`${profile.baseUrl}/api/generate`, {
     method: "POST",
+    signal: createModelRequestSignal(),
     headers: {
       "Content-Type": "application/json",
       ...profile.headers

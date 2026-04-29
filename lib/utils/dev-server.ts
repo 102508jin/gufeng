@@ -1,6 +1,7 @@
 import { createServer } from "node:net";
 
 export const DEFAULT_DEV_PORT = 3000;
+export const LOCAL_DEV_HOST = "127.0.0.1";
 const MAX_PORT = 65535;
 
 export type ParsedDevServerArgs = {
@@ -40,6 +41,15 @@ export function parseDevServerArgs(argv: string[], envPort?: string): ParsedDevS
       continue;
     }
 
+    if ((arg === "--hostname" || arg === "-H") && argv[index + 1]) {
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith("--hostname=") || arg.startsWith("-H=")) {
+      continue;
+    }
+
     nextArgs.push(arg);
   }
 
@@ -47,6 +57,10 @@ export function parseDevServerArgs(argv: string[], envPort?: string): ParsedDevS
     startPort,
     nextArgs
   };
+}
+
+export function buildNextDevArgs(port: number, nextArgs: string[]): string[] {
+  return ["dev", "--hostname", LOCAL_DEV_HOST, "--port", String(port), ...nextArgs];
 }
 
 export function isPortAvailable(port: number): Promise<boolean> {

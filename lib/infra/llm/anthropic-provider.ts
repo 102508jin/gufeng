@@ -1,6 +1,7 @@
 import { z, type ZodType } from "zod";
 
 import type { ModelOptions, ModelProvider } from "@/lib/infra/llm/model-provider";
+import { createModelRequestSignal } from "@/lib/infra/llm/request-timeout";
 import type { ModelProfile } from "@/lib/types/provider";
 
 const anthropicResponseSchema = z.object({
@@ -25,6 +26,7 @@ export class AnthropicProvider implements ModelProvider {
   async generateText(prompt: string, options?: ModelOptions): Promise<string> {
     const response = await fetch(`${this.profile.baseUrl}/messages`, {
       method: "POST",
+      signal: createModelRequestSignal(),
       headers: {
         "Content-Type": "application/json",
         "anthropic-version": "2023-06-01",

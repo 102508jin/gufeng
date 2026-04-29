@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { logger } from "@/lib/infra/logger";
 import { generateRequestSchema } from "@/lib/schemas/generate";
 import { generateService } from "@/lib/services/generate-service";
 import type { ApiResult } from "@/lib/types/api";
@@ -25,10 +26,14 @@ export async function POST(request: Request) {
       );
     }
 
+    logger.error("Generation request failed.", {
+      error: cause instanceof Error ? cause.message : String(cause)
+    });
+
     return NextResponse.json(
       {
         ok: false,
-        error: cause instanceof Error ? cause.message : "\u751f\u6210\u65f6\u53d1\u751f\u672a\u77e5\u9519\u8bef\u3002"
+        error: "\u751f\u6210\u65f6\u53d1\u751f\u9519\u8bef\uff0c\u8bf7\u68c0\u67e5\u672c\u5730\u6a21\u578b\u914d\u7f6e\u6216\u7a0d\u540e\u91cd\u8bd5\u3002"
       },
       { status: 500 }
     );

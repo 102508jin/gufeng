@@ -41,12 +41,15 @@ function toBoolean(value: unknown, fallback: boolean): boolean {
 }
 
 function getCustomApiKey(profile: RawModelProfile): string | undefined {
-  if (profile.apiKey) {
-    return profile.apiKey;
-  }
-
   if (profile.apiKeyEnv) {
     return process.env[profile.apiKeyEnv] ?? "";
+  }
+
+  if (profile.apiKey) {
+    logger.warn("已忽略 MODEL_PROFILES_JSON 中的内联 apiKey，请改用 apiKeyEnv 引用环境变量。", {
+      profileId: profile.id
+    });
+    return "";
   }
 
   return undefined;
