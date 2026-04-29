@@ -1,0 +1,10 @@
+.next
+.next-dev.log
+node_modules
+.env
+.env.local
+dist
+coverage
+*.tsbuildinfo
+data/processed/index-state.json
+gcm-diagnose.log
