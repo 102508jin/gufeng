@@ -1,3 +1,7 @@
+import { promises as fs } from "node:fs";
+import path from "node:path";
+
+import { normalizeKnowledgeRecord } from "@/lib/domain/knowledge-ingestion";
 import type { PersonaRecord } from "@/lib/types/persona";
 import type { KnowledgeRecord } from "@/lib/types/retrieval";
 
@@ -115,7 +119,7 @@ const personas: PersonaRecord[] = [
   }
 ];
 
-const knowledge: KnowledgeRecord[] = [
+const knowledgeSeed: unknown[] = [
   {
     id: "knowledge-1",
     title: "\u529d\u5b66\u8868\u8fbe\u8303\u5f0f",
@@ -168,6 +172,26 @@ const knowledge: KnowledgeRecord[] = [
   }
 ];
 
+async function readProcessedKnowledge(): Promise<KnowledgeRecord[] | null> {
+  const filePath = path.join(process.cwd(), "data", "processed", "knowledge.json");
+
+  try {
+    const raw = await fs.readFile(filePath, "utf8");
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+
+    const normalized = parsed
+      .map(normalizeKnowledgeRecord)
+      .filter((item): item is KnowledgeRecord => Boolean(item));
+
+    return normalized.length ? normalized : null;
+  } catch {
+    return null;
+  }
+}
+
 export class DataRepository {
   async listPersonas(): Promise<PersonaRecord[]> {
     return personas;
@@ -178,7 +202,14 @@ export class DataRepository {
   }
 
   async listKnowledge(): Promise<KnowledgeRecord[]> {
-    return knowledge;
+    const processed = await readProcessedKnowledge();
+    if (processed) {
+      return processed;
+    }
+
+    return knowledgeSeed
+      .map(normalizeKnowledgeRecord)
+      .filter((item): item is KnowledgeRecord => Boolean(item));
   }
 }
 

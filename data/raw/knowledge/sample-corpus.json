@@ -1,9 +1,6 @@
 [
   {
-    "id": "study-expressions-chunk-1",
-    "documentId": "study-expressions",
-    "chunkId": "study-expressions-chunk-1",
-    "chunkIndex": 0,
+    "id": "study-expressions",
     "title": "劝学表达范式",
     "author": "示例语料",
     "category": "education",
@@ -12,21 +9,12 @@
     "era": "modern",
     "content": "劝学类文言答复宜重志、重恒、重法。可用立志、循序、积累等骨架，并说明每日小功如何渐成大效。",
     "summary": "适用于学习、读书、考试、成长主题。",
-    "keywords": [
-      "学习",
-      "读书",
-      "考试",
-      "成长",
-      "劝学"
-    ],
+    "keywords": ["学习", "读书", "考试", "成长", "劝学"],
     "credibility": "medium",
     "updatedAt": "2026-04-29"
   },
   {
-    "id": "life-counsel-expressions-chunk-1",
-    "documentId": "life-counsel-expressions",
-    "chunkId": "life-counsel-expressions-chunk-1",
-    "chunkIndex": 0,
+    "id": "life-counsel-expressions",
     "title": "处世劝诫表达",
     "author": "示例语料",
     "category": "life",
@@ -35,21 +23,12 @@
     "era": "modern",
     "content": "处世类回答宜平衡守本心、慎言行、择友、知进退。遇人际困扰时，先辨己责与外缘，再给出可执行的分寸。",
     "summary": "适用于人生、交友、处世与情绪议题。",
-    "keywords": [
-      "人生",
-      "处世",
-      "朋友",
-      "情绪",
-      "选择"
-    ],
+    "keywords": ["人生", "处世", "朋友", "情绪", "选择"],
     "credibility": "medium",
     "updatedAt": "2026-04-29"
   },
   {
-    "id": "explanation-style-chunk-1",
-    "documentId": "explanation-style",
-    "chunkId": "explanation-style-chunk-1",
-    "chunkIndex": 0,
+    "id": "explanation-style",
     "title": "解析写法说明",
     "author": "示例语料",
     "category": "analysis",
@@ -58,21 +37,12 @@
     "era": "modern",
     "content": "逐句解析应紧贴原句，意译解析可补足逻辑关系，关键词注释优先解释虚词与抽象概念。解释不应脱离原文另起议论。",
     "summary": "规范逐句解析、意译解析和注释的差别。",
-    "keywords": [
-      "解析",
-      "意译",
-      "注释",
-      "逐句",
-      "文言"
-    ],
+    "keywords": ["解析", "意译", "注释", "逐句", "文言"],
     "credibility": "high",
     "updatedAt": "2026-04-29"
   },
   {
-    "id": "discipline-time-chunk-1",
-    "documentId": "discipline-time",
-    "chunkId": "discipline-time-chunk-1",
-    "chunkIndex": 0,
+    "id": "discipline-time",
     "title": "自律与惜时表达",
     "author": "示例语料",
     "category": "discipline",
@@ -81,21 +51,12 @@
     "era": "modern",
     "content": "论自律与时间，可用惜阴、早作、持恒、日省等表达。回答拖延问题时，应把建议落到今日可做的一件小事。",
     "summary": "适用于拖延、自律、效率与规划。",
-    "keywords": [
-      "时间",
-      "自律",
-      "拖延",
-      "规划",
-      "坚持"
-    ],
+    "keywords": ["时间", "自律", "拖延", "规划", "坚持"],
     "credibility": "medium",
     "updatedAt": "2026-04-29"
   },
   {
-    "id": "normalization-guidance-chunk-1",
-    "documentId": "normalization-guidance",
-    "chunkId": "normalization-guidance-chunk-1",
-    "chunkIndex": 0,
+    "id": "normalization-guidance",
     "title": "问题归一化说明",
     "author": "示例语料",
     "category": "normalization",
@@ -104,12 +65,7 @@
     "era": "modern",
     "content": "对现代口语输入，应先抽出核心问题，再转为书面现代汉语，最后进行文言化。归一化结果要保留用户真实意图。",
     "summary": "说明为何需要先做现代汉语中间稿。",
-    "keywords": [
-      "归一化",
-      "白话",
-      "中间稿",
-      "文言转写"
-    ],
+    "keywords": ["归一化", "白话", "中间稿", "文言转写"],
     "credibility": "high",
     "updatedAt": "2026-04-29"
   }

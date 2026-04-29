@@ -2,7 +2,9 @@ import { knowledgeService } from "../lib/services/knowledge-service";
 
 async function main() {
   const result = await knowledgeService.reindex();
-  console.log(`Reindexed local sources. personas=${result.personas} knowledge=${result.knowledge}`);
+  console.log(
+    `Reindexed local sources. personas=${result.personas} knowledge=${result.knowledge} vectors=${result.vectorDocuments}`
+  );
 }
 
 main().catch((error) => {

@@ -39,7 +39,7 @@
 - `retrievalRefs[]`
 - `debug`
 
-`debug` 会返回 `aiIntervention`, `retrievalMode`, `userContextApplied`, 便于排查本次生成是否使用了用户偏好和 RAG 设置.
+`debug` 会返回 `aiIntervention`, `retrievalMode`, `userContextApplied`, `primaryProviderId`, `fallbackProviderId`, `fallbackReason`, 便于排查本次生成是否使用了用户偏好、RAG 设置和 provider fallback.
 
 ## GET /api/personas
 
@@ -51,7 +51,7 @@
 
 ## POST /api/knowledge/reindex
 
-&#x6839;&#x636E; processed corpus &#x91CD;&#x5EFA; &#x672C;&#x5730; index state file.
+根据 processed corpus 重建本地 index state file 和持久化 vector index. 返回 `personas`, `knowledge`, `vectorDocuments`, `embeddingProvider`, `updatedAt`.
 
 ## GET /api/knowledge/search
 
@@ -68,8 +68,8 @@ Query 参数:
 /api/knowledge/search?q=拖延%20自律&topK=4
 ```
 
-返回 `SourceRef[]`, 包含 `title`, `excerpt`, `score`, `sourceType`.
+返回 `SourceRef[]`, 包含 `title`, `excerpt`, `score`, `sourceType`, `source`, `license`, `chunkId`, `documentId`.
 
 ## GET /api/health
 
-&#x8FD4;&#x56DE; &#x670D;&#x52A1; &#x72B6;&#x6001; &#x548C; timestamp.
+返回不含密钥的运行就绪状态, 包括 `status`, `checks`, corpus 数量、模型配置状态、embedding provider 状态和 vector index 新鲜度. `status` 为 `ok` 时返回 HTTP `200`; 为 `degraded` 时返回 HTTP `503`.

@@ -39,7 +39,7 @@ Response shape:
 - `retrievalRefs[]`
 - `debug`
 
-`debug` includes `aiIntervention`, `retrievalMode`, and `userContextApplied` for request-level traceability.
+`debug` includes `aiIntervention`, `retrievalMode`, `userContextApplied`, `primaryProviderId`, `fallbackProviderId`, and `fallbackReason` for request-level traceability.
 
 ## GET /api/personas
 
@@ -51,7 +51,7 @@ Returns all runtime-selectable model profiles for the frontend. Each item includ
 
 ## POST /api/knowledge/reindex
 
-Rebuilds the local index state file from the processed corpus.
+Rebuilds the local index state file and persisted vector index from the processed corpus. The response includes `personas`, `knowledge`, `vectorDocuments`, `embeddingProvider`, and `updatedAt`.
 
 ## GET /api/knowledge/search
 
@@ -68,8 +68,8 @@ Example:
 /api/knowledge/search?q=拖延%20自律&topK=4
 ```
 
-Returns `SourceRef[]` with `title`, `excerpt`, `score`, and `sourceType`.
+Returns `SourceRef[]` with `title`, `excerpt`, `score`, `sourceType`, `source`, `license`, `chunkId`, and `documentId`.
 
 ## GET /api/health
 
-Returns a health status and timestamp.
+Returns runtime readiness information without secrets. The response includes `status`, `checks`, corpus counts, model profile status, embedding provider status, and vector index freshness. Returns HTTP `200` when `status` is `ok`, and HTTP `503` when `status` is `degraded`.

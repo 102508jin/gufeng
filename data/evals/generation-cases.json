@@ -1,0 +1,26 @@
+[
+  {
+    "id": "discipline-planning",
+    "query": "最近做事总拖延，怎样才能坚持每天的计划？",
+    "personaId": "zhuge-liang",
+    "expectedTopics": ["拖延", "自律", "规划"]
+  },
+  {
+    "id": "study-method",
+    "query": "如何把学习计划落到每天，而不是只停在想法里？",
+    "personaId": "kongzi",
+    "expectedTopics": ["学习", "计划"]
+  },
+  {
+    "id": "life-choice",
+    "query": "面对人生选择时，怎么判断什么更值得坚持？",
+    "personaId": "tao-yuanming",
+    "expectedTopics": ["人生", "选择", "坚持"]
+  },
+  {
+    "id": "explanation-guidance",
+    "query": "请用文言回答，并给我逐句解释其中的关键词。",
+    "personaId": null,
+    "expectedTopics": ["文言", "解释"]
+  }
+]

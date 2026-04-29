@@ -45,3 +45,5 @@ The default runtime uses the `mock` provider so the end-to-end flow works before
 - `aiIntervention=conservative` lowers model temperature and asks the model to stay closer to the question and sources.
 - `aiIntervention=creative` raises generation temperature while still forbidding fake citations.
 - The mock provider remains deterministic and reflects the intervention level in style notes.
+- Knowledge retrieval uses the `EmbeddingProvider` abstraction. The default local hashing provider is offline and deterministic; OpenAI-compatible embedding endpoints can be enabled through env vars.
+- `npm run reindex` writes a local `data/processed/vector-index.json`; retrieval reuses indexed vectors only when provider fingerprint and document content hash still match.

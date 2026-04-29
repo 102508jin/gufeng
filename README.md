@@ -134,9 +134,11 @@ cmd /c npm run dev
 cmd /c npm run build
 cmd /c npm run start
 cmd /c npm run test
+cmd /c npm run eval:quality
 cmd /c npm run ingest:personas
 cmd /c npm run ingest:knowledge
 cmd /c npm run reindex
+cmd /c npm run verify
 ```
 
 ## Environment Variables
@@ -159,12 +161,18 @@ cmd /c npm run reindex
 - `DEFAULT_VARIANTS_COUNT`: default number of generated variants
 - `DEFAULT_EXPLANATION_MODES`: comma-separated explanation modes
 - `MODEL_REQUEST_TIMEOUT_MS`: timeout for each external model request
+- `EMBEDDING_PROVIDER`: `local` or `openai-compatible`; defaults to offline local hashing
+- `EMBEDDING_MODEL`: model name for OpenAI-compatible embedding providers
+- `EMBEDDING_API_BASE_URL`: base URL for an OpenAI-compatible `/embeddings` endpoint
+- `EMBEDDING_API_KEY`: optional for local compatible servers, required for `api.openai.com`
+- `EMBEDDING_DIMENSIONS`: vector size for the local hashing embedding provider
 
 ## Driver Notes
 
 - `openai-compatible` covers OpenAI-style `/chat/completions` endpoints, including custom API gateways and local engines that expose the same protocol.
 - `ollama` uses `/api/generate`.
 - `anthropic` uses `/v1/messages`.
+- `EMBEDDING_PROVIDER=openai-compatible` uses an OpenAI-style `/embeddings` endpoint; the default `local` provider is deterministic and offline.
 - Custom profiles should use `apiKeyEnv` instead of inline `apiKey`.
 - `GET /api/providers` returns the runtime-selectable driver list for the frontend.
 
@@ -182,10 +190,11 @@ cmd /c npm run reindex
 
 ## Documentation
 
-- Chinese translations are available for the contributor guide, architecture notes, API notes, data-ingestion notes, and the license note.
+- Chinese translations are available for the contributor guide, architecture notes, API notes, data-ingestion notes, deployment notes, and the license note.
 - [Architecture](./docs/architecture.md)
 - [API Notes](./docs/api.md)
 - [Data Ingestion](./docs/data-ingestion.md)
+- [Deployment Checklist](./docs/deployment.md)
 - [Optimization Plan](./docs/optimization-plan.zh-CN.md)
 - [Contributing](./CONTRIBUTING.md)
 - [Chinese License Note](./LICENSE.zh-CN.md)
@@ -200,4 +209,4 @@ cmd /c npm run reindex
 ## Notes
 
 - The external project shape is intentionally stable so you can replace the internal model provider, retrieval layer, or persistence implementation later without rebuilding the whole app shell.
-- The repository currently favors pragmatic local development over a fully productionized deployment setup.
+- The repository favors pragmatic local deployment with explicit health checks, quality evals, and offline fallbacks.

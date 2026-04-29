@@ -45,3 +45,5 @@
 - `aiIntervention=conservative` 会降低模型温度并要求更贴近问题与来源.
 - `aiIntervention=creative` 会提高生成温度, 但仍要求不可伪造引用.
 - mock provider 走确定性 fallback, 仍会在 style notes 中反映介入强度.
+- 知识库检索使用 `EmbeddingProvider` 抽象. 默认本地 hashing provider 离线且确定; 可通过 env 切换到 OpenAI-compatible embedding endpoint.
+- `npm run reindex` 会写入本地 `data/processed/vector-index.json`; 检索只在 provider fingerprint 和文档 content hash 仍匹配时复用索引向量.

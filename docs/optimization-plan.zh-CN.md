@@ -105,12 +105,23 @@
 
 目标: 从样例内存检索升级为可扩展知识库.
 
+状态: 基础切片已完成, 外部 embedding / vector store 待接入.
+
+当前进展:
+
+- 已规范 `KnowledgeRecord` 的 source、license、era、credibility、updatedAt、documentId 和 chunkId.
+- 已增加 `data/raw/knowledge/` raw JSON 示例语料.
+- 已将 `scripts/ingest-knowledge.ts` 改为 raw -> processed 的校验、清洗和切分管线.
+- 检索和生成引用会透出 source、license、chunk id 和 score.
+- 已增加 embedding provider 抽象, 默认本地 hashing embedding, 可切换 OpenAI-compatible `/embeddings` 接口.
+- 已增加本地向量索引持久化, `reindex` 会生成 `data/processed/vector-index.json`, 检索时按 provider fingerprint 和 content hash 安全复用.
+
 操作步骤:
 
-1. 规范 `KnowledgeRecord` metadata: `category`, `source`, `license`, `era`, `credibility`, `updatedAt`.
-2. 为 `scripts/ingest-knowledge.ts` 增加 raw 文件读取、清洗、切分和校验.
-3. 接入 embedding provider 抽象, 支持本地 embedding 和 OpenAI-compatible embedding.
-4. 在 `lib/infra/vector/` 增加外部向量库适配器, 如 Qdrant、pgvector 或 Chroma.
+1. 已规范 `KnowledgeRecord` metadata: `category`, `source`, `license`, `era`, `credibility`, `updatedAt`.
+2. 已为 `scripts/ingest-knowledge.ts` 增加 raw 文件读取、清洗、切分和校验.
+3. 已接入 embedding provider 抽象, 支持本地 embedding 和 OpenAI-compatible embedding.
+4. 已在 `lib/infra/vector/` 增加本地向量索引持久化; 外部向量库适配器如 Qdrant、pgvector 或 Chroma 待接入.
 5. 增加管理 API: 上传文档、重建索引、查看 chunk、禁用低质量来源.
 
 验收标准:
@@ -123,19 +134,30 @@
 
 目标: 把“好不好”从主观体验变成可回归指标.
 
+状态: 基础评估与部署门禁已完成, 多真实模型对比报告待扩展.
+
+当前进展:
+
+- 已增加固定评测集 `data/evals/generation-cases.json`, 覆盖学习、规划、人生选择和解释需求.
+- 已增加 `npm run eval:quality`, 校验变体数量、文言输出、解释完整性、引用一致性和主题覆盖.
+- 已增加 `npm run verify`, 串联 ingestion、reindex、test、quality eval 和 build.
+- 已增强 `/api/health`, 返回 corpus、model profile、embedding provider 和 vector index 新鲜度.
+- 已增加外部模型失败时的 mock fallback, 并在 debug 中返回 primary/fallback provider 和失败原因.
+- 已增加部署检查文档和 Dockerfile, 支持本地默认离线部署.
+
 操作步骤:
 
-1. 建立固定评测集, 覆盖学习、处世、情绪、规划和文言输入.
-2. 增加自动评分维度: 贴题度、文言自然度、解释清晰度、引用一致性.
-3. 为 provider profile 增加策略字段: 默认 temperature、最大 token、超时、fallback provider.
+1. 已建立固定评测集, 覆盖学习、处世、规划和文言输入.
+2. 已增加自动评分维度: 贴题度、文言自然度、解释清晰度、引用一致性.
+3. 已具备 provider timeout 和失败 fallback; provider profile 默认 temperature、最大 token 等细粒度策略待扩展.
 4. 保存每次生成的 prompt 摘要、provider、耗时、失败原因和命中来源.
 5. 增加回归测试脚本, 在上线前比较新旧模型输出质量.
 
 验收标准:
 
-- 每个模型 profile 都有可重复的质量报告.
-- provider 失败时有清晰 fallback 和错误提示.
-- RAG 相关回答能通过引用一致性检查.
+- mock profile 已有可重复的质量报告; 多真实模型 profile 报告待扩展.
+- provider 失败时有清晰 fallback 和错误提示. 已完成基础覆盖.
+- RAG 相关回答能通过引用一致性检查. 已完成基础覆盖.
 
 ### 第五阶段: 协作与运营
 
