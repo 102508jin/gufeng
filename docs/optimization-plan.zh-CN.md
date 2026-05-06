@@ -32,7 +32,7 @@
    - 新增 `retrievalMode`: `off`, `focused`, `auto`, `broad`.
    - 分别对应知识库召回 0、2、4、6 条.
    - 新增 `GET /api/knowledge/search`, 支持生成前检索预览.
-   - 保持 `SourceRetriever` 抽象, 后续可替换为外部向量库.
+   - 保持 `SourceRetriever` 抽象, 已支持本地向量索引与 Chroma 外部向量库切换.
 
 5. 测试与文档
    - 增加知识库服务单测.
@@ -121,13 +121,14 @@
 - 检索和生成引用会透出 source、license、chunk id 和 score.
 - 已增加 embedding provider 抽象, 默认本地 hashing embedding, 可切换 OpenAI-compatible `/embeddings` 接口.
 - 已增加本地向量索引持久化, `reindex` 会生成 `data/processed/vector-index.json`, 检索时按 provider fingerprint 和 content hash 安全复用.
+- 已接入 Chroma vector store, `VECTOR_STORE=chroma` 时可通过 Chroma HTTP API upsert 和检索知识库, 不可用时回退本地检索.
 
 操作步骤:
 
 1. 已规范 `KnowledgeRecord` metadata: `category`, `source`, `license`, `era`, `credibility`, `updatedAt`.
 2. 已为 `scripts/ingest-knowledge.ts` 增加 raw 文件读取、清洗、切分和校验.
 3. 已接入 embedding provider 抽象, 支持本地 embedding 和 OpenAI-compatible embedding.
-4. 已在 `lib/infra/vector/` 增加本地向量索引持久化; 外部向量库适配器如 Qdrant、pgvector 或 Chroma 待接入.
+4. 已在 `lib/infra/vector/` 增加本地向量索引持久化和 Chroma 适配器; Qdrant、pgvector 等其他外部向量库待接入.
 5. 增加管理 API: 上传文档、重建索引、查看 chunk、禁用低质量来源.
 
 验收标准:

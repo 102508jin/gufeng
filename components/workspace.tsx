@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { ChatInput } from "@/components/chat-input";
 import { KnowledgeImportPanel } from "@/components/knowledge-import-panel";
+import { ProviderSettingsDialog } from "@/components/provider-settings-dialog";
 import { VariantCard } from "@/components/variant-card";
 import { WorkspaceMemoryPanel } from "@/components/workspace-memory-panel";
 import {
@@ -23,7 +24,7 @@ import type {
   VariantResult
 } from "@/lib/types/generation";
 import type { PersonaProfile } from "@/lib/types/persona";
-import type { PublicModelProfile } from "@/lib/types/provider";
+import type { ProviderEndpointOverrides, PublicModelProfile } from "@/lib/types/provider";
 import type { SourceRef } from "@/lib/types/retrieval";
 import type { KnowledgeImportInput, KnowledgeImportResult } from "@/lib/types/knowledge-import";
 import {
@@ -64,6 +65,17 @@ const historyStorageKey = "wenyan-agent:question-history:v1";
 const favoritesStorageKey = "wenyan-agent:favorites:v1";
 const profilesStorageKey = "wenyan-agent:profiles:v1";
 const activeProfileStorageKey = "wenyan-agent:active-profile:v1";
+const providerSettingsStorageKey = "wenyan-agent:provider-settings:v1";
+
+type ProviderSettingsState = {
+  openaiBaseUrl: string;
+  anthropicBaseUrl: string;
+};
+
+const emptyProviderSettings: ProviderSettingsState = {
+  openaiBaseUrl: "",
+  anthropicBaseUrl: ""
+};
 
 const text = {
   providerOllama: "\u672c\u5730 Ollama",
@@ -226,6 +238,51 @@ function writeStorageValue(key: string, value: unknown) {
   }
 }
 
+function trimStoredValue(value: unknown): string {
+  return typeof value === "string" ? value.trim().replace(/\/+$/u, "") : "";
+}
+
+function readStoredProviderSettings(): ProviderSettingsState {
+  try {
+    const raw = window.localStorage.getItem(providerSettingsStorageKey);
+    if (!raw) {
+      return emptyProviderSettings;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<ProviderSettingsState>;
+    return {
+      openaiBaseUrl: trimStoredValue(parsed.openaiBaseUrl),
+      anthropicBaseUrl: trimStoredValue(parsed.anthropicBaseUrl)
+    };
+  } catch {
+    return emptyProviderSettings;
+  }
+}
+
+function getProviderDefaults(providers: PublicModelProfile[]): ProviderSettingsState {
+  const openai = providers.find((provider) => provider.id === "openai");
+  const anthropic = providers.find((provider) => provider.id === "anthropic");
+
+  return {
+    openaiBaseUrl: openai?.baseUrl ?? "",
+    anthropicBaseUrl: anthropic?.baseUrl ?? ""
+  };
+}
+
+function toRequestProviderOverrides(value: ProviderSettingsState): ProviderEndpointOverrides | undefined {
+  const overrides: ProviderEndpointOverrides = {};
+
+  if (value.openaiBaseUrl) {
+    overrides.openaiBaseUrl = value.openaiBaseUrl;
+  }
+
+  if (value.anthropicBaseUrl) {
+    overrides.anthropicBaseUrl = value.anthropicBaseUrl;
+  }
+
+  return Object.keys(overrides).length ? overrides : undefined;
+}
+
 function profileUserContextStorageKey(profileId: string) {
   return `wenyan-agent:profile:${profileId}:user-context:v1`;
 }
@@ -377,6 +434,8 @@ export function Workspace() {
   const [providerId, setProviderId] = useState("");
   const [personas, setPersonas] = useState<PersonaProfile[]>([]);
   const [providers, setProviders] = useState<PublicModelProfile[]>([]);
+  const [providerDefaults, setProviderDefaults] = useState<ProviderSettingsState>(emptyProviderSettings);
+  const [providerSettings, setProviderSettings] = useState<ProviderSettingsState>(emptyProviderSettings);
   const [historyEntries, setHistoryEntries] = useState<QuestionHistoryEntry[]>([]);
   const [favorites, setFavorites] = useState<FavoriteAnswer[]>([]);
   const [feedbackEntries, setFeedbackEntries] = useState<FeedbackEntry[]>([]);
@@ -392,6 +451,7 @@ export function Workspace() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingKnowledge, setIsSearchingKnowledge] = useState(false);
   const [isImportingKnowledge, setIsImportingKnowledge] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -416,6 +476,8 @@ export function Workspace() {
         if (!cancelled) {
           setPersonas(personaPayload.data);
           setProviders(providerPayload.data);
+          setProviderDefaults(getProviderDefaults(providerPayload.data));
+          setProviderSettings(readStoredProviderSettings());
 
           const defaultProvider = providerPayload.data.find((provider) => provider.isDefault && provider.configured)
             ?? providerPayload.data.find((provider) => provider.configured);
@@ -511,6 +573,7 @@ export function Workspace() {
     retrievalMode,
     personaId,
     providerId,
+    providerOverrides: toRequestProviderOverrides(providerSettings),
     userContext
   });
 
@@ -530,6 +593,7 @@ export function Workspace() {
           inputMode,
           personaId: personaId || null,
           providerId: providerId || null,
+          providerOverrides: toRequestProviderOverrides(providerSettings),
           variantsCount,
           explanationModes,
           aiIntervention,
@@ -618,6 +682,10 @@ export function Workspace() {
     setRetrievalMode(entry.retrievalMode);
     setPersonaId(entry.personaId);
     setProviderId(entry.providerId);
+    setProviderSettings({
+      openaiBaseUrl: entry.providerOverrides?.openaiBaseUrl ?? "",
+      anthropicBaseUrl: entry.providerOverrides?.anthropicBaseUrl ?? ""
+    });
     setUserContext(entry.userContext);
     setActionMessage(text.historyApplied);
   };
@@ -835,6 +903,7 @@ export function Workspace() {
             providerId={providerId}
             personas={personas}
             providers={providers}
+            hasCustomProviderSettings={Boolean(providerSettings.openaiBaseUrl || providerSettings.anthropicBaseUrl)}
             knowledgeRefs={knowledgeRefs}
             knowledgeError={knowledgeError}
             knowledgeSearching={isSearchingKnowledge}
@@ -849,6 +918,7 @@ export function Workspace() {
             onUserContextChange={setUserContext}
             onPersonaChange={setPersonaId}
             onProviderChange={setProviderId}
+            onOpenSettings={() => setIsSettingsOpen(true)}
             onKnowledgeSearch={() => {
               void handleKnowledgeSearch();
             }}
@@ -984,6 +1054,18 @@ export function Workspace() {
           )}
         </section>
       </div>
+
+      <ProviderSettingsDialog
+        open={isSettingsOpen}
+        value={providerSettings}
+        defaults={providerDefaults}
+        onClose={() => setIsSettingsOpen(false)}
+        onSave={(value) => {
+          setProviderSettings(value);
+          writeStorageValue(providerSettingsStorageKey, value);
+          setIsSettingsOpen(false);
+        }}
+      />
     </main>
   );
 }

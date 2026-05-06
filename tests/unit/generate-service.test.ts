@@ -21,6 +21,9 @@ describe("generate service", () => {
     expect(result.retrievalRefs.length).toBeGreaterThan(0);
     expect(result.retrievalRefs.some((ref) => ref.metadata.license === "internal-sample")).toBe(true);
     expect(result.variants[0].sources.some((source) => source.license === "internal-sample")).toBe(true);
+    expect(result.variants[0]?.freeExplanation).toContain("\u5927\u610f\u662f");
+    expect(result.variants[0]?.lineByLinePairs.every((pair) => !/^[\u3002\uff1b\uff0c\u3001\uff01\uff1f\uff1a]+$/u.test(pair.classicalSegment.trim()))).toBe(true);
+    expect(result.variants[0]?.lineByLinePairs.every((pair) => !/^[\u3002\uff1b\uff0c\u3001\uff01\uff1f\uff1a]+$/u.test(pair.vernacularSegment.trim()))).toBe(true);
   });
 
   it("applies user context and can disable knowledge retrieval", async () => {

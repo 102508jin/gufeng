@@ -5,6 +5,7 @@ import { LocalSourceRetriever, toSearchableKnowledgeDocuments } from "@/lib/doma
 import { createEmbeddingProvider } from "@/lib/infra/embedding/provider-registry";
 import { dataRepository } from "@/lib/infra/db/repositories/data-repository";
 import { logger } from "@/lib/infra/logger";
+import { createWritableVectorStore, resolveVectorStoreDriver } from "@/lib/infra/vector/provider-registry";
 import { buildVectorIndex, writeVectorIndex } from "@/lib/infra/vector/vector-index";
 import type { SourceRef } from "@/lib/types/retrieval";
 import { toSourceRef } from "@/lib/utils/retrieval";
@@ -31,16 +32,21 @@ export class KnowledgeService {
       dataRepository.listKnowledge()
     ]);
     const embeddingProvider = createEmbeddingProvider();
+    const documents = toSearchableKnowledgeDocuments(knowledge);
     const vectorIndex = await buildVectorIndex({
-      documents: toSearchableKnowledgeDocuments(knowledge),
+      documents,
       embeddingProvider
     });
     await writeVectorIndex(vectorIndex);
+    const writableVectorStore = createWritableVectorStore();
+    const externalVectorDocuments = writableVectorStore ? await writableVectorStore.upsertDocuments(documents) : 0;
 
     const result = {
       personas: personas.length,
       knowledge: knowledge.length,
       vectorDocuments: vectorIndex.documents.length,
+      externalVectorStore: resolveVectorStoreDriver(),
+      externalVectorDocuments,
       embeddingProvider: embeddingProvider.fingerprint,
       updatedAt: new Date().toISOString()
     };

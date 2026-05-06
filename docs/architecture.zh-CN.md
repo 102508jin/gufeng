@@ -47,5 +47,6 @@
 - mock provider 走确定性 fallback, 仍会在 style notes 中反映介入强度.
 - 知识库检索使用 `EmbeddingProvider` 抽象. 默认本地 hashing provider 离线且确定; 可通过 env 切换到 OpenAI-compatible embedding endpoint.
 - `npm run reindex` 会写入本地 `data/processed/vector-index.json`; 检索只在 provider fingerprint 和文档 content hash 仍匹配时复用索引向量.
+- `VECTOR_STORE=chroma` 会把知识库检索切换到 Chroma, 并在 reindex 时 upsert chunks, 同时保留本地 vector index 作为 fallback.
 - 工作台知识库导入面板通过 `POST /api/knowledge/import` 写入用户文档; 浏览器不会传入任意文件系统路径.
 - 回答反馈按本地浏览器配置档保存到 `localStorage`, 并随配置档备份导出.

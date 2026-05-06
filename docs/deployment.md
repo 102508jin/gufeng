@@ -23,6 +23,7 @@ Copy-Item .env.example .env.local
 - Keep `DEFAULT_PROVIDER_ID=mock` for offline validation.
 - Use `ollama`, `openai`, or `anthropic` only after the relevant local service or API key is available.
 - Keep `EMBEDDING_PROVIDER=local` unless an OpenAI-compatible `/embeddings` endpoint is ready.
+- Keep `VECTOR_STORE=local` for offline validation. Use `VECTOR_STORE=chroma` only after Chroma is running and `CHROMA_BASE_URL` is reachable.
 
 4. Rebuild corpus and vector index.
 
@@ -50,6 +51,8 @@ GET /api/health
 ```
 
 The response should return `status: "ok"`. A `degraded` status means the corpus, model profiles, embedding provider, or vector index needs attention before release.
+
+For Chroma-backed retrieval, start Chroma before `npm run reindex`. Reindexing still writes the local vector index for fallback, then upserts knowledge chunks into the configured Chroma collection.
 
 ## Docker Deployment
 

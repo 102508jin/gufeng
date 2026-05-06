@@ -18,5 +18,7 @@ export type KnowledgeImportResult = {
   totalRawDocuments: number;
   processedChunks: number;
   vectorDocuments: number;
+  externalVectorStore?: string;
+  externalVectorDocuments?: number;
   updatedAt: string;
 };

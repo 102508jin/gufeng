@@ -7,6 +7,7 @@ import type {
   UserContext,
   VariantResult
 } from "@/lib/types/generation";
+import type { ProviderEndpointOverrides } from "@/lib/types/provider";
 import type { SourceRef } from "@/lib/types/retrieval";
 
 export const MAX_HISTORY_ENTRIES = 20;
@@ -40,6 +41,7 @@ export type GenerationSettingsSnapshot = {
   retrievalMode: RetrievalMode;
   personaId: string;
   providerId: string;
+  providerOverrides?: ProviderEndpointOverrides;
   userContext: UserContext;
 };
 

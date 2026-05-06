@@ -22,6 +22,7 @@ type ChatInputProps = {
   providerId: string;
   personas: PersonaProfile[];
   providers: PublicModelProfile[];
+  hasCustomProviderSettings: boolean;
   knowledgeRefs: SourceRef[];
   knowledgeError: string | null;
   knowledgeSearching: boolean;
@@ -36,6 +37,7 @@ type ChatInputProps = {
   onUserContextChange: (value: UserContext) => void;
   onPersonaChange: (value: string) => void;
   onProviderChange: (value: string) => void;
+  onOpenSettings: () => void;
   onKnowledgeSearch: () => void;
   onSubmit: () => void;
 };
@@ -74,6 +76,8 @@ const text = {
   providerLabel: "\u6a21\u578b\u9a71\u52a8",
   providerDefault: "\u8ddf\u968f\u9ed8\u8ba4\u914d\u7f6e",
   providerNotReady: "\u672a\u914d\u7f6e",
+  settings: "\u63a5\u53e3\u8bbe\u7f6e",
+  settingsCustom: "\u63a5\u53e3\u8bbe\u7f6e\uff08\u5df2\u81ea\u5b9a\u4e49\uff09",
   variantsLabel: "\u751f\u6210\u7248\u672c",
   explanationLabel: "\u89e3\u6790\u7c7b\u578b",
   generating: "\u751f\u6210\u4e2d...",
@@ -125,8 +129,11 @@ export function ChatInput(props: ChatInputProps) {
           <p className="eyebrow">{text.eyebrow}</p>
           <h2>{text.title}</h2>
         </div>
-        <p className="panel-copy">{text.summary}</p>
+        <button type="button" className="secondary-button compact-button" onClick={props.onOpenSettings} disabled={props.disabled}>
+          {props.hasCustomProviderSettings ? text.settingsCustom : text.settings}
+        </button>
       </div>
+      <p className="panel-copy composer-copy">{text.summary}</p>
 
       <label className="field-group">
         <span className="field-label">{text.queryLabel}</span>

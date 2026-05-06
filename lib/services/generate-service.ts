@@ -93,7 +93,7 @@ export class GenerateService {
   ) {}
 
   async generate(request: GenerateRequest): Promise<GenerateResponse> {
-    const profile = this.resolveProfile(request.providerId);
+    const profile = this.resolveProfile(request.providerId, request.providerOverrides);
     try {
       return await this.generateWithProfile(request, profile);
     } catch (error) {
@@ -193,7 +193,7 @@ export class GenerateService {
         normalizationNotes: [
           `\u610f\u56fe\uff1a${formatIntent(normalized.intent)}`,
           `\u8bed\u6c14\uff1a${formatTone(normalized.tone)}`,
-          `\u4e3b\u9898\uff1a${normalized.topics.join("\u3001") || "\u672a\u8bc6\u522b"}`
+          `\u4e3b\u9898\uff1a${normalized.topics.join(" ") || "\u672a\u8bc6\u522b"}`
         ],
         personaApplied: Boolean(persona),
         retrievalHitCount: sharedSources.length,

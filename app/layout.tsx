@@ -1,7 +1,24 @@
 import type { Metadata } from "next";
+import { Ma_Shan_Zheng, Noto_Serif_SC } from "next/font/google";
 import type { ReactNode } from "react";
 
 import "@/app/globals.css";
+
+const bodySerif = Noto_Serif_SC({
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  preload: false,
+  variable: "--font-body-serif",
+  fallback: ["Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", "serif"]
+});
+
+const displayCalligraphy = Ma_Shan_Zheng({
+  weight: "400",
+  display: "swap",
+  preload: false,
+  variable: "--font-display-calligraphy",
+  fallback: ["STKaiti", "Kaiti SC", "Songti SC", "serif"]
+});
 
 export const metadata: Metadata = {
   title: "\u53e4\u98ce\u95ee\u7b54",
@@ -10,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" className={`${bodySerif.variable} ${displayCalligraphy.variable}`}>
       <body>{children}</body>
     </html>
   );

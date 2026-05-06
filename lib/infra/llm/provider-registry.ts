@@ -1,6 +1,6 @@
 import { env } from "@/lib/config/env";
 import { logger } from "@/lib/infra/logger";
-import type { ModelDriver, ModelProfile, PublicModelProfile } from "@/lib/types/provider";
+import type { ModelDriver, ModelProfile, ProviderEndpointOverrides, PublicModelProfile } from "@/lib/types/provider";
 
 type RawModelProfile = {
   id?: string;
@@ -55,6 +55,15 @@ function getCustomApiKey(profile: RawModelProfile): string | undefined {
   return undefined;
 }
 
+function normalizeBaseUrl(baseUrl: string | undefined | null): string | undefined {
+  const trimmed = baseUrl?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  return trimmed.replace(/\/+$/u, "");
+}
+
 function parseCustomProfiles(): ModelProfile[] {
   if (!env.modelProfilesJson.trim()) {
     return [];
@@ -84,7 +93,7 @@ function parseCustomProfiles(): ModelProfile[] {
         label: profile.label,
         driver,
         model: profile.model,
-        baseUrl: profile.baseUrl,
+        baseUrl: normalizeBaseUrl(profile.baseUrl),
         apiKey: getCustomApiKey(profile),
         headers: profile.headers
       }];
@@ -109,14 +118,14 @@ function buildBuiltinProfiles(): ModelProfile[] {
       label: env.ollamaLabel,
       driver: "ollama",
       model: env.ollamaModel,
-      baseUrl: env.ollamaBaseUrl
+      baseUrl: normalizeBaseUrl(env.ollamaBaseUrl)
     },
     {
       id: "openai",
       label: env.openAiLabel,
       driver: "openai-compatible",
       model: env.modelName,
-      baseUrl: env.openAiBaseUrl,
+      baseUrl: normalizeBaseUrl(env.openAiBaseUrl),
       apiKey: env.openAiApiKey
     },
     {
@@ -124,7 +133,7 @@ function buildBuiltinProfiles(): ModelProfile[] {
       label: env.anthropicLabel,
       driver: "anthropic",
       model: env.anthropicModel,
-      baseUrl: env.anthropicBaseUrl,
+      baseUrl: normalizeBaseUrl(env.anthropicBaseUrl),
       apiKey: env.anthropicApiKey
     }
   ];
@@ -176,12 +185,37 @@ export function listPublicModelProfiles(): PublicModelProfile[] {
     label: profile.label,
     driver: profile.driver,
     model: profile.model,
+    baseUrl: profile.baseUrl,
     configured: isProfileConfigured(profile),
     isDefault: profile.id === env.defaultProviderId
   }));
 }
 
-export function resolveModelProfile(providerId?: string | null): ModelProfile {
+export function applyRequestScopedProviderOverrides(
+  profile: ModelProfile,
+  overrides?: ProviderEndpointOverrides | null
+): ModelProfile {
+  if (!overrides) {
+    return profile;
+  }
+
+  if (profile.id === "openai") {
+    const baseUrl = normalizeBaseUrl(overrides.openaiBaseUrl);
+    return baseUrl ? { ...profile, baseUrl } : profile;
+  }
+
+  if (profile.id === "anthropic") {
+    const baseUrl = normalizeBaseUrl(overrides.anthropicBaseUrl);
+    return baseUrl ? { ...profile, baseUrl } : profile;
+  }
+
+  return profile;
+}
+
+export function resolveModelProfile(
+  providerId?: string | null,
+  overrides?: ProviderEndpointOverrides | null
+): ModelProfile {
   const profiles = listModelProfiles();
 
   if (providerId) {
@@ -190,22 +224,34 @@ export function resolveModelProfile(providerId?: string | null): ModelProfile {
       throw new Error("\u672a\u627e\u5230\u6240\u9009\u7684\u6a21\u578b\u9a71\u52a8\u3002");
     }
 
-    if (!isProfileConfigured(selected)) {
+    const effectiveProfile = applyRequestScopedProviderOverrides(selected, overrides);
+    if (!isProfileConfigured(effectiveProfile)) {
       throw new Error("\u6240\u9009\u7684\u6a21\u578b\u9a71\u52a8\u5c1a\u672a\u914d\u7f6e\u5b8c\u6210\u3002");
     }
 
-    return selected;
+    return effectiveProfile;
   }
 
   const preferred = profiles.find((profile) => profile.id === env.defaultProviderId);
-  if (preferred && isProfileConfigured(preferred)) {
-    return preferred;
+  if (preferred) {
+    const effectiveProfile = applyRequestScopedProviderOverrides(preferred, overrides);
+    if (isProfileConfigured(effectiveProfile)) {
+      return effectiveProfile;
+    }
   }
 
   const legacyPreferred = profiles.find((profile) => profile.id === env.modelProvider);
-  if (legacyPreferred && isProfileConfigured(legacyPreferred)) {
-    return legacyPreferred;
+  if (legacyPreferred) {
+    const effectiveProfile = applyRequestScopedProviderOverrides(legacyPreferred, overrides);
+    if (isProfileConfigured(effectiveProfile)) {
+      return effectiveProfile;
+    }
   }
 
-  return profiles.find(isProfileConfigured) ?? profiles[0] ?? { id: "mock", label: "\u6f14\u793a\u6a21\u5f0f", driver: "mock" };
+  const firstConfigured = profiles.find((profile) => isProfileConfigured(applyRequestScopedProviderOverrides(profile, overrides)));
+  if (firstConfigured) {
+    return applyRequestScopedProviderOverrides(firstConfigured, overrides);
+  }
+
+  return profiles[0] ?? { id: "mock", label: "\u6f14\u793a\u6a21\u5f0f", driver: "mock" };
 }

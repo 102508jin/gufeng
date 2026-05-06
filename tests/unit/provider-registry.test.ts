@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import type { ModelProfile } from "@/lib/types/provider";
+
 describe("provider registry", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -45,5 +47,46 @@ describe("provider registry", () => {
     const customProfile = listModelProfiles().find((profile) => profile.id === "custom");
 
     expect(customProfile?.apiKey).toBe("env-secret");
+  });
+
+  it("applies request-scoped baseUrl overrides to built-in openai and anthropic providers", async () => {
+    const { applyRequestScopedProviderOverrides } = await import("@/lib/infra/llm/provider-registry");
+    const openaiProfile: ModelProfile = {
+      id: "openai",
+      label: "OpenAI Compatible",
+      driver: "openai-compatible",
+      model: "gpt-4.1-mini",
+      baseUrl: "https://api.openai.com/v1",
+      apiKey: "test-key"
+    };
+    const anthropicProfile: ModelProfile = {
+      id: "anthropic",
+      label: "Claude / Anthropic",
+      driver: "anthropic",
+      model: "claude-3-5-sonnet-latest",
+      baseUrl: "https://api.anthropic.com/v1",
+      apiKey: "test-key"
+    };
+
+    expect(applyRequestScopedProviderOverrides(openaiProfile, {
+      openaiBaseUrl: "https://proxy.example.com/v1/"
+    }).baseUrl).toBe("https://proxy.example.com/v1");
+
+    expect(applyRequestScopedProviderOverrides(anthropicProfile, {
+      anthropicBaseUrl: "http://127.0.0.1:8080/v1/"
+    }).baseUrl).toBe("http://127.0.0.1:8080/v1");
+  });
+
+  it("leaves unrelated providers unchanged when request-scoped overrides are present", async () => {
+    const { applyRequestScopedProviderOverrides } = await import("@/lib/infra/llm/provider-registry");
+    const mockProfile: ModelProfile = {
+      id: "mock",
+      label: "\u6f14\u793a\u6a21\u5f0f",
+      driver: "mock"
+    };
+
+    expect(applyRequestScopedProviderOverrides(mockProfile, {
+      openaiBaseUrl: "https://proxy.example.com/v1"
+    })).toEqual(mockProfile);
   });
 });

@@ -4,12 +4,15 @@ import path from "node:path";
 import { dataRepository } from "@/lib/infra/db/repositories/data-repository";
 import { createEmbeddingProvider, isEmbeddingProfileConfigured, resolveEmbeddingProfile } from "@/lib/infra/embedding/provider-registry";
 import { listPublicModelProfiles } from "@/lib/infra/llm/provider-registry";
+import { resolveVectorStoreDriver } from "@/lib/infra/vector/provider-registry";
 import { getDefaultVectorIndexPath, readVectorIndex } from "@/lib/infra/vector/vector-index";
 
 type IndexState = {
   personas?: number;
   knowledge?: number;
   vectorDocuments?: number;
+  externalVectorStore?: string;
+  externalVectorDocuments?: number;
   embeddingProvider?: string;
   updatedAt?: string;
 };
@@ -38,6 +41,7 @@ export type HealthStatus = {
     fingerprint: string;
   };
   index: {
+    driver: string;
     stateFound: boolean;
     vectorIndexFound: boolean;
     vectorDocuments: number;
@@ -73,6 +77,8 @@ async function readIndexState(): Promise<IndexState | null> {
       personas: readNumber(parsed.personas),
       knowledge: readNumber(parsed.knowledge),
       vectorDocuments: readNumber(parsed.vectorDocuments),
+      externalVectorStore: readString(parsed.externalVectorStore),
+      externalVectorDocuments: readNumber(parsed.externalVectorDocuments),
       embeddingProvider: readString(parsed.embeddingProvider),
       updatedAt: readString(parsed.updatedAt)
     };
@@ -94,6 +100,7 @@ export class HealthService {
     const embeddingProvider = createEmbeddingProvider();
     const configuredModels = modelProfiles.filter((profile) => profile.configured);
     const defaultAvailable = modelProfiles.some((profile) => profile.isDefault && profile.configured);
+    const vectorStoreDriver = resolveVectorStoreDriver();
     const expectedDocuments = knowledge.length;
     const vectorDocuments = vectorIndex?.documents.length ?? 0;
     const providerMatches = Boolean(vectorIndex && vectorIndex.provider.fingerprint === embeddingProvider.fingerprint);
@@ -148,6 +155,7 @@ export class HealthService {
         fingerprint: embeddingProvider.fingerprint
       },
       index: {
+        driver: vectorStoreDriver,
         stateFound,
         vectorIndexFound,
         vectorDocuments,

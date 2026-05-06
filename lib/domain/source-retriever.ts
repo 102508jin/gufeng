@@ -1,5 +1,5 @@
 import { dataRepository } from "@/lib/infra/db/repositories/data-repository";
-import { InMemoryVectorStore } from "@/lib/infra/vector/in-memory-store";
+import { createVectorStore } from "@/lib/infra/vector/provider-registry";
 import type { SearchableDocument, VectorStore } from "@/lib/infra/vector/vector-store";
 import type { RetrievedChunk } from "@/lib/types/retrieval";
 import type { KnowledgeRecord } from "@/lib/types/retrieval";
@@ -32,7 +32,7 @@ export function toSearchableKnowledgeDocuments(knowledge: KnowledgeRecord[]): Se
 }
 
 export class LocalSourceRetriever implements SourceRetriever {
-  constructor(private readonly vectorStore: VectorStore = new InMemoryVectorStore()) {}
+  constructor(private readonly vectorStore: VectorStore = createVectorStore()) {}
 
   async search(query: string, topK = 4): Promise<RetrievedChunk[]> {
     const knowledge = await dataRepository.listKnowledge();

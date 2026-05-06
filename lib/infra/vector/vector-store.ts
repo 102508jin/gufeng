@@ -19,3 +19,7 @@ export type SearchResult = SearchableDocument & {
 export interface VectorStore {
   search(query: string, documents: SearchableDocument[], topK: number): Promise<SearchResult[]>;
 }
+
+export interface WritableVectorStore extends VectorStore {
+  upsertDocuments(documents: SearchableDocument[]): Promise<number>;
+}

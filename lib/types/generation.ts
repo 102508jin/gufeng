@@ -1,4 +1,5 @@
 import type { PersonaProfile } from "@/lib/types/persona";
+import type { ProviderEndpointOverrides } from "@/lib/types/provider";
 import type { RetrievedChunk, SourceRef } from "@/lib/types/retrieval";
 
 export type InputMode = "auto" | "vernacular" | "classical";
@@ -19,6 +20,7 @@ export type GenerateRequest = {
   inputMode: InputMode;
   personaId?: string | null;
   providerId?: string | null;
+  providerOverrides?: ProviderEndpointOverrides;
   variantsCount: number;
   explanationModes: ExplanationMode[];
   aiIntervention?: AiInterventionMode;

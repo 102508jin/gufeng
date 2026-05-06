@@ -1,18 +1,30 @@
 import type { VariantResult } from "@/lib/types/generation";
+import { splitChineseSentences } from "@/lib/utils/text";
 
 type ExplanationPanelProps = {
   variant: VariantResult;
 };
 
 const text = {
-  title: "\u89e3\u6790\u8bf4\u660e",
-  literal: "\u9010\u53e5\u76f4\u89e3",
-  free: "\u610f\u8bd1\u9610\u91ca",
-  gloss: "\u8bcd\u4e49\u6ce8\u91ca",
-  separator: "\u3001"
+  title: "解释说明",
+  literal: "逐句直解",
+  free: "意译阐释",
+  gloss: "词义注释",
+  separator: "、"
 } as const;
 
+function isStandalonePunctuation(value: string): boolean {
+  return /^[。；，、！？：]+$/u.test(value.trim());
+}
+
 export function ExplanationPanel({ variant }: ExplanationPanelProps) {
+  const freeExplanationLines = variant.freeExplanation
+    ? splitChineseSentences(variant.freeExplanation).filter((line) => !isStandalonePunctuation(line))
+    : [];
+  const sanitizedLinePairs = variant.lineByLinePairs.filter(
+    (pair) => !isStandalonePunctuation(pair.classicalSegment) && !isStandalonePunctuation(pair.vernacularSegment)
+  );
+
   return (
     <section className="stack-section">
       <div className="section-header">
@@ -20,17 +32,31 @@ export function ExplanationPanel({ variant }: ExplanationPanelProps) {
       </div>
 
       <div className="explanation-grid">
-        {variant.literalExplanation ? (
-          <article className="subpanel">
+        {sanitizedLinePairs.length ? (
+          <article className="subpanel explanation-panel-literal">
             <p className="subpanel-title">{text.literal}</p>
-            <p>{variant.literalExplanation}</p>
+            <div className="literal-line-list">
+              {sanitizedLinePairs.map((pair, index) => (
+                <div key={`${pair.classicalSegment}-${index}`} className="literal-line-item">
+                  <p className="literal-line-classical">{pair.classicalSegment}</p>
+                  <p className="literal-line-vernacular">{pair.vernacularSegment}</p>
+                  {pair.notes?.length ? <p className="line-pair-notes">{pair.notes.join(text.separator)}</p> : null}
+                </div>
+              ))}
+            </div>
           </article>
         ) : null}
 
         {variant.freeExplanation ? (
-          <article className="subpanel">
+          <article className="subpanel explanation-panel-free">
             <p className="subpanel-title">{text.free}</p>
-            <p>{variant.freeExplanation}</p>
+            <div className="free-paragraph-list">
+              {(freeExplanationLines.length ? freeExplanationLines : [variant.freeExplanation]).map((line, index) => (
+                <p key={`${line}-${index}`} className="free-paragraph">
+                  {line}
+                </p>
+              ))}
+            </div>
           </article>
         ) : null}
 
@@ -40,16 +66,6 @@ export function ExplanationPanel({ variant }: ExplanationPanelProps) {
             <p>{variant.glossExplanation}</p>
           </article>
         ) : null}
-      </div>
-
-      <div className="line-pair-list">
-        {variant.lineByLinePairs.map((pair, index) => (
-          <div key={`${pair.classicalSegment}-${index}`} className="line-pair-card">
-            <p className="line-pair-classical">{pair.classicalSegment}</p>
-            <p className="line-pair-vernacular">{pair.vernacularSegment}</p>
-            {pair.notes?.length ? <p className="line-pair-notes">{pair.notes.join(text.separator)}</p> : null}
-          </div>
-        ))}
       </div>
     </section>
   );

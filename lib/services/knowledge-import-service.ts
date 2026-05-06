@@ -10,6 +10,7 @@ import {
 import { toSearchableKnowledgeDocuments } from "@/lib/domain/source-retriever";
 import { dataRepository } from "@/lib/infra/db/repositories/data-repository";
 import { createEmbeddingProvider } from "@/lib/infra/embedding/provider-registry";
+import { createWritableVectorStore, resolveVectorStoreDriver } from "@/lib/infra/vector/provider-registry";
 import { buildVectorIndex, getDefaultVectorIndexPath, writeVectorIndex } from "@/lib/infra/vector/vector-index";
 import type { KnowledgeImportInput, KnowledgeImportResult } from "@/lib/types/knowledge-import";
 
@@ -140,10 +141,13 @@ export class KnowledgeImportService {
     const documents = await this.readRawKnowledgeDocuments();
     const records = buildKnowledgeRecords(documents);
     const embeddingProvider = createEmbeddingProvider();
+    const searchableDocuments = toSearchableKnowledgeDocuments(records);
     const vectorIndex = await buildVectorIndex({
-      documents: toSearchableKnowledgeDocuments(records),
+      documents: searchableDocuments,
       embeddingProvider
     });
+    const writableVectorStore = createWritableVectorStore();
+    const externalVectorDocuments = writableVectorStore ? await writableVectorStore.upsertDocuments(searchableDocuments) : 0;
     const personas = await dataRepository.listPersonas();
     const updatedAt = new Date().toISOString();
     const result = {
@@ -151,6 +155,8 @@ export class KnowledgeImportService {
       totalRawDocuments: documents.length,
       processedChunks: records.length,
       vectorDocuments: vectorIndex.documents.length,
+      externalVectorStore: resolveVectorStoreDriver(),
+      externalVectorDocuments,
       updatedAt
     };
 
@@ -163,6 +169,8 @@ export class KnowledgeImportService {
         personas: personas.length,
         knowledge: records.length,
         vectorDocuments: vectorIndex.documents.length,
+        externalVectorStore: resolveVectorStoreDriver(),
+        externalVectorDocuments,
         embeddingProvider: embeddingProvider.fingerprint,
         updatedAt
       }, null, 2)}\n`,

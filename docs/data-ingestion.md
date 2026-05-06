@@ -21,16 +21,16 @@ Available scripts:
 - `npm run ingest:knowledge`
 - `npm run reindex`
 
-Embedding generation now goes through an `EmbeddingProvider` abstraction. The default provider is local hashing embedding, and `EMBEDDING_PROVIDER=openai-compatible` can call an OpenAI-compatible `/embeddings` endpoint. `npm run reindex` persists document vectors to `data/processed/vector-index.json`; external vector databases are still future work.
+Embedding generation now goes through an `EmbeddingProvider` abstraction. The default provider is local hashing embedding, and `EMBEDDING_PROVIDER=openai-compatible` can call an OpenAI-compatible `/embeddings` endpoint. `npm run reindex` always persists document vectors to `data/processed/vector-index.json`; when `VECTOR_STORE=chroma`, it also upserts the same knowledge chunks into Chroma.
 
 ## Current Knowledge Retrieval
 
-- `LocalSourceRetriever` loads local knowledge entries through `dataRepository.listKnowledge()` and ranks them with `InMemoryVectorStore`.
+- `LocalSourceRetriever` loads local knowledge entries through `dataRepository.listKnowledge()` and ranks them with the configured vector store.
 - `/api/knowledge/search?q=...&topK=...` can be used to preview RAG matches before generation.
 - `/api/knowledge/reindex` writes `data/processed/index-state.json` and `data/processed/vector-index.json`.
 - Search responses include source, license, chunk id, score, and excerpt data so citations stay traceable.
-- The current ranking implementation is still in-memory but reuses persisted document vectors when the embedding provider fingerprint and content hash match.
-- A future external vector database should preserve the `SourceRetriever` contract and replace only the adapter under `lib/infra/vector/`.
+- `VECTOR_STORE=local` uses `InMemoryVectorStore` and reuses persisted document vectors when the embedding provider fingerprint and content hash match.
+- `VECTOR_STORE=chroma` uses the Chroma HTTP API for knowledge search, with local vector search as a fallback if Chroma is unavailable.
 
 ## Embedding Configuration
 
@@ -39,3 +39,11 @@ Embedding generation now goes through an `EmbeddingProvider` abstraction. The de
 - `EMBEDDING_MODEL` selects the embedding model for OpenAI-compatible providers.
 - `EMBEDDING_API_KEY` is optional for local OpenAI-compatible servers, but required for `api.openai.com`.
 - `EMBEDDING_DIMENSIONS` controls local hashing vector size.
+
+## Chroma Configuration
+
+- `VECTOR_STORE=chroma` enables Chroma for knowledge search and reindex upserts.
+- `CHROMA_BASE_URL` defaults to `http://127.0.0.1:8000`.
+- `CHROMA_TENANT`, `CHROMA_DATABASE`, and `CHROMA_COLLECTION` select the Chroma namespace.
+- `CHROMA_TOKEN` is sent as `x-chroma-token` when set.
+- Run `npm run reindex` after enabling Chroma so the collection is created and populated.

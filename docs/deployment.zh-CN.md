@@ -23,6 +23,7 @@ Copy-Item .env.example .env.local
 - 离线验证时保持 `DEFAULT_PROVIDER_ID=mock`.
 - 只有在本地服务或 API key 已就绪时, 才切换到 `ollama`, `openai` 或 `anthropic`.
 - 除非已有 OpenAI-compatible `/embeddings` endpoint, 否则保持 `EMBEDDING_PROVIDER=local`.
+- 离线验证时保持 `VECTOR_STORE=local`. 只有在 Chroma 已启动且 `CHROMA_BASE_URL` 可访问时, 才切换到 `VECTOR_STORE=chroma`.
 
 4. 重建语料和向量索引.
 
@@ -50,6 +51,8 @@ GET /api/health
 ```
 
 返回结果应为 `status: "ok"`. 如果是 `degraded`, 说明 corpus、模型配置、embedding provider 或 vector index 需要处理后再发布.
+
+使用 Chroma 检索时, 先启动 Chroma 再执行 `npm run reindex`. Reindex 仍会写入本地 vector index 作为 fallback, 然后把知识 chunk upsert 到配置的 Chroma collection.
 
 ## Docker 部署
 

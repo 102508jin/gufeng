@@ -32,5 +32,11 @@ export const env = {
   embeddingModel: process.env.EMBEDDING_MODEL ?? "text-embedding-3-small",
   embeddingBaseUrl: process.env.EMBEDDING_API_BASE_URL ?? openAiBaseUrl,
   embeddingApiKey: process.env.EMBEDDING_API_KEY ?? openAiApiKey,
-  embeddingDimensions: numberFromEnv(process.env.EMBEDDING_DIMENSIONS, 128)
+  embeddingDimensions: numberFromEnv(process.env.EMBEDDING_DIMENSIONS, 128),
+  vectorStore: process.env.VECTOR_STORE ?? "local",
+  chromaBaseUrl: process.env.CHROMA_BASE_URL ?? "http://127.0.0.1:8000",
+  chromaTenant: process.env.CHROMA_TENANT ?? "default_tenant",
+  chromaDatabase: process.env.CHROMA_DATABASE ?? "default_database",
+  chromaCollection: process.env.CHROMA_COLLECTION ?? "wenyan_knowledge",
+  chromaToken: process.env.CHROMA_TOKEN ?? ""
 };

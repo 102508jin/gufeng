@@ -1,6 +1,11 @@
 export type ModelDriver = "mock" | "ollama" | "openai-compatible" | "anthropic";
 export type EmbeddingDriver = "local" | "openai-compatible";
 
+export type ProviderEndpointOverrides = {
+  openaiBaseUrl?: string;
+  anthropicBaseUrl?: string;
+};
+
 export type ModelProfile = {
   id: string;
   label: string;
@@ -16,6 +21,7 @@ export type PublicModelProfile = {
   label: string;
   driver: ModelDriver;
   model?: string;
+  baseUrl?: string;
   configured: boolean;
   isDefault: boolean;
 };
