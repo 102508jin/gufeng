@@ -883,14 +883,20 @@ export function Workspace() {
 
   return (
     <main className="page-shell">
-      <section className="hero-panel">
-        <p className="eyebrow">{text.heroEyebrow}</p>
-        <h1>{text.heroTitle}</h1>
-        <p className="hero-copy">{text.heroCopy}</p>
-      </section>
+      <header className="app-topbar">
+        <div className="app-brand">
+          <p className="eyebrow">{text.heroEyebrow}</p>
+          <h1>{text.heroTitle}</h1>
+        </div>
+        <div className="app-status-row" aria-label="workspace status">
+          <span>{formatProvider(selectedProvider?.driver ?? result?.debug?.provider)}</span>
+          <span>{formatAiIntervention(aiIntervention)}</span>
+          <span>{formatRetrievalMode(retrievalMode)}</span>
+        </div>
+      </header>
 
-      <div className="workspace-grid">
-        <aside className="workspace-sidebar">
+      <div className="workbench-grid">
+        <aside className="input-rail">
           <ChatInput
             query={query}
             inputMode={inputMode}
@@ -926,45 +932,9 @@ export function Workspace() {
               void handleSubmit();
             }}
           />
-
-          <WorkspaceMemoryPanel
-            profiles={profiles}
-            activeProfileId={activeProfileId}
-            profileNameDraft={profileNameDraft}
-            historyEntries={historyEntries}
-            favorites={filteredFavorites}
-            personas={personas}
-            personaFilter={favoritePersonaFilter}
-            topicFilter={favoriteTopicFilter}
-            onProfileChange={handleSelectProfile}
-            onProfileNameDraftChange={setProfileNameDraft}
-            onCreateProfile={handleCreateProfile}
-            onRenameProfile={handleRenameProfile}
-            onDeleteProfile={handleDeleteProfile}
-            onExportProfileBackup={handleExportProfileBackup}
-            onImportProfileBackup={(file) => {
-              void handleImportProfileBackup(file);
-            }}
-            onPersonaFilterChange={setFavoritePersonaFilter}
-            onTopicFilterChange={setFavoriteTopicFilter}
-            onUseHistory={handleUseHistory}
-            onRemoveHistory={(id) => setHistoryEntries((current) => current.filter((entry) => entry.id !== id))}
-            onClearHistory={handleClearHistory}
-            onUseFavoriteQuery={handleUseFavoriteQuery}
-            onRemoveFavorite={(favoriteKey) => setFavorites((current) => current.filter((item) => item.favoriteKey !== favoriteKey))}
-            onExportFavorite={handleExportFavorite}
-          />
-
-          <KnowledgeImportPanel
-            disabled={isSubmitting}
-            importing={isImportingKnowledge}
-            importError={knowledgeImportError}
-            importSummary={knowledgeImportSummary}
-            onImport={handleImportKnowledge}
-          />
         </aside>
 
-        <section className="results-column">
+        <section className="results-column workspace-main">
           {error ? <div className="panel error-panel">{error}</div> : null}
           {actionMessage ? <div className="panel toast-panel">{actionMessage}</div> : null}
 
@@ -1053,6 +1023,44 @@ export function Workspace() {
             </section>
           )}
         </section>
+
+        <aside className="utility-rail">
+          <WorkspaceMemoryPanel
+            profiles={profiles}
+            activeProfileId={activeProfileId}
+            profileNameDraft={profileNameDraft}
+            historyEntries={historyEntries}
+            favorites={filteredFavorites}
+            personas={personas}
+            personaFilter={favoritePersonaFilter}
+            topicFilter={favoriteTopicFilter}
+            onProfileChange={handleSelectProfile}
+            onProfileNameDraftChange={setProfileNameDraft}
+            onCreateProfile={handleCreateProfile}
+            onRenameProfile={handleRenameProfile}
+            onDeleteProfile={handleDeleteProfile}
+            onExportProfileBackup={handleExportProfileBackup}
+            onImportProfileBackup={(file) => {
+              void handleImportProfileBackup(file);
+            }}
+            onPersonaFilterChange={setFavoritePersonaFilter}
+            onTopicFilterChange={setFavoriteTopicFilter}
+            onUseHistory={handleUseHistory}
+            onRemoveHistory={(id) => setHistoryEntries((current) => current.filter((entry) => entry.id !== id))}
+            onClearHistory={handleClearHistory}
+            onUseFavoriteQuery={handleUseFavoriteQuery}
+            onRemoveFavorite={(favoriteKey) => setFavorites((current) => current.filter((item) => item.favoriteKey !== favoriteKey))}
+            onExportFavorite={handleExportFavorite}
+          />
+
+          <KnowledgeImportPanel
+            disabled={isSubmitting}
+            importing={isImportingKnowledge}
+            importError={knowledgeImportError}
+            importSummary={knowledgeImportSummary}
+            onImport={handleImportKnowledge}
+          />
+        </aside>
       </div>
 
       <ProviderSettingsDialog

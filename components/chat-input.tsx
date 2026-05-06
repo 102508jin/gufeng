@@ -73,6 +73,10 @@ const text = {
   knowledgePreview: "\u547d\u4e2d\u6765\u6e90",
   sourceScore: "\u76f8\u5173\u5ea6",
   validationTitle: "\u8868\u5355\u63d0\u793a",
+  profileSection: "\u4e2a\u4eba\u8bed\u5883",
+  generationSection: "\u751f\u6210\u7b56\u7565",
+  retrievalSection: "\u77e5\u8bc6\u4e0e\u6765\u6e90",
+  modelSection: "\u6a21\u578b\u4e0e\u8f93\u51fa",
   providerLabel: "\u6a21\u578b\u9a71\u52a8",
   providerDefault: "\u8ddf\u968f\u9ed8\u8ba4\u914d\u7f6e",
   providerNotReady: "\u672a\u914d\u7f6e",
@@ -124,120 +128,145 @@ export function ChatInput(props: ChatInputProps) {
 
   return (
     <section className="panel composer-panel">
-      <div className="panel-heading">
+      <header className="composer-header">
         <div>
           <p className="eyebrow">{text.eyebrow}</p>
           <h2>{text.title}</h2>
         </div>
-        <button type="button" className="secondary-button compact-button" onClick={props.onOpenSettings} disabled={props.disabled}>
+        <button type="button" className="icon-text-button" onClick={props.onOpenSettings} disabled={props.disabled}>
           {props.hasCustomProviderSettings ? text.settingsCustom : text.settings}
         </button>
-      </div>
-      <p className="panel-copy composer-copy">{text.summary}</p>
+      </header>
 
-      <label className="field-group">
-        <span className="field-label">{text.queryLabel}</span>
-        <textarea
-          className="field-input field-textarea"
-          value={props.query}
-          onChange={(event) => props.onQueryChange(event.target.value)}
-          placeholder={text.placeholder}
-          disabled={props.disabled}
-          rows={6}
-          maxLength={1000}
-        />
-      </label>
-
-      <div className="field-group">
-        <span className="field-label">{text.userLabel}</span>
-        <div className="field-grid">
-          <label className="compact-field">
-            <span>{text.displayNameLabel}</span>
-            <input
-              className="field-input"
-              value={props.userContext.displayName ?? ""}
-              onChange={(event) => updateUserContext({ displayName: event.target.value })}
-              placeholder={text.displayNamePlaceholder}
-              disabled={props.disabled}
-              maxLength={40}
-            />
-          </label>
-          <label className="compact-field">
-            <span>{text.useCaseLabel}</span>
-            <input
-              className="field-input"
-              value={props.userContext.useCase ?? ""}
-              onChange={(event) => updateUserContext({ useCase: event.target.value })}
-              placeholder={text.useCasePlaceholder}
-              disabled={props.disabled}
-              maxLength={80}
-            />
-          </label>
-        </div>
-        <label className="compact-field">
-          <span>{text.preferenceLabel}</span>
-          <input
-            className="field-input"
-            value={props.userContext.preference ?? ""}
-            onChange={(event) => updateUserContext({ preference: event.target.value })}
-            placeholder={text.preferencePlaceholder}
+      <div className="composer-body">
+        <label className="prompt-box">
+          <span className="field-label">{text.queryLabel}</span>
+          <textarea
+            className="field-input prompt-textarea"
+            value={props.query}
+            onChange={(event) => props.onQueryChange(event.target.value)}
+            placeholder={text.placeholder}
             disabled={props.disabled}
-            maxLength={240}
+            rows={4}
+            maxLength={1000}
           />
         </label>
-      </div>
 
-      <div className="field-grid">
-        <label className="field-group">
-          <span className="field-label">{text.modeLabel}</span>
-          <select
-            className="field-input field-select"
-            value={props.inputMode}
-            onChange={(event) => props.onInputModeChange(event.target.value as InputMode)}
-            disabled={props.disabled}
-          >
-            <option value="auto">{text.auto}</option>
-            <option value="vernacular">{text.vernacular}</option>
-            <option value="classical">{text.classical}</option>
-          </select>
-        </label>
-
-        <label className="field-group">
-          <span className="field-label">{text.variantsLabel}</span>
-          <select
-            className="field-input field-select"
-            value={String(props.variantsCount)}
-            onChange={(event) => props.onVariantsCountChange(Number(event.target.value))}
-            disabled={props.disabled}
-          >
-            <option value="2">{`2 \u7248`}</option>
-            <option value="3">{`3 \u7248`}</option>
-            <option value="4">{`4 \u7248`}</option>
-          </select>
-        </label>
-      </div>
-
-      <div className="field-grid">
-        <div className="field-group">
-          <span className="field-label">{text.aiInterventionLabel}</span>
-          <div className="chip-row segmented-row">
-            {aiInterventionOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`chip ${props.aiIntervention === option.value ? "chip-active" : ""}`}
-                onClick={() => props.onAiInterventionChange(option.value)}
+        <div className="composer-section">
+          <div className="section-title-row">
+            <p className="field-label">{text.generationSection}</p>
+          </div>
+          <div className="field-grid">
+            <label className="compact-field">
+              <span>{text.modeLabel}</span>
+              <select
+                className="field-input field-select"
+                value={props.inputMode}
+                onChange={(event) => props.onInputModeChange(event.target.value as InputMode)}
                 disabled={props.disabled}
               >
-                {option.label}
-              </button>
-            ))}
+                <option value="auto">{text.auto}</option>
+                <option value="vernacular">{text.vernacular}</option>
+                <option value="classical">{text.classical}</option>
+              </select>
+            </label>
+            <label className="compact-field">
+              <span>{text.variantsLabel}</span>
+              <select
+                className="field-input field-select"
+                value={String(props.variantsCount)}
+                onChange={(event) => props.onVariantsCountChange(Number(event.target.value))}
+                disabled={props.disabled}
+              >
+                <option value="2">{`2 \u7248`}</option>
+                <option value="3">{`3 \u7248`}</option>
+                <option value="4">{`4 \u7248`}</option>
+              </select>
+            </label>
+          </div>
+          <div className="compact-field">
+            <span>{text.aiInterventionLabel}</span>
+            <div className="chip-row segmented-row">
+              {aiInterventionOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`chip ${props.aiIntervention === option.value ? "chip-active" : ""}`}
+                  onClick={() => props.onAiInterventionChange(option.value)}
+                  disabled={props.disabled}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="field-group">
-          <span className="field-label">{text.retrievalLabel}</span>
-          <div className="chip-row segmented-row">
+        <div className="composer-section">
+          <div className="section-title-row">
+            <p className="field-label">{text.profileSection}</p>
+          </div>
+          <div className="field-grid">
+            <label className="compact-field">
+              <span>{text.displayNameLabel}</span>
+              <input
+                className="field-input"
+                value={props.userContext.displayName ?? ""}
+                onChange={(event) => updateUserContext({ displayName: event.target.value })}
+                placeholder={text.displayNamePlaceholder}
+                disabled={props.disabled}
+                maxLength={40}
+              />
+            </label>
+            <label className="compact-field">
+              <span>{text.useCaseLabel}</span>
+              <input
+                className="field-input"
+                value={props.userContext.useCase ?? ""}
+                onChange={(event) => updateUserContext({ useCase: event.target.value })}
+                placeholder={text.useCasePlaceholder}
+                disabled={props.disabled}
+                maxLength={80}
+              />
+            </label>
+          </div>
+          <label className="compact-field">
+            <span>{text.preferenceLabel}</span>
+            <input
+              className="field-input"
+              value={props.userContext.preference ?? ""}
+              onChange={(event) => updateUserContext({ preference: event.target.value })}
+              placeholder={text.preferencePlaceholder}
+              disabled={props.disabled}
+              maxLength={240}
+            />
+          </label>
+        </div>
+
+        {props.validationMessages.length ? (
+          <div className="validation-panel" role="status">
+            <p>{text.validationTitle}</p>
+            <ul>
+              {props.validationMessages.map((message) => (
+                <li key={message}>{message}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        <div className="composer-section">
+          <div className="section-title-row">
+            <p className="field-label">{text.retrievalSection}</p>
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={props.onKnowledgeSearch}
+              disabled={props.disabled || props.knowledgeSearching || !props.query.trim()}
+            >
+              {props.knowledgeSearching ? text.knowledgeSearching : text.knowledgeSearch}
+            </button>
+          </div>
+          <div className="chip-row segmented-row retrieval-segmented-row">
             {retrievalOptions.map((option) => (
               <button
                 key={option.value}
@@ -250,101 +279,84 @@ export function ChatInput(props: ChatInputProps) {
               </button>
             ))}
           </div>
+          {props.knowledgeError ? <p className="inline-error">{props.knowledgeError}</p> : null}
+          {props.knowledgeRefs.length ? (
+            <div className="knowledge-preview">
+              <p className="field-label">{text.knowledgePreview}</p>
+              <div className="knowledge-preview-list">
+                {props.knowledgeRefs.map((refItem) => (
+                  <article key={refItem.id} className="knowledge-preview-item">
+                    <div>
+                      <h3>{refItem.title}</h3>
+                      <p>{refItem.excerpt}</p>
+                    </div>
+                    <span>{`${text.sourceScore} ${refItem.score.toFixed(2)}`}</span>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
-      </div>
 
-      <PersonaSelector
-        personas={props.personas}
-        value={props.personaId}
-        disabled={props.disabled}
-        onChange={props.onPersonaChange}
-      />
-
-      <label className="field-group">
-        <span className="field-label">{text.providerLabel}</span>
-        <select
-          className="field-input field-select"
-          value={props.providerId}
-          onChange={(event) => props.onProviderChange(event.target.value)}
-          disabled={props.disabled}
-        >
-          <option value="">{text.providerDefault}</option>
-          {props.providers.map((provider) => (
-            <option key={provider.id} value={provider.id} disabled={!provider.configured}>
-              {provider.label}
-              {provider.configured ? "" : `\uff08${text.providerNotReady}\uff09`}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <div className="knowledge-tools">
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={props.onKnowledgeSearch}
-          disabled={props.disabled || props.knowledgeSearching || !props.query.trim()}
-        >
-          {props.knowledgeSearching ? text.knowledgeSearching : text.knowledgeSearch}
-        </button>
-        {props.knowledgeError ? <p className="inline-error">{props.knowledgeError}</p> : null}
-        {props.knowledgeRefs.length ? (
-          <div className="knowledge-preview">
-            <p className="field-label">{text.knowledgePreview}</p>
-            <div className="knowledge-preview-list">
-              {props.knowledgeRefs.map((refItem) => (
-                <article key={refItem.id} className="knowledge-preview-item">
-                  <div>
-                    <h3>{refItem.title}</h3>
-                    <p>{refItem.excerpt}</p>
-                  </div>
-                  <span>{`${text.sourceScore} ${refItem.score.toFixed(2)}`}</span>
-                </article>
+        <div className="composer-section">
+          <div className="section-title-row">
+            <p className="field-label">{text.modelSection}</p>
+          </div>
+          <PersonaSelector
+            personas={props.personas}
+            value={props.personaId}
+            disabled={props.disabled}
+            onChange={props.onPersonaChange}
+          />
+          <label className="compact-field">
+            <span>{text.providerLabel}</span>
+            <select
+              className="field-input field-select"
+              value={props.providerId}
+              onChange={(event) => props.onProviderChange(event.target.value)}
+              disabled={props.disabled}
+            >
+              <option value="">{text.providerDefault}</option>
+              {props.providers.map((provider) => (
+                <option key={provider.id} value={provider.id} disabled={!provider.configured}>
+                  {provider.label}
+                  {provider.configured ? "" : `\uff08${text.providerNotReady}\uff09`}
+                </option>
               ))}
+            </select>
+          </label>
+          <div className="compact-field">
+            <span>{text.explanationLabel}</span>
+            <div className="chip-row">
+              {explanationOptions.map((option) => {
+                const active = props.explanationModes.includes(option.value);
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`chip ${active ? "chip-active" : ""}`}
+                    onClick={() => toggleExplanationMode(option.value)}
+                    disabled={props.disabled}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
-        ) : null}
-      </div>
-
-      <div className="field-group">
-        <span className="field-label">{text.explanationLabel}</span>
-        <div className="chip-row">
-          {explanationOptions.map((option) => {
-            const active = props.explanationModes.includes(option.value);
-            return (
-              <button
-                key={option.value}
-                type="button"
-                className={`chip ${active ? "chip-active" : ""}`}
-                onClick={() => toggleExplanationMode(option.value)}
-                disabled={props.disabled}
-              >
-                {option.label}
-              </button>
-            );
-          })}
         </div>
       </div>
 
-      <button
-        type="button"
-        className="primary-button"
-        onClick={props.onSubmit}
-        disabled={props.disabled || !props.query.trim()}
-      >
-        {props.disabled ? text.generating : text.submit}
-      </button>
-
-      {props.validationMessages.length ? (
-        <div className="validation-panel" role="status">
-          <p>{text.validationTitle}</p>
-          <ul>
-            {props.validationMessages.map((message) => (
-              <li key={message}>{message}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <footer className="composer-footer">
+        <button
+          type="button"
+          className="primary-button"
+          onClick={props.onSubmit}
+          disabled={props.disabled || !props.query.trim()}
+        >
+          {props.disabled ? text.generating : text.submit}
+        </button>
+      </footer>
     </section>
   );
 }
