@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Shu-xiang AI - 推理引擎配置</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&amp;family=Source+Sans+3:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "secondary-fixed": "#f1e1be",
+                "error": "#ba1a1a",
+                "primary-fixed-dim": "#f4bb94",
+                "inverse-primary": "#f4bb94",
+                "on-secondary-container": "#6f6348",
+                "on-primary-fixed-variant": "#653d20",
+                "on-primary-container": "#ffcaa7",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary": "#ffffff",
+                "tertiary-fixed-dim": "#cbc6ba",
+                "error-container": "#ffdad6",
+                "surface-variant": "#e9e1dc",
+                "inverse-surface": "#34302c",
+                "surface-tint": "#805435",
+                "secondary": "#695d42",
+                "tertiary-container": "#5f5c53",
+                "surface-container": "#f5ece7",
+                "outline": "#83746b",
+                "background": "#fff8f5",
+                "on-surface": "#1e1b18",
+                "on-secondary-fixed": "#231b06",
+                "outline-variant": "#d5c3b9",
+                "on-primary": "#ffffff",
+                "on-secondary-fixed-variant": "#50462c",
+                "on-tertiary-container": "#dad4c9",
+                "primary-container": "#7d5233",
+                "secondary-container": "#f1e1be",
+                "tertiary": "#47443c",
+                "primary-fixed": "#ffdcc6",
+                "on-surface-variant": "#51443d",
+                "on-primary-fixed": "#301400",
+                "on-tertiary-fixed": "#1e1c14",
+                "surface-container-highest": "#e9e1dc",
+                "tertiary-fixed": "#e8e2d6",
+                "on-secondary": "#ffffff",
+                "on-tertiary-fixed-variant": "#4a473e",
+                "surface-container-low": "#fbf2ed",
+                "surface-dim": "#e1d8d4",
+                "on-background": "#1e1b18",
+                "inverse-on-surface": "#f8efea",
+                "on-error-container": "#93000a",
+                "surface": "#fff8f5",
+                "primary": "#623b1e",
+                "surface-bright": "#fff8f5",
+                "on-error": "#ffffff",
+                "secondary-fixed-dim": "#d5c5a4",
+                "surface-container-high": "#efe6e2"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "xs": "4px",
+                "lg": "48px",
+                "gutter": "24px",
+                "margin-mobile": "16px",
+                "xl": "80px",
+                "md": "24px",
+                "margin-desktop": "auto",
+                "base": "8px",
+                "sm": "12px",
+                "sidebar-width": "280px"
+        },
+        "fontFamily": {
+                "display-lg-mobile": [
+                        "Noto Serif"
+                ],
+                "body-md": [
+                        "Noto Serif"
+                ],
+                "body-lg": [
+                        "Noto Serif"
+                ],
+                "display-lg": [
+                        "Noto Serif"
+                ],
+                "label-sm": [
+                        "Source Sans Three"
+                ],
+                "headline-md": [
+                        "Noto Serif"
+                ]
+        },
+        "fontSize": {
+                "display-lg-mobile": [
+                        "32px",
+                        {
+                                "lineHeight": "44px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "display-lg": [
+                        "40px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "36px",
+                                "fontWeight": "600"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body { font-family: 'Noto Serif', serif; }
+        .ui-font { font-family: 'Source Sans Three', sans-serif; }
+        
+        /* Modal Background Blur */
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+            background-color: rgba(27, 28, 28, 0.4);
+        }
+        
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #623b1e; /* primary */
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #e9e1dc; /* surface-variant */
+            border-radius: 2px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen w-screen overflow-hidden flex items-center justify-center relative">
+<!-- Workbench Background Simulation (Blurred out) -->
+<div aria-hidden="true" class="absolute inset-0 z-0 flex">
+<!-- Sidebar Shell Simulation -->
+<div class="w-sidebar-width h-full bg-surface border-r border-outline-variant flex flex-col py-margin-desktop opacity-50">
+<div class="px-8 mb-8 mt-8">
+<h1 class="font-headline-md text-headline-md text-primary">Shu-xiang AI</h1>
+</div>
+</div>
+<!-- Main Content Area Simulation -->
+<div class="flex-1 h-full bg-surface flex flex-col opacity-50">
+<div class="h-16 border-b border-outline-variant flex items-center px-8 w-full bg-surface"></div>
+<div class="flex-1 p-8 flex items-center justify-center">
+<div class="w-2/3 h-2/3 border border-outline-variant rounded-lg bg-surface-container-lowest"></div>
+</div>
+</div>
+</div>
+<!-- Modal Backdrop -->
+<div class="absolute inset-0 z-10 modal-backdrop flex items-center justify-center p-4">
+<!-- Settings Modal Container -->
+<!-- Level 2 Elevation: Subtle drop shadow for floating elements -->
+<div class="w-full max-w-2xl bg-surface-container-lowest rounded-lg border border-outline-variant shadow-[0_8px_32px_rgba(0,0,0,0.05)] flex flex-col overflow-hidden max-h-[921px]">
+<!-- Modal Header -->
+<div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span aria-hidden="true" class="material-symbols-outlined text-primary text-2xl">hub</span>
+<h2 class="font-headline-md text-headline-md text-on-surface m-0 leading-tight">推理引擎配置</h2>
+</div>
+<button aria-label="Close Settings" class="text-on-surface-variant hover:text-on-surface transition-colors p-1 rounded-DEFAULT hover:bg-surface-container focus:outline-none focus:ring-2 focus:ring-primary/50">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Modal Content (Scrollable) -->
+<div class="p-6 overflow-y-auto flex-1 bg-surface-container-lowest custom-scrollbar">
+<div class="space-y-8">
+<!-- Section: API Connection -->
+<section>
+<h3 class="font-label-sm text-label-sm font-semibold text-primary mb-4 flex items-center gap-2 border-b border-outline-variant/50 pb-2">
+<span class="material-symbols-outlined text-[18px]">dns</span>
+                            API 连接配置
+                        </h3>
+<div class="grid grid-cols-1 md:grid-cols-1 gap-5">
+<!-- Model Selection Dropdown -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="model-select">大语言模型</label>
+<div class="relative">
+<select class="w-full bg-surface border border-outline-variant rounded-DEFAULT py-2.5 px-3 appearance-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-label-sm text-label-sm text-on-surface ui-font pr-10" id="model-select">
+<option selected="" value="llama3-8b">Llama-3-8B-Instruct (Local)</option>
+<option value="qwen-14b">Qwen-1.5-14B-Chat (Local)</option>
+<option value="qwen-72b">Qwen-1.5-72B-Chat (API)</option>
+<option value="custom">Custom Endpoint...</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">expand_more</span>
+</div>
+</div>
+</div>
+<!-- API Base URL -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="api-url">API 基础 URL</label>
+<input class="w-full bg-surface border-b border-outline-variant py-2 px-1 focus:outline-none focus:border-primary focus:border-b-2 font-label-sm text-label-sm text-on-surface ui-font placeholder-on-surface-variant/50 transition-colors" id="api-url" placeholder="e.g., http://localhost:11434/v1" type="url" value="http://localhost:11434/v1"/>
+<p class="text-sm text-on-surface-variant mt-1">本地 Ollama 默认地址为 http://localhost:11434/v1</p>
+</div>
+<!-- API Key -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="api-key">API 密钥</label>
+<div class="relative">
+<input class="w-full bg-surface border-b border-outline-variant py-2 px-1 focus:outline-none focus:border-primary focus:border-b-2 font-label-sm text-label-sm text-on-surface ui-font pr-10 transition-colors" id="api-key" type="password" value="sk-local-dummy-key"/>
+<button aria-label="Toggle password visibility" class="absolute inset-y-0 right-0 flex items-center px-2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility_off</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section: Parameters -->
+<section>
+<h3 class="font-label-sm text-label-sm font-semibold text-primary mb-4 flex items-center gap-2 border-b border-outline-variant/50 pb-2">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+                            模型参数
+                        </h3>
+<div class="space-y-6">
+<!-- Context Window Slider -->
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-end">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="context-window">上下文窗口</label>
+<span class="font-label-sm text-label-sm text-primary bg-secondary-container/50 px-2 py-0.5 rounded-DEFAULT ui-font border border-outline-variant/30">8192 词元</span>
+</div>
+<div class="w-full flex items-center gap-4">
+<span class="text-sm text-on-surface-variant w-8 text-right">4k</span>
+<input class="flex-1" id="context-window" max="32768" min="4096" step="1024" type="range" value="8192"/>
+<span class="text-sm text-on-surface-variant w-8">32k</span>
+</div>
+<p class="text-sm text-on-surface-variant">文言文分析推荐使用较大的上下文以包含充分的注释参考。</p>
+</div>
+</div>
+</section>
+<!-- Section: Diagnostics -->
+<section class="bg-surface-container-low rounded-DEFAULT p-4 border border-outline-variant/50">
+<div class="flex items-center justify-between">
+<div>
+<h4 class="font-label-sm text-label-sm font-semibold text-on-surface mb-1">连接状态</h4>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary-container border border-secondary"></div>
+<span class="text-sm text-secondary">已连接</span>
+<span class="text-sm text-on-surface-variant ml-2 border-l border-outline-variant pl-2">延迟: <span class="font-label-sm text-label-sm ui-font">24ms</span></span>
+</div>
+</div>
+<button class="border border-outline bg-transparent hover:bg-surface-variant text-on-surface font-label-sm text-label-sm font-semibold py-1.5 px-4 rounded-DEFAULT transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary/50" type="button">
+<span class="material-symbols-outlined text-[16px]">wifi_protected_setup</span>
+                                测试连接
+                            </button>
+</div>
+</section>
+</div>
+</div>
+<!-- Modal Footer (Actions) -->
+<div class="px-6 py-4 border-t border-outline-variant bg-surface flex justify-between items-center">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">save</span>
+<span class="text-sm">配置将保存至本地 local_profile.json</span>
+</div>
+<div class="flex gap-3">
+<button class="border border-outline bg-transparent hover:bg-surface-variant text-on-surface font-label-sm text-label-sm font-semibold py-2 px-6 rounded-DEFAULT transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50" type="button">
+                        取消
+                    </button>
+<button class="bg-primary hover:bg-primary-fixed-variant text-on-primary font-label-sm text-label-sm font-semibold py-2 px-6 rounded-DEFAULT transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface" type="button">
+                        保存配置
+                    </button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

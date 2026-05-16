@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>古风问答 - 手机端</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&amp;family=Noto+Serif:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "secondary-fixed": "#f1e1be",
+                "error": "#ba1a1a",
+                "primary-fixed-dim": "#f4bb94",
+                "inverse-primary": "#f4bb94",
+                "on-secondary-container": "#6f6348",
+                "on-primary-fixed-variant": "#653d20",
+                "on-primary-container": "#ffcaa7",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary": "#ffffff",
+                "tertiary-fixed-dim": "#cbc6ba",
+                "error-container": "#ffdad6",
+                "surface-variant": "#e9e1dc",
+                "inverse-surface": "#34302c",
+                "surface-tint": "#805435",
+                "secondary": "#695d42",
+                "tertiary-container": "#5f5c53",
+                "surface-container": "#f5ece7",
+                "outline": "#83746b",
+                "background": "#fff8f5",
+                "on-surface": "#1e1b18",
+                "on-secondary-fixed": "#231b06",
+                "outline-variant": "#d5c3b9",
+                "on-primary": "#ffffff",
+                "on-secondary-fixed-variant": "#50462c",
+                "on-tertiary-container": "#dad4c9",
+                "primary-container": "#7d5233",
+                "secondary-container": "#f1e1be",
+                "tertiary": "#47443c",
+                "primary-fixed": "#ffdcc6",
+                "on-surface-variant": "#51443d",
+                "on-primary-fixed": "#301400",
+                "on-tertiary-fixed": "#1e1c14",
+                "surface-container-highest": "#e9e1dc",
+                "tertiary-fixed": "#e8e2d6",
+                "on-secondary": "#ffffff",
+                "on-tertiary-fixed-variant": "#4a473e",
+                "surface-container-low": "#fbf2ed",
+                "surface-dim": "#e1d8d4",
+                "on-background": "#1e1b18",
+                "inverse-on-surface": "#f8efea",
+                "on-error-container": "#93000a",
+                "surface": "#fff8f5",
+                "primary": "#623b1e",
+                "surface-bright": "#fff8f5",
+                "on-error": "#ffffff",
+                "secondary-fixed-dim": "#d5c5a4",
+                "surface-container-high": "#efe6e2"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.5rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "xs": "4px",
+                "lg": "48px",
+                "gutter": "24px",
+                "margin-mobile": "16px",
+                "xl": "80px",
+                "md": "24px",
+                "margin-desktop": "auto",
+                "base": "8px",
+                "sm": "12px"
+        },
+        "fontFamily": {
+                "display-lg-mobile": [
+                        "Noto Serif", "serif"
+                ],
+                "body-md": [
+                        "Noto Serif", "serif"
+                ],
+                "body-lg": [
+                        "Noto Serif", "serif"
+                ],
+                "display-lg": [
+                        "Noto Serif", "serif"
+                ],
+                "label-sm": [
+                        "Source Sans 3", "sans-serif"
+                ],
+                "headline-md": [
+                        "Noto Serif", "serif"
+                ]
+        },
+        "fontSize": {
+                "display-lg-mobile": [
+                        "32px",
+                        {
+                                "lineHeight": "44px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "display-lg": [
+                        "40px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "36px",
+                                "fontWeight": "600"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body { font-family: 'Source Sans 3', sans-serif; }
+        .font-noto { font-family: 'Noto Serif', serif; }
+        /* Custom scrollbar for textareas */
+        textarea::-webkit-scrollbar { width: 4px; }
+        textarea::-webkit-scrollbar-track { background: transparent; }
+        textarea::-webkit-scrollbar-thumb { background: #e9e1dc; border-radius: 8px; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface h-screen flex flex-col overflow-hidden antialiased">
+<!-- Header / Top Nav (Tab Switcher) -->
+<header class="bg-surface border-b border-outline-variant flex-shrink-0 pt-4">
+<div class="px-margin-mobile pb-4">
+<h1 class="font-display-lg-mobile text-display-lg-mobile text-primary font-noto">古风问答</h1>
+</div>
+<div class="flex px-margin-mobile space-x-6 overflow-x-auto hide-scrollbar">
+<button class="pb-2 border-b-2 border-primary text-primary font-label-sm text-label-sm px-1 whitespace-nowrap" id="tab-input" onclick="switchTab('input')">输入</button>
+<button class="pb-2 border-b-2 border-transparent text-on-surface-variant font-label-sm text-label-sm px-1 whitespace-nowrap hover:text-primary transition-colors" id="tab-result" onclick="switchTab('result')">结果</button>
+<button class="pb-2 border-b-2 border-transparent text-on-surface-variant font-label-sm text-label-sm px-1 whitespace-nowrap hover:text-primary transition-colors" id="tab-settings" onclick="switchTab('settings')">设置</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto relative pb-20">
+<!-- View: Input -->
+<div class="p-margin-mobile flex flex-col h-full animate-fade-in block" id="view-input">
+<div class="flex-1 flex flex-col mb-6">
+<label class="font-label-sm text-label-sm text-on-surface-variant mb-2 block" for="question-input">吾有所问</label>
+<div class="relative flex-1 min-h-[200px] bg-surface-container-lowest border border-outline-variant rounded focus-within:border-primary transition-colors p-4 flex flex-col">
+<textarea class="w-full flex-1 resize-none bg-transparent outline-none font-body-md text-body-md font-noto text-on-surface placeholder-outline" id="question-input" placeholder="请输入文言文或需要解答的问题..."></textarea>
+<div class="mt-4 flex justify-between items-center border-t border-surface-variant pt-3">
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-primary text-[20px]" title="附加文档">attach_file</span>
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-primary text-[20px]" title="语音输入">mic</span>
+</div>
+<span class="font-label-sm text-[12px] text-outline">0 / 2000</span>
+</div>
+</div>
+</div>
+<!-- Configuration Chips -->
+<div class="mb-6">
+<div class="flex items-center justify-between mb-3">
+<span class="font-label-sm text-label-sm text-on-surface-variant">配置选项</span>
+<button class="text-primary font-label-sm text-[12px] flex items-center hover:underline">
+                        展开全部 <span class="material-symbols-outlined text-[16px] ml-1">expand_more</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-2">
+<div class="flex items-center bg-surface-container border border-outline-variant rounded-full px-3 py-1.5 cursor-pointer hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant mr-1">person</span>
+<span class="font-label-sm text-label-sm text-on-surface">角色: 硕儒</span>
+</div>
+<div class="flex items-center bg-surface-container border border-outline-variant rounded-full px-3 py-1.5 cursor-pointer hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant mr-1">tune</span>
+<span class="font-label-sm text-label-sm text-on-surface">模式: 详考</span>
+</div>
+<div class="flex items-center bg-surface border border-dashed border-outline-variant rounded-full px-3 py-1.5 cursor-pointer hover:bg-surface-container transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] mr-1">add</span>
+<span class="font-label-sm text-label-sm">添加参数</span>
+</div>
+</div>
+</div>
+<!-- Fixed Bottom Action inside Input View -->
+<div class="mt-auto pt-4">
+<button class="w-full bg-primary text-on-primary font-label-sm text-label-sm py-4 rounded hover:bg-primary/90 transition-colors flex justify-center items-center active:scale-[0.98] shadow-sm" onclick="simulateGeneration()">
+<span class="material-symbols-outlined mr-2">auto_awesome</span>
+                    开始推演
+                </button>
+</div>
+</div>
+<!-- View: Result (Hidden initially) -->
+<div class="p-margin-mobile flex flex-col gap-4 hidden animate-fade-in pb-24" id="view-result">
+<!-- Result Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-5 relative overflow-hidden">
+<div class="absolute top-0 left-0 bottom-0 w-[4px] bg-secondary-fixed"></div> <!-- Sage-colored border for attribution -->
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-2">
+<span class="bg-secondary-container text-on-secondary-container font-label-sm text-[12px] px-2 py-0.5 rounded">版本 A</span>
+<span class="font-label-sm text-label-sm text-outline">硕儒模式</span>
+</div>
+<div class="flex gap-2">
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">bookmark_border</span></button>
+</div>
+</div>
+<div class="font-body-md text-body-md font-noto text-on-surface leading-relaxed mb-4">
+                    “春江潮水连海平，海上明月共潮生。”此句出处唐代张若虚之《春江花月夜》。其意境宏大，描绘春江之水与大海相连，一轮明月伴随潮水而生，气象万千，情景交融。
+                </div>
+<div class="border-t border-surface-variant pt-3 mt-2">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-sm text-[12px] text-on-surface-variant flex items-center">
+<span class="material-symbols-outlined text-[14px] mr-1 text-primary">check_circle</span> 信度: 极高
+                        </span>
+</div>
+<div class="flex flex-col gap-1">
+<a class="font-label-sm text-[12px] text-primary hover:underline flex items-center" href="#">
+<span class="material-symbols-outlined text-[14px] mr-1">book</span> 《全唐诗》卷一一七
+                        </a>
+<a class="font-label-sm text-[12px] text-primary hover:underline flex items-center" href="#">
+<span class="material-symbols-outlined text-[14px] mr-1">book</span> 《唐诗三百首》
+                        </a>
+</div>
+</div>
+</div>
+<!-- Result Card 2 (Comparison) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-5 relative overflow-hidden">
+<div class="absolute top-0 left-0 bottom-0 w-[4px] bg-primary"></div> <!-- Primary border -->
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-2">
+<span class="bg-surface-variant text-on-surface-variant font-label-sm text-[12px] px-2 py-0.5 rounded">版本 B</span>
+<span class="font-label-sm text-label-sm text-outline">简要模式</span>
+</div>
+<div class="flex gap-2">
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">bookmark_border</span></button>
+</div>
+</div>
+<div class="font-body-md text-body-md font-noto text-on-surface leading-relaxed mb-4">
+                    张若虚《春江花月夜》首联。描写春江潮水与海相连的壮丽景色，明月随潮水升起。
+                </div>
+<div class="border-t border-surface-variant pt-3 mt-2">
+<span class="font-label-sm text-[12px] text-on-surface-variant flex items-center">
+<span class="material-symbols-outlined text-[14px] mr-1 text-primary">check_circle</span> 信度: 高
+                    </span>
+</div>
+</div>
+<div class="flex justify-center mt-4">
+<button class="text-primary font-label-sm text-label-sm py-2 px-4 border border-outline-variant rounded hover:bg-surface-container transition-colors flex items-center">
+<span class="material-symbols-outlined mr-2">difference</span>
+                    对比版本
+                </button>
+</div>
+</div>
+<!-- View: Settings (Hidden initially) -->
+<div class="p-margin-mobile flex flex-col gap-6 hidden animate-fade-in pb-24" id="view-settings">
+<div>
+<h3 class="font-label-sm text-label-sm text-on-surface mb-3">模型偏好</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center bg-surface-container-lowest border border-outline-variant p-4 rounded">
+<div>
+<div class="font-label-sm text-label-sm text-on-surface">默认角色设定</div>
+<div class="font-label-sm text-[12px] text-on-surface-variant mt-1">当前: 硕儒 (侧重考据)</div>
+</div>
+<span class="material-symbols-outlined text-outline">chevron_right</span>
+</div>
+<div class="flex justify-between items-center bg-surface-container-lowest border border-outline-variant p-4 rounded">
+<div>
+<div class="font-label-sm text-label-sm text-on-surface">温度 (创造性)</div>
+<div class="font-label-sm text-[12px] text-on-surface-variant mt-1">当前: 0.3 (严谨)</div>
+</div>
+<span class="material-symbols-outlined text-outline">chevron_right</span>
+</div>
+</div>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-surface mb-3">显示设置</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center bg-surface-container-lowest border border-outline-variant p-4 rounded">
+<div>
+<div class="font-label-sm text-label-sm text-on-surface">繁简转换</div>
+<div class="font-label-sm text-[12px] text-on-surface-variant mt-1">输出结果默认使用繁体</div>
+</div>
+<!-- Toggle Switch -->
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-primary appearance-none cursor-pointer translate-x-5 transition-transform" id="toggle1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-primary cursor-pointer" for="toggle1"></label>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-auto">
+<button class="w-full text-error font-label-sm text-label-sm py-3 border border-error-container rounded hover:bg-error-container/20 transition-colors">
+                    清除本地缓存
+                </button>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Mobile only essentially based on constraints, but enforcing visibility for this specific request) -->
+<nav class="bg-surface border-t border-outline-variant flex justify-around items-center py-2 fixed bottom-0 left-0 right-0 z-50 md:hidden">
+<a class="flex flex-col items-center p-2 text-primary dark:text-primary-fixed-dim" href="#" onclick="setActiveNav(this)">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">edit_note</span>
+<span class="font-label-sm text-[10px] mt-1 font-bold">工作台</span>
+</a>
+<a class="flex flex-col items-center p-2 text-on-surface-variant hover:text-primary transition-colors" href="#" onclick="setActiveNav(this)">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-sm text-[10px] mt-1">历史</span>
+</a>
+<a class="flex flex-col items-center p-2 text-on-surface-variant hover:text-primary transition-colors" href="#" onclick="setActiveNav(this)">
+<span class="material-symbols-outlined">database</span>
+<span class="font-label-sm text-[10px] mt-1">知识库</span>
+</a>
+<a class="flex flex-col items-center p-2 text-on-surface-variant hover:text-primary transition-colors" href="#" onclick="setActiveNav(this)">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm text-[10px] mt-1">设置</span>
+</a>
+</nav>
+<!-- Loading Overlay (Hidden) -->
+<div class="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60] hidden flex-col justify-center items-center" id="loading-overlay">
+<div class="w-12 h-12 border-4 border-surface-variant border-t-primary rounded-full animate-spin"></div>
+<p class="mt-4 font-label-sm text-label-sm text-primary font-noto">正在查阅典籍...</p>
+</div>
+<script>
+        function switchTab(tabId) {
+            // Reset all tabs
+            ['input', 'result', 'settings'].forEach(id => {
+                const btn = document.getElementById(`tab-${id}`);
+                const view = document.getElementById(`view-${id}`);
+                
+                // Reset button styles
+                btn.classList.remove('border-primary', 'text-primary');
+                btn.classList.add('border-transparent', 'text-on-surface-variant');
+                
+                // Hide view
+                view.classList.add('hidden');
+                view.classList.remove('block');
+            });
+
+            // Set active tab
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            const activeView = document.getElementById(`view-${tabId}`);
+            
+            activeBtn.classList.remove('border-transparent', 'text-on-surface-variant');
+            activeBtn.classList.add('border-primary', 'text-primary');
+            
+            activeView.classList.remove('hidden');
+            activeView.classList.add('block');
+        }
+
+        function simulateGeneration() {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+                switchTab('result');
+            }, 1500);
+        }
+
+        function setActiveNav(element) {
+            // Reset all nav items
+            const navItems = document.querySelectorAll('nav a');
+            navItems.forEach(item => {
+                item.className = "flex flex-col items-center p-2 text-on-surface-variant hover:text-primary transition-colors";
+                const icon = item.querySelector('.material-symbols-outlined');
+                icon.style.fontVariationSettings = "'FILL' 0";
+                const text = item.querySelector('span:last-child');
+                text.classList.remove('font-bold');
+            });
+
+            // Set clicked as active
+            element.className = "flex flex-col items-center p-2 text-primary dark:text-primary-fixed-dim";
+            const activeIcon = element.querySelector('.material-symbols-outlined');
+            activeIcon.style.fontVariationSettings = "'FILL' 1";
+            const activeText = element.querySelector('span:last-child');
+            activeText.classList.add('font-bold');
+        }
+    </script>
+</body></html>

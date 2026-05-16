@@ -6,13 +6,13 @@ type SourcePanelProps = {
 };
 
 const text = {
-  title: "\u53c2\u8003\u6765\u6e90",
+  title: "\u6765\u6e90\u6eaf\u6e90",
   persona: "\u4eba\u7269\u8bed\u6599",
   knowledge: "\u77e5\u8bc6\u5e93",
   details: "\u67e5\u770b\u53ec\u56de\u7247\u6bb5",
-  score: "\u76f8\u5173\u5ea6",
-  chunk: "\u7247\u6bb5",
-  license: "\u8bb8\u53ef"
+  score: "\u5339\u914d\u5ea6",
+  chunk: "\u7247\u6bb5 ID",
+  license: "\u7248\u6743"
 } as const;
 
 function formatSourceType(sourceType: SourceRef["sourceType"] | RetrievedChunk["sourceType"]) {

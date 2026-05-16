@@ -14,7 +14,7 @@ type KnowledgeImportPanelProps = {
 
 const text = {
   title: "知识库导入",
-  copy: "导入本地语料后会自动重建 processed corpus 与 vector index。",
+  copy: "导入本地语料后自动重建可检索语料与向量索引。",
   titleLabel: "标题",
   titlePlaceholder: "例如：拖延与自律笔记",
   categoryLabel: "分类",
@@ -24,7 +24,7 @@ const text = {
   keywordsLabel: "关键词",
   contentLabel: "正文",
   contentPlaceholder: "粘贴要导入的知识库文本，至少 8 个字符。",
-  importOne: "导入当前文本",
+  importOne: "导入文本",
   importing: "导入中...",
   fileImport: "导入 TXT / JSON",
   low: "低",

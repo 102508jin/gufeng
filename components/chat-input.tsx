@@ -43,11 +43,11 @@ type ChatInputProps = {
 };
 
 const text = {
-  eyebrow: "\u8f93\u5165\u8bbe\u7f6e",
-  title: "\u95ee\u7b54\u5de5\u4f5c\u53f0",
+  eyebrow: "\u73b0\u4ee3\u767d\u8bdd\u6587\u8f93\u5165",
+  title: "\u73b0\u4ee3\u767d\u8bdd\u6587\u8f93\u5165",
   summary: "\u95ee\u9898\u3001\u98ce\u683c\u3001\u77e5\u8bc6\u5e93\u4e0e\u6a21\u578b\u914d\u7f6e",
-  queryLabel: "\u63d0\u95ee\u5185\u5bb9",
-  placeholder: "\u4f8b\u5982\uff1a\u6211\u6700\u8fd1\u603b\u62d6\u5ef6\uff0c\u600e\u6837\u624d\u80fd\u771f\u6b63\u5f00\u59cb\u884c\u52a8\uff1f",
+  queryLabel: "\u73b0\u4ee3\u767d\u8bdd\u6587\u8f93\u5165",
+  placeholder: "\u5728\u6b64\u8f93\u5165\u9700\u8981\u89e3\u6790\u6216\u8f6c\u6362\u7684\u95ee\u9898...",
   userLabel: "\u672c\u5730\u7528\u6237",
   displayNameLabel: "\u79f0\u547c",
   displayNamePlaceholder: "\u4f8b\u5982\uff1a\u6c88\u4e00",
@@ -59,33 +59,37 @@ const text = {
   auto: "\u81ea\u52a8\u8bc6\u522b",
   vernacular: "\u767d\u8bdd\u6587",
   classical: "\u6587\u8a00\u6587",
-  aiInterventionLabel: "AI \u4ecb\u5165",
-  conservative: "\u7a33\u59a5",
-  balanced: "\u5e73\u8861",
-  creative: "\u521b\u4f5c",
-  retrievalLabel: "\u77e5\u8bc6\u5e93",
-  retrievalOff: "\u5173\u95ed",
-  retrievalFocused: "\u7cbe\u51c6",
-  retrievalAuto: "\u6807\u51c6",
-  retrievalBroad: "\u5e7f\u641c",
-  knowledgeSearch: "\u9884\u68c0\u77e5\u8bc6\u5e93",
+  aiInterventionLabel: "AI \u6da6\u8272\u529b\u5ea6",
+  conservative: "\u4e25\u8c28\u5f15\u7ecf",
+  balanced: "\u5316\u7528\u878d\u5408",
+  creative: "\u81ea\u7531\u521b\u4f5c",
+  retrievalLabel: "\u5178\u7c4d\u68c0\u7d22",
+  retrievalOff: "\u4e0d\u5f15\u5178",
+  retrievalFocused: "\u4e25\u8c28\u5f15\u7ecf",
+  retrievalAuto: "\u5316\u7528\u878d\u5408",
+  retrievalBroad: "\u5e7f\u6cdb\u535a\u91c7",
+  knowledgeSearch: "\u9884\u68c0\u5178\u7c4d",
   knowledgeSearching: "\u68c0\u7d22\u4e2d...",
   knowledgePreview: "\u547d\u4e2d\u6765\u6e90",
   sourceScore: "\u76f8\u5173\u5ea6",
   validationTitle: "\u8868\u5355\u63d0\u793a",
   profileSection: "\u4e2a\u4eba\u8bed\u5883",
-  generationSection: "\u751f\u6210\u7b56\u7565",
-  retrievalSection: "\u77e5\u8bc6\u4e0e\u6765\u6e90",
-  modelSection: "\u6a21\u578b\u4e0e\u8f93\u51fa",
-  providerLabel: "\u6a21\u578b\u9a71\u52a8",
+  generationSection: "\u5206\u6790\u53c2\u6570\u914d\u7f6e",
+  retrievalSection: "\u5178\u7c4d\u68c0\u7d22",
+  modelSection: "\u4e8c\u7ea7\u8bbe\u7f6e",
+  providerLabel: "\u670d\u52a1\u5546",
   providerDefault: "\u8ddf\u968f\u9ed8\u8ba4\u914d\u7f6e",
   providerNotReady: "\u672a\u914d\u7f6e",
-  settings: "\u63a5\u53e3\u8bbe\u7f6e",
-  settingsCustom: "\u63a5\u53e3\u8bbe\u7f6e\uff08\u5df2\u81ea\u5b9a\u4e49\uff09",
+  settings: "\u6a21\u578b\u8bbe\u7f6e",
+  settingsCustom: "\u6a21\u578b\u8bbe\u7f6e\uff08\u5df2\u8986\u76d6\uff09",
   variantsLabel: "\u751f\u6210\u7248\u672c",
   explanationLabel: "\u89e3\u6790\u7c7b\u578b",
   generating: "\u751f\u6210\u4e2d...",
-  submit: "\u751f\u6210\u6587\u8a00\u7b54\u590d"
+  submit: "\u751f\u6210",
+  strictDescription: "\u4ec5\u5f15\u7528\u5df2\u6821\u9a8c\u5178\u7c4d\u7684\u539f\u53e5\u3002",
+  balancedDescription: "\u57fa\u4e8e\u7ecf\u5178\u98ce\u683c\u5316\u7528\u8f9e\u85fb\u3002",
+  creativeDescription: "\u5bbd\u6cdb\u542f\u53d1\uff0c\u8f83\u81ea\u7531\u3002",
+  advancedSettings: "\u9ad8\u7ea7\u8bbe\u7f6e"
 } as const;
 
 const explanationOptions: Array<{ label: string; value: ExplanationMode }> = [
@@ -133,15 +137,13 @@ export function ChatInput(props: ChatInputProps) {
           <p className="eyebrow">{text.eyebrow}</p>
           <h2>{text.title}</h2>
         </div>
-        <button type="button" className="icon-text-button" onClick={props.onOpenSettings} disabled={props.disabled}>
-          {props.hasCustomProviderSettings ? text.settingsCustom : text.settings}
-        </button>
       </header>
 
       <div className="composer-body">
-        <label className="prompt-box">
-          <span className="field-label">{text.queryLabel}</span>
+        <div className="prompt-box stitch-prompt-box">
+          <label className="field-label" htmlFor="query-input">{text.queryLabel}</label>
           <textarea
+            id="query-input"
             className="field-input prompt-textarea"
             value={props.query}
             onChange={(event) => props.onQueryChange(event.target.value)}
@@ -150,12 +152,131 @@ export function ChatInput(props: ChatInputProps) {
             rows={4}
             maxLength={1000}
           />
-        </label>
+          <div className="prompt-action-row">
+            <span>{`${props.query.length} / 1000`}</span>
+            <button
+              type="button"
+              className="primary-button compact-button"
+              onClick={props.onSubmit}
+              disabled={props.disabled || !props.query.trim()}
+            >
+              {props.disabled ? text.generating : text.submit}
+            </button>
+          </div>
+        </div>
 
         <div className="composer-section">
           <div className="section-title-row">
             <p className="field-label">{text.generationSection}</p>
           </div>
+          <PersonaSelector
+            personas={props.personas}
+            value={props.personaId}
+            disabled={props.disabled}
+            onChange={props.onPersonaChange}
+          />
+          <div className="compact-field">
+            <span>释义深度</span>
+            <div className="chip-row segmented-row">
+              {explanationOptions.map((option) => {
+                const active = props.explanationModes.includes(option.value);
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`chip ${active ? "chip-active" : ""}`}
+                    onClick={() => toggleExplanationMode(option.value)}
+                    disabled={props.disabled}
+                  >
+                    {option.label.replace("逐句", "").replace("阐释", "").replace("注释", "")}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="compact-field ai-strength-field">
+            <div className="section-title-row">
+              <span>{text.aiInterventionLabel}</span>
+              <span className="range-value">{props.aiIntervention === "creative" ? "高" : props.aiIntervention === "conservative" ? "低" : "适中"}</span>
+            </div>
+            <div className="stitch-range" aria-hidden="true">
+              <span className={`stitch-range-fill stitch-range-${props.aiIntervention}`} />
+              <span className={`stitch-range-thumb stitch-range-thumb-${props.aiIntervention}`} />
+            </div>
+            <div className="range-scale"><span>低</span><span>高</span></div>
+          </div>
+
+          <div className="retrieval-mode-list">
+            {aiInterventionOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`retrieval-mode-option ${props.aiIntervention === option.value ? "retrieval-mode-option-active" : ""}`}
+                onClick={() => props.onAiInterventionChange(option.value)}
+                disabled={props.disabled}
+              >
+                <span className="radio-dot" aria-hidden="true" />
+                <strong>{option.label}</strong>
+                <small>
+                  {option.value === "conservative"
+                    ? text.strictDescription
+                    : option.value === "creative"
+                      ? text.creativeDescription
+                      : text.balancedDescription}
+                </small>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="composer-section">
+          <div className="section-title-row">
+            <p className="field-label">{text.retrievalSection}</p>
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={props.onKnowledgeSearch}
+              disabled={props.disabled || props.knowledgeSearching || !props.query.trim()}
+            >
+              {props.knowledgeSearching ? text.knowledgeSearching : text.knowledgeSearch}
+            </button>
+          </div>
+          <div className="retrieval-mode-list">
+            {retrievalOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`retrieval-mode-option ${props.retrievalMode === option.value ? "retrieval-mode-option-active" : ""}`}
+                onClick={() => props.onRetrievalModeChange(option.value)}
+                disabled={props.disabled}
+              >
+                <span className="radio-dot" aria-hidden="true" />
+                <strong>{option.label}</strong>
+                <small>{option.value === "off" ? "不使用知识库来源。" : option.value === "focused" ? "优先少量高相关片段。" : option.value === "broad" ? "放宽范围，召回更多资料。" : "自动平衡相关性与覆盖面。"}</small>
+              </button>
+            ))}
+          </div>
+          {props.knowledgeError ? <p className="inline-error">{props.knowledgeError}</p> : null}
+          {props.knowledgeRefs.length ? (
+            <div className="knowledge-preview">
+              <p className="field-label">{text.knowledgePreview}</p>
+              <div className="knowledge-preview-list">
+                {props.knowledgeRefs.map((refItem) => (
+                  <article key={refItem.id} className="knowledge-preview-item">
+                    <div>
+                      <h3>{refItem.title}</h3>
+                      <p>{refItem.excerpt}</p>
+                    </div>
+                    <span>{`${text.sourceScore} ${refItem.score.toFixed(2)}`}</span>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <details className="composer-section advanced-settings">
+          <summary>{text.advancedSettings}</summary>
           <div className="field-grid">
             <label className="compact-field">
               <span>{text.modeLabel}</span>
@@ -184,28 +305,23 @@ export function ChatInput(props: ChatInputProps) {
               </select>
             </label>
           </div>
-          <div className="compact-field">
-            <span>{text.aiInterventionLabel}</span>
-            <div className="chip-row segmented-row">
-              {aiInterventionOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className={`chip ${props.aiIntervention === option.value ? "chip-active" : ""}`}
-                  onClick={() => props.onAiInterventionChange(option.value)}
-                  disabled={props.disabled}
-                >
-                  {option.label}
-                </button>
+          <label className="compact-field">
+            <span>{text.providerLabel}</span>
+            <select
+              className="field-input field-select"
+              value={props.providerId}
+              onChange={(event) => props.onProviderChange(event.target.value)}
+              disabled={props.disabled}
+            >
+              <option value="">{text.providerDefault}</option>
+              {props.providers.map((provider) => (
+                <option key={provider.id} value={provider.id} disabled={!provider.configured}>
+                  {provider.label}
+                  {provider.configured ? "" : `\uff08${text.providerNotReady}\uff09`}
+                </option>
               ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="composer-section">
-          <div className="section-title-row">
-            <p className="field-label">{text.profileSection}</p>
-          </div>
+            </select>
+          </label>
           <div className="field-grid">
             <label className="compact-field">
               <span>{text.displayNameLabel}</span>
@@ -241,7 +357,7 @@ export function ChatInput(props: ChatInputProps) {
               maxLength={240}
             />
           </label>
-        </div>
+        </details>
 
         {props.validationMessages.length ? (
           <div className="validation-panel" role="status">
@@ -253,110 +369,7 @@ export function ChatInput(props: ChatInputProps) {
             </ul>
           </div>
         ) : null}
-
-        <div className="composer-section">
-          <div className="section-title-row">
-            <p className="field-label">{text.retrievalSection}</p>
-            <button
-              type="button"
-              className="ghost-button"
-              onClick={props.onKnowledgeSearch}
-              disabled={props.disabled || props.knowledgeSearching || !props.query.trim()}
-            >
-              {props.knowledgeSearching ? text.knowledgeSearching : text.knowledgeSearch}
-            </button>
-          </div>
-          <div className="chip-row segmented-row retrieval-segmented-row">
-            {retrievalOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`chip ${props.retrievalMode === option.value ? "chip-active" : ""}`}
-                onClick={() => props.onRetrievalModeChange(option.value)}
-                disabled={props.disabled}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          {props.knowledgeError ? <p className="inline-error">{props.knowledgeError}</p> : null}
-          {props.knowledgeRefs.length ? (
-            <div className="knowledge-preview">
-              <p className="field-label">{text.knowledgePreview}</p>
-              <div className="knowledge-preview-list">
-                {props.knowledgeRefs.map((refItem) => (
-                  <article key={refItem.id} className="knowledge-preview-item">
-                    <div>
-                      <h3>{refItem.title}</h3>
-                      <p>{refItem.excerpt}</p>
-                    </div>
-                    <span>{`${text.sourceScore} ${refItem.score.toFixed(2)}`}</span>
-                  </article>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="composer-section">
-          <div className="section-title-row">
-            <p className="field-label">{text.modelSection}</p>
-          </div>
-          <PersonaSelector
-            personas={props.personas}
-            value={props.personaId}
-            disabled={props.disabled}
-            onChange={props.onPersonaChange}
-          />
-          <label className="compact-field">
-            <span>{text.providerLabel}</span>
-            <select
-              className="field-input field-select"
-              value={props.providerId}
-              onChange={(event) => props.onProviderChange(event.target.value)}
-              disabled={props.disabled}
-            >
-              <option value="">{text.providerDefault}</option>
-              {props.providers.map((provider) => (
-                <option key={provider.id} value={provider.id} disabled={!provider.configured}>
-                  {provider.label}
-                  {provider.configured ? "" : `\uff08${text.providerNotReady}\uff09`}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="compact-field">
-            <span>{text.explanationLabel}</span>
-            <div className="chip-row">
-              {explanationOptions.map((option) => {
-                const active = props.explanationModes.includes(option.value);
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`chip ${active ? "chip-active" : ""}`}
-                    onClick={() => toggleExplanationMode(option.value)}
-                    disabled={props.disabled}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
       </div>
-
-      <footer className="composer-footer">
-        <button
-          type="button"
-          className="primary-button"
-          onClick={props.onSubmit}
-          disabled={props.disabled || !props.query.trim()}
-        >
-          {props.disabled ? text.generating : text.submit}
-        </button>
-      </footer>
     </section>
   );
 }

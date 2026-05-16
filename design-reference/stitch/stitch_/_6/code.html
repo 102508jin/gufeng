@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Shu-xiang Workbench - Empty State &amp; Errors</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&amp;family=Source+Sans+3:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#83746b",
+                    "on-tertiary-container": "#dad4c9",
+                    "error-container": "#ffdad6",
+                    "primary": "#623b1e",
+                    "surface-tint": "#805435",
+                    "secondary": "#695d42",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-highest": "#e9e1dc",
+                    "secondary-fixed": "#f1e1be",
+                    "surface": "#fff8f5",
+                    "on-tertiary-fixed-variant": "#4a473e",
+                    "background": "#fff8f5",
+                    "on-tertiary-fixed": "#1e1c14",
+                    "primary-container": "#7d5233",
+                    "on-primary": "#ffffff",
+                    "primary-fixed": "#ffdcc6",
+                    "on-background": "#1e1b18",
+                    "secondary-container": "#f1e1be",
+                    "inverse-on-surface": "#f8efea",
+                    "secondary-fixed-dim": "#d5c5a4",
+                    "on-secondary-container": "#6f6348",
+                    "surface-variant": "#e9e1dc",
+                    "surface-container-low": "#fbf2ed",
+                    "on-secondary-fixed": "#231b06",
+                    "on-error": "#ffffff",
+                    "on-primary-container": "#ffcaa7",
+                    "tertiary-fixed-dim": "#cbc6ba",
+                    "primary-fixed-dim": "#f4bb94",
+                    "outline-variant": "#d5c3b9",
+                    "on-error-container": "#93000a",
+                    "inverse-surface": "#34302c",
+                    "tertiary-container": "#5f5c53",
+                    "surface-bright": "#fff8f5",
+                    "on-surface": "#1e1b18",
+                    "inverse-primary": "#f4bb94",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed": "#301400",
+                    "surface-container-high": "#efe6e2",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#e8e2d6",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container": "#f5ece7",
+                    "on-surface-variant": "#51443d",
+                    "on-primary-fixed-variant": "#653d20",
+                    "tertiary": "#47443c",
+                    "on-secondary-fixed-variant": "#50462c",
+                    "surface-dim": "#e1d8d4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "80px",
+                    "md": "24px",
+                    "xs": "4px",
+                    "margin-mobile": "16px",
+                    "lg": "48px",
+                    "sm": "12px",
+                    "margin-desktop": "auto",
+                    "gutter": "24px",
+                    "base": "8px",
+                    "sidebar-width": "280px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Source Sans 3"],
+                    "headline-md": ["Noto Serif"],
+                    "body-lg": ["Noto Serif"],
+                    "display-lg": ["Noto Serif"],
+                    "body-md": ["Noto Serif"],
+                    "display-lg-mobile": ["Noto Serif"]
+            },
+            "fontSize": {
+                    "label-sm": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "32px", "fontWeight": "400"}],
+                    "display-lg": ["40px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg-mobile": ["32px", {"lineHeight": "44px", "fontWeight": "700"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body {
+            background-color: #fff8f5;
+            background-image: radial-gradient(#d5c3b9 0.5px, transparent 0.5px), radial-gradient(#d5c3b9 0.5px, #fff8f5 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            background-attachment: fixed;
+        }
+        .tonal-layer {
+            box-shadow: 0 4px 20px rgba(98, 59, 30, 0.05);
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface bg-background antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-surface text-primary flex-col h-screen w-sidebar-width fixed left-0 top-0 border-r border-outline-variant py-margin-desktop z-40">
+<div class="px-6 pb-8">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-on-primary-container" data-icon="account_circle">account_circle</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md font-semibold text-primary">Shu-xiang AI</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Classical Prose Workbench</p>
+</div>
+</div>
+<button class="mt-6 w-full py-3 px-4 bg-primary text-on-primary rounded-lg font-label-sm text-label-sm hover:bg-surface-tint transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="add">add</span> New Session
+            </button>
+</div>
+<ul class="flex-1 overflow-y-auto px-4 space-y-2">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-label-sm text-label-sm border-r-2 border-primary bg-secondary-container/30 transition-transform duration-150 scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+                    Workbench
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+                    Knowledge Base
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+                    History
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                    Settings
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+                    Providers
+                </a>
+</li>
+</ul>
+<div class="px-4 pt-4 border-t border-outline-variant/50">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+                Vector Status
+            </a>
+</div>
+</nav>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-0 md:left-sidebar-width h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-4 md:px-margin-desktop w-full z-30 transition-all duration-200">
+<div class="flex items-center gap-4">
+<button class="md:hidden p-2 text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-semibold text-primary hidden md:block">Shu-xiang Workbench</h1>
+</div>
+<div class="flex items-center gap-4">
+<!-- Search placeholder for structure -->
+<div class="hidden sm:flex items-center bg-surface-container-low rounded-lg px-3 py-1.5 border border-outline-variant/30">
+<span class="material-symbols-outlined text-on-surface-variant text-sm mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm font-label-sm w-32 placeholder-on-surface-variant/50" placeholder="Search..." type="text"/>
+</div>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="sync">sync</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="w-full md:ml-sidebar-width mt-16 mb-8 pt-8 px-4 md:px-8 max-w-[1200px] mx-auto flex flex-col gap-lg">
+<!-- Welcome / Empty State Section -->
+<section class="flex flex-col items-center justify-center py-xl text-center">
+<div class="w-24 h-24 rounded-full bg-surface-container-low border border-outline-variant/50 flex items-center justify-center mb-6 tonal-layer">
+<span class="material-symbols-outlined text-4xl text-primary opacity-80" data-icon="history_edu">history_edu</span>
+</div>
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface mb-4">静谧治学，文心雕龙</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-12">
+                工作台暂无进行中的研读。您可开启新篇章，或从下方经典书目中择取一卷，让AI辅助您进行深度解析与考据。
+            </p>
+<!-- Quick Start Suggestions (Bento Style) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl text-left">
+<!-- Suggestion 1 -->
+<button class="bg-surface rounded-xl p-6 border border-outline-variant/50 hover:border-primary/50 tonal-layer transition-all duration-300 group text-left h-full flex flex-col">
+<div class="flex items-center gap-3 mb-4">
+<div class="p-2 rounded-lg bg-secondary-container/30 text-secondary">
+<span class="material-symbols-outlined" data-icon="translate">translate</span>
+</div>
+<h3 class="font-headline-md text-[18px] text-on-surface font-semibold group-hover:text-primary transition-colors">翻译《出师表》</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant flex-1">
+                        逐句解析诸葛亮肺腑之言，对照现代白话文，理解三国时代的政治理想。
+                    </p>
+<div class="mt-4 flex items-center text-primary font-label-sm text-label-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                        开始研读 <span class="material-symbols-outlined text-sm ml-1" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</button>
+<!-- Suggestion 2 -->
+<button class="bg-surface rounded-xl p-6 border border-outline-variant/50 hover:border-primary/50 tonal-layer transition-all duration-300 group text-left h-full flex flex-col">
+<div class="flex items-center gap-3 mb-4">
+<div class="p-2 rounded-lg bg-primary-container/20 text-primary">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+</div>
+<h3 class="font-headline-md text-[18px] text-on-surface font-semibold group-hover:text-primary transition-colors">解析《论语》</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant flex-1">
+                        探讨孔孟之道的核心思想，结合历代注疏，深挖儒家经典的现代意义。
+                    </p>
+<div class="mt-4 flex items-center text-primary font-label-sm text-label-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                        开始研读 <span class="material-symbols-outlined text-sm ml-1" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</button>
+<!-- Suggestion 3 -->
+<button class="bg-surface rounded-xl p-6 border border-outline-variant/50 hover:border-primary/50 tonal-layer transition-all duration-300 group text-left h-full flex flex-col">
+<div class="flex items-center gap-3 mb-4">
+<div class="p-2 rounded-lg bg-tertiary-container/20 text-tertiary">
+<span class="material-symbols-outlined" data-icon="search_insights">search_insights</span>
+</div>
+<h3 class="font-headline-md text-[18px] text-on-surface font-semibold group-hover:text-primary transition-colors">考据唐诗意象</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant flex-1">
+                        提取特定历史时期的文学意象，利用本地知识库进行交叉比对与情感分析。
+                    </p>
+<div class="mt-4 flex items-center text-primary font-label-sm text-label-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                        开始研读 <span class="material-symbols-outlined text-sm ml-1" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</button>
+</div>
+</section>
+<hr class="border-t border-outline-variant/30 my-8 w-1/2 mx-auto"/>
+<!-- Error State Example -->
+<section class="max-w-2xl mx-auto w-full">
+<div class="bg-error-container/20 border border-error-container rounded-xl p-8 flex flex-col items-center text-center relative overflow-hidden">
+<!-- Decorative background elements -->
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-error/5 rounded-full blur-2xl"></div>
+<div class="w-16 h-16 rounded-full bg-error-container text-on-error-container flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-3xl" data-icon="wifi_off">wifi_off</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">本地向量库连接断开</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8 max-w-md">
+                    系统无法与本地 RAG 向量数据库建立连接。部分高阶考据与交叉引用功能暂时无法使用。请检查本地服务状态。
+                </p>
+<div class="flex gap-4">
+<button class="px-6 py-2.5 bg-error text-on-error rounded-lg font-label-sm text-label-sm hover:bg-error/90 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="refresh">refresh</span> 重试连接
+                    </button>
+<button class="px-6 py-2.5 border border-outline-variant text-on-surface-variant rounded-lg font-label-sm text-label-sm hover:bg-surface-container-low transition-colors">
+                        查看文档
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="fixed bottom-0 right-0 left-0 md:left-sidebar-width h-8 bg-surface-container-low border-t border-outline-variant flex justify-between items-center px-4 z-30">
+<div class="font-label-sm text-label-sm text-primary">
+            © 2024 Shu-xiang Academic. Local-first RAG active.
+        </div>
+<div class="flex gap-4 font-label-sm text-label-sm text-secondary">
+<a class="hover:underline" href="#">Documentation</a>
+<a class="hover:underline" href="#">API Status</a>
+<a class="hover:underline" href="#">Privacy</a>
+</div>
+</footer>
+</body></html>

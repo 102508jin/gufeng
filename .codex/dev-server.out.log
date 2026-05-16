@@ -1,0 +1,24 @@
+
+> wenyan-agent@0.1.0 dev
+> tsx scripts/dev-server.ts
+
+Starting Next.js dev server at http://127.0.0.1:3000
+   ▲ Next.js 15.5.15
+   - Local:        http://127.0.0.1:3000
+   - Network:      http://127.0.0.1:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 3.3s
+ ○ Compiling / ...
+ ✓ Compiled / in 2.3s (562 modules)
+ GET / 200 in 2854ms
+ ○ Compiling /api/providers ...
+ ✓ Compiled /api/providers in 726ms (581 modules)
+ GET /api/personas 200 in 951ms
+ GET /api/providers 200 in 962ms
+ ✓ Compiled /api/knowledge/search in 335ms (604 modules)
+ GET /api/knowledge/search?q=%E6%9C%80%E8%BF%91%E6%80%BB%E8%A7%89%E5%BE%97%E8%AE%A1%E5%88%92%E5%BE%88%E5%A4%9A%E5%8D%B4%E6%80%BB%E6%8B%96%E5%BB%B6%EF%BC%8C%E5%BA%94%E8%AF%A5%E6%80%8E%E6%A0%B7%E7%A8%B3%E4%BD%8F%E5%BF%83%E5%BF%97%E5%B9%B6%E7%9C%9F%E6%AD%A3%E8%A1%8C%E5%8A%A8%E8%B5%B7%E6%9D%A5%EF%BC%9F&topK=4 200 in 481ms
+ GET /api/knowledge/search?q=%E6%9C%80%E8%BF%91%E6%80%BB%E8%A7%89%E5%BE%97%E8%AE%A1%E5%88%92%E5%BE%88%E5%A4%9A%E5%8D%B4%E6%80%BB%E6%8B%96%E5%BB%B6%EF%BC%8C%E5%BA%94%E8%AF%A5%E6%80%8E%E6%A0%B7%E7%A8%B3%E4%BD%8F%E5%BF%83%E5%BF%97%E5%B9%B6%E7%9C%9F%E6%AD%A3%E8%A1%8C%E5%8A%A8%E8%B5%B7%E6%9D%A5%EF%BC%9F&topK=4 200 in 29ms
+ ✓ Compiled /api/generate in 467ms (619 modules)
+ POST /api/generate 200 in 570ms

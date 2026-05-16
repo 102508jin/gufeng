@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>历史与收藏 - 书香 AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&amp;family=Source+Sans+3:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#83746b",
+                        "on-tertiary-container": "#dad4c9",
+                        "error-container": "#ffdad6",
+                        "primary": "#623b1e",
+                        "surface-tint": "#805435",
+                        "secondary": "#695d42",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#e9e1dc",
+                        "secondary-fixed": "#f1e1be",
+                        "surface": "#fff8f5",
+                        "on-tertiary-fixed-variant": "#4a473e",
+                        "background": "#fff8f5",
+                        "on-tertiary-fixed": "#1e1c14",
+                        "primary-container": "#7d5233",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#ffdcc6",
+                        "on-background": "#1e1b18",
+                        "secondary-container": "#f1e1be",
+                        "inverse-on-surface": "#f8efea",
+                        "secondary-fixed-dim": "#d5c5a4",
+                        "on-secondary-container": "#6f6348",
+                        "surface-variant": "#e9e1dc",
+                        "surface-container-low": "#fbf2ed",
+                        "on-secondary-fixed": "#231b06",
+                        "on-error": "#ffffff",
+                        "on-primary-container": "#ffcaa7",
+                        "tertiary-fixed-dim": "#cbc6ba",
+                        "primary-fixed-dim": "#f4bb94",
+                        "outline-variant": "#d5c3b9",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#34302c",
+                        "tertiary-container": "#5f5c53",
+                        "surface-bright": "#fff8f5",
+                        "on-surface": "#1e1b18",
+                        "inverse-primary": "#f4bb94",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#301400",
+                        "surface-container-high": "#efe6e2",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#e8e2d6",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#f5ece7",
+                        "on-surface-variant": "#51443d",
+                        "on-primary-fixed-variant": "#653d20",
+                        "tertiary": "#47443c",
+                        "on-secondary-fixed-variant": "#50462c",
+                        "surface-dim": "#e1d8d4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "80px",
+                        "md": "24px",
+                        "xs": "4px",
+                        "margin-mobile": "16px",
+                        "lg": "48px",
+                        "sm": "12px",
+                        "margin-desktop": "auto",
+                        "gutter": "24px",
+                        "base": "8px",
+                        "sidebar-width": "280px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Source Sans 3"],
+                        "headline-md": ["Noto Serif"],
+                        "body-lg": ["Noto Serif"],
+                        "display-lg": ["Noto Serif"],
+                        "body-md": ["Noto Serif"],
+                        "display-lg-mobile": ["Noto Serif"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "display-lg": ["40px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "44px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.surface'); color: theme('colors.on-surface'); }
+        .bg-pattern {
+            background-image: radial-gradient(theme('colors.outline-variant') 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.1;
+        }
+        .tonal-layer-1 { background-color: theme('colors.surface-container-low'); }
+        .tonal-layer-2 { background-color: theme('colors.surface-container'); }
+        .tonal-layer-3 { background-color: theme('colors.surface-container-high'); }
+        
+        .nav-item { transition: all 0.2s ease-in-out; }
+        .nav-item:hover { background-color: theme('colors.surface-container-high'); }
+        .nav-item:active { transform: scale(0.98); }
+        
+        .card-border { border: 1px solid theme('colors.outline-variant'); border-radius: theme('borderRadius.lg'); }
+        
+        /* Checkbox styling */
+        .custom-checkbox {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 1px solid theme('colors.outline');
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            background-color: transparent;
+            transition: all 0.2s;
+        }
+        .custom-checkbox:checked {
+            background-color: theme('colors.primary');
+            border-color: theme('colors.primary');
+        }
+        .custom-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+<body class="flex min-h-screen relative overflow-x-hidden font-body-md text-body-md">
+<!-- Background Pattern -->
+<div class="fixed inset-0 pointer-events-none bg-pattern z-0"></div>
+<!-- SideNavBar (Predicted JSON) -->
+<nav class="hidden md:flex flex-col h-screen w-sidebar-width fixed left-0 top-0 border-r border-outline-variant bg-surface py-lg z-20">
+<div class="px-md mb-lg">
+<h1 class="font-headline-md text-headline-md font-semibold text-primary">Shu-xiang AI</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Classical Prose Workbench</p>
+</div>
+<div class="px-md mb-md">
+<button class="w-full bg-primary text-on-primary rounded-full py-2 px-4 flex items-center justify-center gap-2 hover:bg-primary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span class="font-label-sm text-label-sm">New Session</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto">
+<ul class="flex flex-col gap-1 px-sm">
+<li>
+<a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">edit_note</span>
+<span>Workbench</span>
+</a>
+</li>
+<li>
+<a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">database</span>
+<span>Knowledge Base</span>
+</a>
+</li>
+<li>
+<a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-primary font-label-sm text-label-sm bg-secondary-container/30 border-r-2 border-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history</span>
+<span>History</span>
+</a>
+</li>
+<li>
+<a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</li>
+<li>
+<a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span>Providers</span>
+</a>
+</li>
+</ul>
+</div>
+<div class="mt-auto px-sm pt-md border-t border-outline-variant">
+<a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">sensors</span>
+<span>Vector Status</span>
+</a>
+<div class="mt-md px-3 flex items-center gap-3">
+<img alt="User profile" class="w-8 h-8 rounded-full border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEyY1ZDLQyLGvbDjLo2_5uNK6F6P3lT0-wLEWea7-j7ql6acs89roC8jMQtnn4m13mEGSTvpDKUr5Mer4CairutPX189t9zgO3940sd7KfuDDvJ3RHJPvIZpea8n5PYFHJNZC6kmmn7pR5_ts3wPsbOtHroHwTmWyqpxgLQadm6qmnUIZsoHKnq3s0O1IydQUJdhEHz1BiPcfnvEWrip-kMIJQajZ90OFgf4neFUbsJApgaGxjmJEPPFsXPVYSGQUAbNkBPC7-M_tH"/>
+<span class="font-label-sm text-label-sm text-on-surface">Scholar Yin</span>
+</div>
+</div>
+</nav>
+<!-- TopAppBar (Predicted JSON) -->
+<header class="fixed top-0 right-0 left-0 md:left-sidebar-width h-16 border-b border-outline-variant bg-surface/90 backdrop-blur-sm z-10 flex justify-between items-center px-md w-auto transition-all duration-200">
+<div class="flex items-center gap-3">
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="font-headline-md text-headline-md font-semibold text-primary hidden md:block">Shu-xiang Workbench</h2>
+<h2 class="font-headline-md text-[20px] font-semibold text-primary md:hidden">History</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<input class="bg-surface-container-low border border-outline-variant rounded-full py-1.5 pl-4 pr-10 text-label-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-64 transition-shadow" placeholder="Search..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">sync</span></button>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">help_outline</span></button>
+<button class="text-on-surface-variant hover:text-primary transition-colors md:hidden"><span class="material-symbols-outlined">account_circle</span></button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full pt-[80px] pb-[80px] px-margin-mobile md:px-md md:ml-sidebar-width max-w-[1200px] mx-auto relative z-0 flex flex-col">
+<!-- Page Header & Actions -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-lg gap-4">
+<div>
+<h2 class="font-display-lg-mobile md:font-display-lg text-primary mb-xs">研习记录</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">温故而知新，浏览您过往的文言文解析与对话。</p>
+</div>
+<div class="flex flex-wrap items-center gap-3">
+<div class="bg-surface-container-low rounded-lg p-1 flex border border-outline-variant">
+<button class="px-3 py-1 rounded-md bg-surface text-primary font-label-sm text-label-sm shadow-sm border border-outline-variant/50">全部</button>
+<button class="px-3 py-1 rounded-md text-on-surface-variant hover:text-primary font-label-sm text-label-sm transition-colors">已收藏</button>
+</div>
+<div class="h-6 w-px bg-outline-variant mx-1 hidden sm:block"></div>
+<button class="px-4 py-1.5 rounded-lg border border-outline text-primary hover:bg-primary/5 font-label-sm text-label-sm transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                    导出选中
+                </button>
+<button class="px-4 py-1.5 rounded-lg border border-error/50 text-error hover:bg-error/5 font-label-sm text-label-sm transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+                    批量删除
+                </button>
+</div>
+</div>
+<!-- List Header (Desktop) -->
+<div class="hidden md:grid grid-cols-[auto_1fr_150px_150px_auto] gap-4 px-4 py-2 border-b border-outline-variant text-on-surface-variant font-label-sm text-label-sm mb-4">
+<div class="w-[40px] flex items-center justify-center">
+<input class="custom-checkbox" type="checkbox"/>
+</div>
+<div>标题 / 摘录</div>
+<div>研习模型</div>
+<div>日期</div>
+<div class="w-[80px] text-center">操作</div>
+</div>
+<!-- History List (Cards on Mobile, Rows on Desktop) -->
+<div class="flex flex-col gap-4 md:gap-0">
+<!-- Item 1 -->
+<div class="group flex flex-col md:grid md:grid-cols-[auto_1fr_150px_150px_auto] gap-4 md:gap-4 p-4 md:px-4 md:py-4 card-border md:border-x-0 md:border-t-0 md:border-b md:rounded-none bg-surface md:bg-transparent hover:bg-surface-container-low transition-colors relative">
+<div class="absolute top-4 right-4 md:static md:w-[40px] flex items-center justify-center order-1 md:order-none">
+<input class="custom-checkbox hidden md:block" type="checkbox"/>
+<!-- Mobile only favorite icon in top right -->
+<button class="md:hidden text-primary"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bookmark</span></button>
+</div>
+<div class="order-2 md:order-none">
+<h3 class="font-body-lg text-body-lg text-on-surface font-semibold mb-1 line-clamp-1">「先帝创业未半而中道崩殂...」</h3>
+<p class="text-on-surface-variant text-[14px] line-clamp-2 leading-relaxed">探讨《出师表》中诸葛亮的情感表达与修辞手法，特别是“崩殂”一词在当时的语境意义。</p>
+</div>
+<div class="order-4 md:order-none flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">school</span>
+<span>经史子集模型 V2</span>
+</div>
+<div class="order-3 md:order-none flex items-center text-on-surface-variant font-label-sm text-label-sm">
+                    2024-05-12 14:30
+                </div>
+<div class="hidden md:flex w-[80px] justify-center items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-primary hover:text-primary-container" title="取消收藏"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bookmark</span></button>
+<button class="text-on-surface-variant hover:text-primary" title="继续研习"><span class="material-symbols-outlined">arrow_forward</span></button>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="group flex flex-col md:grid md:grid-cols-[auto_1fr_150px_150px_auto] gap-4 md:gap-4 p-4 md:px-4 md:py-4 card-border md:border-x-0 md:border-t-0 md:border-b md:rounded-none bg-surface md:bg-transparent hover:bg-surface-container-low transition-colors relative">
+<div class="absolute top-4 right-4 md:static md:w-[40px] flex items-center justify-center order-1 md:order-none">
+<input class="custom-checkbox hidden md:block" type="checkbox"/>
+<button class="md:hidden text-outline"><span class="material-symbols-outlined">bookmark_add</span></button>
+</div>
+<div class="order-2 md:order-none">
+<h3 class="font-body-lg text-body-lg text-on-surface font-semibold mb-1 line-clamp-1">《庄子·逍遥游》鲲鹏之喻解析</h3>
+<p class="text-on-surface-variant text-[14px] line-clamp-2 leading-relaxed">对比分析不同注疏版本对“水击三千里，抟扶摇而上者九万里”的解释，探究庄子的绝对自由观。</p>
+</div>
+<div class="order-4 md:order-none flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">auto_awesome</span>
+<span>老庄玄学特化版</span>
+</div>
+<div class="order-3 md:order-none flex items-center text-on-surface-variant font-label-sm text-label-sm">
+                    2024-05-10 09:15
+                </div>
+<div class="hidden md:flex w-[80px] justify-center items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-primary" title="收藏"><span class="material-symbols-outlined">bookmark_add</span></button>
+<button class="text-on-surface-variant hover:text-primary" title="继续研习"><span class="material-symbols-outlined">arrow_forward</span></button>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="group flex flex-col md:grid md:grid-cols-[auto_1fr_150px_150px_auto] gap-4 md:gap-4 p-4 md:px-4 md:py-4 card-border md:border-x-0 md:border-t-0 md:border-b md:rounded-none bg-surface md:bg-transparent hover:bg-surface-container-low transition-colors relative">
+<div class="absolute top-4 right-4 md:static md:w-[40px] flex items-center justify-center order-1 md:order-none">
+<input class="custom-checkbox hidden md:block" type="checkbox"/>
+<button class="md:hidden text-primary"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bookmark</span></button>
+</div>
+<div class="order-2 md:order-none">
+<h3 class="font-body-lg text-body-lg text-on-surface font-semibold mb-1 line-clamp-1">唐诗意象抽取：以王维《山居秋暝》为例</h3>
+<p class="text-on-surface-variant text-[14px] line-clamp-2 leading-relaxed">使用结构化指令提取诗中的自然意象（明月、松间、清泉、石上），并生成对应的视觉描述提示词。</p>
+</div>
+<div class="order-4 md:order-none flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">psychology</span>
+<span>通用认知大模型</span>
+</div>
+<div class="order-3 md:order-none flex items-center text-on-surface-variant font-label-sm text-label-sm">
+                    2024-05-08 21:40
+                </div>
+<div class="hidden md:flex w-[80px] justify-center items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-primary hover:text-primary-container" title="取消收藏"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bookmark</span></button>
+<button class="text-on-surface-variant hover:text-primary" title="继续研习"><span class="material-symbols-outlined">arrow_forward</span></button>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="mt-lg flex justify-center items-center gap-2">
+<button class="w-8 h-8 flex items-center justify-center rounded-md border border-outline-variant text-on-surface-variant hover:bg-surface-container-low disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-md bg-primary text-on-primary font-label-sm text-label-sm">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-md border border-outline-variant text-on-surface-variant hover:bg-surface-container-low font-label-sm text-label-sm">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-md border border-outline-variant text-on-surface-variant hover:bg-surface-container-low font-label-sm text-label-sm">3</button>
+<span class="text-on-surface-variant mx-1">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded-md border border-outline-variant text-on-surface-variant hover:bg-surface-container-low disabled:opacity-50">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</main>
+<!-- Footer (Predicted JSON) -->
+<footer class="fixed bottom-0 right-0 left-0 md:left-sidebar-width h-8 border-t border-outline-variant bg-surface-container-low flex justify-between items-center px-4 z-10 text-secondary font-label-sm text-label-sm">
+<div>© 2024 Shu-xiang Academic. Local-first RAG active.</div>
+<div class="flex gap-4">
+<a class="hover:underline" href="#">Documentation</a>
+<a class="hover:underline" href="#">API Status</a>
+<a class="hover:underline" href="#">Privacy</a>
+</div>
+</footer>
+</body></html>

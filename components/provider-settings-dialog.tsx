@@ -17,8 +17,8 @@ type ProviderSettingsDialogProps = {
 };
 
 const text = {
-  title: "接口设置",
-  summary: "可在此覆盖 OpenAI 与 Claude 的 API Base URL，仅对当前浏览器生效。",
+  title: "推理引擎配置",
+  summary: "配置当前浏览器使用的模型接口覆盖项；留空时沿用服务端默认配置。",
   openAiLabel: "OpenAI API URL",
   anthropicLabel: "Claude API URL",
   emptyHint: "留空则使用服务端默认值",
@@ -27,7 +27,7 @@ const text = {
   invalidAnthropic: "Claude API URL 格式不正确，请输入 http(s) 地址。",
   reset: "清空覆盖",
   cancel: "取消",
-  save: "保存"
+  save: "保存设置"
 } as const;
 
 function trimBaseUrl(value: string): string {
@@ -108,7 +108,7 @@ export function ProviderSettingsDialog(props: ProviderSettingsDialogProps) {
       >
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">设置</p>
+            <p className="eyebrow">模型设置</p>
             <h2 id="provider-settings-title">{text.title}</h2>
           </div>
           <button type="button" className="secondary-button" onClick={props.onClose}>
