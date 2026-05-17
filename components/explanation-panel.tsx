@@ -26,10 +26,10 @@ export function ExplanationPanel({ variant }: ExplanationPanelProps) {
   );
 
   return (
-    <section className="stack-section">
-      <div className="section-header">
+    <details className="stack-section collapsible-stack">
+      <summary className="section-header collapsible-summary">
         <h4>{text.title}</h4>
-      </div>
+      </summary>
 
       <div className="explanation-grid">
         {sanitizedLinePairs.length ? (
@@ -67,6 +67,6 @@ export function ExplanationPanel({ variant }: ExplanationPanelProps) {
           </article>
         ) : null}
       </div>
-    </section>
+    </details>
   );
 }

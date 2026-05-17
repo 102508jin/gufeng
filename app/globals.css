@@ -322,8 +322,8 @@ blockquote {
 }
 
 .workspace-main {
-  display: grid;
-  align-content: flex-start;
+  display: flex;
+  flex-direction: column;
   gap: 18px;
   padding: 28px;
 }
@@ -491,7 +491,7 @@ blockquote {
 }
 
 .section-page.knowledge-page {
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
   align-items: start;
 }
 
@@ -954,6 +954,40 @@ blockquote {
   padding-bottom: 14px;
 }
 
+.summary-details {
+  margin-top: 10px;
+}
+
+.summary-details > summary {
+  align-items: center;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 700;
+  gap: 8px;
+  list-style: none;
+}
+
+.summary-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary-details > summary::after {
+  color: var(--primary);
+  content: "展开";
+  font-size: 0.86rem;
+}
+
+.summary-details[open] > summary::after {
+  content: "收起";
+}
+
+.summary-details .summary-grid {
+  margin-top: 14px;
+}
+
 .summary-grid article,
 .subpanel,
 .source-card,
@@ -983,7 +1017,9 @@ blockquote {
 }
 
 .variant-card {
-  overflow: hidden;
+  display: grid;
+  gap: 0;
+  overflow: visible;
   padding: 0;
 }
 
@@ -1039,6 +1075,31 @@ blockquote {
 
 .variant-card > .stack-section:last-child {
   margin-bottom: 20px;
+}
+
+.collapsible-stack {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.collapsible-summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.collapsible-summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible-summary::after {
+  color: var(--muted);
+  content: "展开";
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+}
+
+.collapsible-stack[open] .collapsible-summary::after {
+  content: "收起";
 }
 
 .section-header {
@@ -1358,7 +1419,7 @@ blockquote {
 
 .knowledge-table {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 88px 86px 110px 110px;
+  grid-template-columns: minmax(260px, 1fr) 92px 92px 120px 172px;
   gap: 16px;
   align-items: center;
   min-height: 72px;
@@ -1392,7 +1453,82 @@ blockquote {
 }
 
 .table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
   color: var(--primary);
+  white-space: nowrap;
+}
+
+.table-action-button {
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1;
+  padding: 8px 0;
+}
+
+.table-action-button:hover:not(:disabled) {
+  color: var(--primary-strong);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.table-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.54;
+}
+
+.table-action-button.danger {
+  color: var(--danger);
+}
+
+.section-toast {
+  box-shadow: none;
+}
+
+.section-inline-message {
+  border-left: 3px solid var(--success);
+  padding-left: 12px;
+}
+
+.knowledge-precheck-panel {
+  display: grid;
+  gap: 16px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.knowledge-precheck-panel .panel-heading {
+  border-bottom: 1px solid var(--line);
+  padding: 18px 20px 16px;
+}
+
+.knowledge-precheck-panel .field-group {
+  margin: 0;
+  padding: 0 20px;
+}
+
+.knowledge-precheck-panel .compact-textarea {
+  min-height: 132px;
+}
+
+.knowledge-precheck-panel > .primary-button {
+  margin: -2px 20px 0;
+  width: auto;
+}
+
+.knowledge-precheck-panel .inline-error {
+  padding: 0 20px;
+}
+
+.knowledge-precheck-panel .retrieval-list {
+  margin: 0;
+  padding: 0 20px 20px;
 }
 
 .history-tabs {
@@ -1751,5 +1887,58 @@ blockquote {
   .modal-primary-button,
   .modal-actions .secondary-button {
     width: 100%;
+  }
+
+  .knowledge-table,
+  .history-table {
+    overflow: hidden;
+  }
+
+  .knowledge-table-head,
+  .knowledge-table-row,
+  .history-table-head,
+  .history-row {
+    grid-template-columns: 1fr;
+  }
+
+  .knowledge-table-head,
+  .history-table-head {
+    display: none;
+  }
+
+  .history-row {
+    min-height: auto;
+    align-items: start;
+  }
+
+  .provider-config-footer {
+    display: grid;
+    align-items: start;
+    padding: 18px 24px 24px;
+  }
+
+  .provider-config-footer > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .provider-config-footer span {
+    max-width: none;
+    line-height: 1.7;
+  }
+
+  .provider-config-footer .modal-primary-button,
+  .provider-config-footer .secondary-button {
+    width: 100%;
+  }
+
+  .provider-connection-card {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .provider-connection-card .compact-button {
+    justify-self: stretch;
   }
 }

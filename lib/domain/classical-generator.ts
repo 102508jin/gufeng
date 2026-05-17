@@ -229,8 +229,8 @@ export class DefaultClassicalGenerator implements ClassicalGenerator {
             temperature: Math.max(0.3, getGenerationTemperature(context) - 0.15)
           });
           return parsePlainTextVariants(textResponse, context);
-        } catch {
-          return buildDeterministicVariants(context);
+        } catch (cause) {
+          throw cause;
         }
       }
     }

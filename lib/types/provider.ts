@@ -13,6 +13,8 @@ export type ModelProfile = {
   model?: string;
   baseUrl?: string;
   apiKey?: string;
+  authHeader?: "authorization" | "api-key";
+  maxCompletionTokens?: number;
   headers?: Record<string, string>;
 };
 

@@ -42,11 +42,15 @@ function formatChunkMeta(chunk: RetrievedChunk): string | null {
 }
 
 export function SourcePanel({ refs, retrievalRefs = [] }: SourcePanelProps) {
+  if (!refs.length && !retrievalRefs.length) {
+    return null;
+  }
+
   return (
-    <section className="stack-section">
-      <div className="section-header">
+    <details className="stack-section collapsible-stack">
+      <summary className="section-header collapsible-summary">
         <h4>{text.title}</h4>
-      </div>
+      </summary>
 
       <div className="source-list">
         {refs.map((refItem) => (
@@ -77,6 +81,6 @@ export function SourcePanel({ refs, retrievalRefs = [] }: SourcePanelProps) {
           </div>
         </details>
       ) : null}
-    </section>
+    </details>
   );
 }

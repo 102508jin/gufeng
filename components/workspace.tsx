@@ -487,6 +487,7 @@ export function Workspace() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingKnowledge, setIsSearchingKnowledge] = useState(false);
   const [isImportingKnowledge, setIsImportingKnowledge] = useState(false);
+  const [isReindexingKnowledge, setIsReindexingKnowledge] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
@@ -916,6 +917,47 @@ export function Workspace() {
     }
   };
 
+  const handleReindexKnowledge = async () => {
+    setKnowledgeError(null);
+    setIsReindexingKnowledge(true);
+
+    try {
+      const response = await fetch("/api/knowledge/reindex", {
+        method: "POST"
+      });
+      const payload = (await response.json()) as ApiResult<{
+        knowledge: number;
+        vectorDocuments: number;
+        embeddingProvider: string;
+      }>;
+      if (!payload.ok) {
+        throw new Error(payload.error);
+      }
+
+      setKnowledgeRefs([]);
+      setKnowledgeImportSummary(
+        `索引已更新：knowledge=${payload.data.knowledge}，vectors=${payload.data.vectorDocuments}，embedding=${payload.data.embeddingProvider}`
+      );
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "重新索引失败。";
+      setKnowledgeError(message);
+    } finally {
+      setIsReindexingKnowledge(false);
+    }
+  };
+
+  const handleDeleteKnowledgeSource = (name: string) => {
+    if (name === "user-import") {
+      setKnowledgeImportSummary(null);
+      setKnowledgeRefs([]);
+      setKnowledgeError(null);
+      setActionMessage("已清除本次导入状态；如需删除原始导入文件，请在本地语料目录处理后重新索引。");
+      return;
+    }
+
+    setActionMessage("内置知识文件受本地语料保护，不能从前端直接删除；请在 data/raw/knowledge 中管理后重新索引。");
+  };
+
   const handleSubmitFeedback = (variant: VariantResult, rating: FeedbackRating) => {
     if (!result) {
       return;
@@ -1066,35 +1108,38 @@ export function Workspace() {
                         </button>
                       </div>
                     </div>
-                    <div className="summary-grid">
-                      <article>
-                        <p className="eyebrow">{text.normalizedQuery}</p>
-                        <h2>{result.normalizedQuery}</h2>
-                      </article>
-                      <article>
-                        <p className="eyebrow">{text.detectedMode}</p>
-                        <p>{result.detectedInputMode === "classical" ? text.classical : text.vernacular}</p>
-                      </article>
-                      <article>
-                        <p className="eyebrow">{text.provider}</p>
-                        <p>{formatProvider(result.debug?.provider)}</p>
-                      </article>
-                      <article>
-                        <p className="eyebrow">{text.persona}</p>
-                        <p>{result.persona?.name ?? text.genericPersona}</p>
-                      </article>
-                      <article>
-                        <p className="eyebrow">{text.aiIntervention}</p>
-                        <p>{formatAiIntervention(result.debug?.aiIntervention)}</p>
-                      </article>
-                      <article>
-                        <p className="eyebrow">{text.retrievalMode}</p>
-                        <p>{formatRetrievalMode(result.debug?.retrievalMode)}</p>
-                      </article>
-                    </div>
-                    {result.debug?.normalizationNotes?.length ? (
-                      <p className="summary-notes">{result.debug.normalizationNotes.join(text.notesSeparator)}</p>
-                    ) : null}
+                    <details className="summary-details">
+                      <summary>{text.previewEyebrow}</summary>
+                      <div className="summary-grid">
+                        <article>
+                          <p className="eyebrow">{text.normalizedQuery}</p>
+                          <h2>{result.normalizedQuery}</h2>
+                        </article>
+                        <article>
+                          <p className="eyebrow">{text.detectedMode}</p>
+                          <p>{result.detectedInputMode === "classical" ? text.classical : text.vernacular}</p>
+                        </article>
+                        <article>
+                          <p className="eyebrow">{text.provider}</p>
+                          <p>{formatProvider(result.debug?.provider)}</p>
+                        </article>
+                        <article>
+                          <p className="eyebrow">{text.persona}</p>
+                          <p>{result.persona?.name ?? text.genericPersona}</p>
+                        </article>
+                        <article>
+                          <p className="eyebrow">{text.aiIntervention}</p>
+                          <p>{formatAiIntervention(result.debug?.aiIntervention)}</p>
+                        </article>
+                        <article>
+                          <p className="eyebrow">{text.retrievalMode}</p>
+                          <p>{formatRetrievalMode(result.debug?.retrievalMode)}</p>
+                        </article>
+                      </div>
+                      {result.debug?.normalizationNotes?.length ? (
+                        <p className="summary-notes">{result.debug.normalizationNotes.join(text.notesSeparator)}</p>
+                      ) : null}
+                    </details>
                   </section>
 
                   {result.variants.map((variant) => (
@@ -1166,6 +1211,9 @@ export function Workspace() {
                 </details>
               </div>
 
+              {actionMessage ? <div className="panel toast-panel section-toast">{actionMessage}</div> : null}
+              {knowledgeImportSummary ? <p className="inline-success section-inline-message">{knowledgeImportSummary}</p> : null}
+
               <section className="stitch-table-panel">
                 <div className="knowledge-table knowledge-table-head">
                   <span>文件名称</span>
@@ -1174,6 +1222,7 @@ export function Workspace() {
                   <span>状态</span>
                   <span>操作</span>
                 </div>
+
                 {[
                   ["local-corpus.json", "JSON", "已生成", "已向量化"],
                   ["vector-index.json", "INDEX", "本地", "可检索"],
@@ -1184,14 +1233,32 @@ export function Workspace() {
                     <span>{type}</span>
                     <span>{size}</span>
                     <span className="table-status">{status}</span>
-                    <span className="table-actions">重新索引　删除</span>
+                    <span className="table-actions">
+                      <button
+                        type="button"
+                        className="table-action-button"
+                        onClick={() => {
+                          void handleReindexKnowledge();
+                        }}
+                        disabled={isReindexingKnowledge}
+                      >
+                        {isReindexingKnowledge ? "索引中" : "重新索引"}
+                      </button>
+                      <button
+                        type="button"
+                        className="table-action-button danger"
+                        onClick={() => handleDeleteKnowledgeSource(name)}
+                      >
+                        删除
+                      </button>
+                    </span>
                   </article>
                 ))}
               </section>
             </div>
 
             <aside className="section-page-side">
-              <section className="panel">
+              <section className="panel knowledge-precheck-panel">
                 <div className="panel-heading">
                   <div>
                     <p className="eyebrow">检索预检</p>

@@ -59,6 +59,8 @@ export function VariantCard({
         {variant.styleNotes?.length ? <p className="style-note">{variant.styleNotes.join(noteSeparator)}</p> : null}
       </div>
 
+      <blockquote className="classical-block">{variant.classicalText}</blockquote>
+
       <div className="variant-actions">
         <button type="button" className="small-button" onClick={() => onCopyClassical(variant)}>
           {text.copyClassical}
@@ -94,7 +96,6 @@ export function VariantCard({
         </div>
       </div>
 
-      <blockquote className="classical-block">{variant.classicalText}</blockquote>
       <ExplanationPanel variant={variant} />
       <SourcePanel refs={variant.sources} retrievalRefs={retrievalRefs} />
     </article>

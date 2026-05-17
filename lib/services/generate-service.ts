@@ -9,6 +9,7 @@ import { DefaultExplanationGenerator } from "@/lib/domain/explanation-generator"
 import { DefaultInputNormalizer } from "@/lib/domain/input-normalizer";
 import { LocalPersonaRetriever } from "@/lib/domain/persona-retriever";
 import { LocalSourceRetriever } from "@/lib/domain/source-retriever";
+import { env } from "@/lib/config/env";
 import { createModelProvider } from "@/lib/infra/llm/model-provider";
 import { logger } from "@/lib/infra/logger";
 import { resolveModelProfile } from "@/lib/infra/llm/provider-registry";
@@ -64,6 +65,31 @@ function formatProvider(provider: string): string {
   }
 }
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
+
+    if (typeof timeout === "object" && "unref" in timeout && typeof timeout.unref === "function") {
+      timeout.unref();
+    }
+
+    promise.then(
+      (value) => {
+        clearTimeout(timeout);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timeout);
+        reject(error);
+      }
+    );
+  });
+}
+
+function getGenerationFallbackTimeoutMs(): number {
+  return Math.min(env.modelRequestTimeoutMs, 75_000);
+}
+
 function cleanOptionalText(value: string | undefined): string | undefined {
   const normalized = value?.trim();
   return normalized ? normalized : undefined;
@@ -95,7 +121,15 @@ export class GenerateService {
   async generate(request: GenerateRequest): Promise<GenerateResponse> {
     const profile = this.resolveProfile(request.providerId, request.providerOverrides);
     try {
-      return await this.generateWithProfile(request, profile);
+      if (profile.driver === "mock") {
+        return await this.generateWithProfile(request, profile);
+      }
+
+      return await withTimeout(
+        this.generateWithProfile(request, profile),
+        getGenerationFallbackTimeoutMs(),
+        `模型供应方响应超过 ${Math.round(getGenerationFallbackTimeoutMs() / 1000)} 秒。`
+      );
     } catch (error) {
       if (profile.driver === "mock") {
         throw error;

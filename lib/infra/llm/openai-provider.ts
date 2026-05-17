@@ -19,6 +19,10 @@ function extractJsonBlock(input: string): string {
   return fencedMatch?.[1]?.trim() ?? input.trim();
 }
 
+function usesMimoCompletionTokens(profile: ModelProfile): boolean {
+  return Boolean(profile.baseUrl?.includes("mimo") || profile.baseUrl?.includes("xiaomimimo"));
+}
+
 export class OpenAiProvider implements ModelProvider {
   kind = "openai-compatible";
 
@@ -31,8 +35,14 @@ export class OpenAiProvider implements ModelProvider {
     };
 
     if (this.profile.apiKey) {
-      headers.Authorization = `Bearer ${this.profile.apiKey}`;
+      if (this.profile.authHeader === "api-key") {
+        headers["api-key"] = this.profile.apiKey;
+      } else {
+        headers.Authorization = `Bearer ${this.profile.apiKey}`;
+      }
     }
+
+    const maxCompletionTokens = this.profile.maxCompletionTokens ?? (usesMimoCompletionTokens(this.profile) ? 1024 : undefined);
 
     const response = await fetch(`${this.profile.baseUrl}/chat/completions`, {
       method: "POST",
@@ -41,6 +51,8 @@ export class OpenAiProvider implements ModelProvider {
       body: JSON.stringify({
         model: this.profile.model,
         temperature: options?.temperature ?? 0.6,
+        stream: false,
+        ...(maxCompletionTokens ? { max_completion_tokens: maxCompletionTokens } : {}),
         messages: [
           options?.systemPrompt ? { role: "system", content: options.systemPrompt } : null,
           { role: "user", content: prompt }

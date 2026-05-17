@@ -10,6 +10,8 @@ type RawModelProfile = {
   baseUrl?: string;
   apiKey?: string;
   apiKeyEnv?: string;
+  authHeader?: string;
+  maxCompletionTokens?: number;
   headers?: Record<string, string>;
 };
 
@@ -64,6 +66,22 @@ function normalizeBaseUrl(baseUrl: string | undefined | null): string | undefine
   return trimmed.replace(/\/+$/u, "");
 }
 
+function normalizeAuthHeader(value: string | undefined, baseUrl: string | undefined): ModelProfile["authHeader"] {
+  if (value === "api-key" || value === "authorization") {
+    return value;
+  }
+
+  return baseUrl?.includes("mimo") || baseUrl?.includes("xiaomimimo") ? "api-key" : "authorization";
+}
+
+function normalizeMaxCompletionTokens(value: number | undefined, baseUrl: string | undefined): number | undefined {
+  if (Number.isFinite(value) && value && value > 0) {
+    return Math.floor(value);
+  }
+
+  return baseUrl?.includes("mimo") || baseUrl?.includes("xiaomimimo") ? 1024 : undefined;
+}
+
 function parseCustomProfiles(): ModelProfile[] {
   if (!env.modelProfilesJson.trim()) {
     return [];
@@ -88,13 +106,17 @@ function parseCustomProfiles(): ModelProfile[] {
         return [];
       }
 
+      const baseUrl = normalizeBaseUrl(profile.baseUrl);
+
       return [{
         id: profile.id,
         label: profile.label,
         driver,
         model: profile.model,
-        baseUrl: normalizeBaseUrl(profile.baseUrl),
+        baseUrl,
         apiKey: getCustomApiKey(profile),
+        authHeader: normalizeAuthHeader(profile.authHeader, baseUrl),
+        maxCompletionTokens: normalizeMaxCompletionTokens(profile.maxCompletionTokens, baseUrl),
         headers: profile.headers
       }];
     });
