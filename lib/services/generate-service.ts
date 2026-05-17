@@ -238,7 +238,8 @@ export class GenerateService {
         fallbackReason: fallback?.fallbackReason,
         aiIntervention,
         retrievalMode,
-        userContextApplied: Boolean(userContext)
+        userContextApplied: Boolean(userContext),
+        maxCompletionTokens: profile.maxCompletionTokens
       }
     };
   }

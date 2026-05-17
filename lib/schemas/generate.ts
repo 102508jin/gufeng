@@ -2,7 +2,9 @@ import { z } from "zod";
 
 import {
   DEFAULT_AI_INTERVENTION,
+  MAX_COMPLETION_TOKEN_BUDGET,
   DEFAULT_EXPLANATION_MODES,
+  MIN_COMPLETION_TOKEN_BUDGET,
   DEFAULT_RETRIEVAL_MODE,
   DEFAULT_VARIANTS_COUNT,
   MAX_QUERY_LENGTH,
@@ -11,7 +13,11 @@ import {
 
 const providerOverrideSchema = z.object({
   openaiBaseUrl: z.string().trim().url().optional(),
-  anthropicBaseUrl: z.string().trim().url().optional()
+  anthropicBaseUrl: z.string().trim().url().optional(),
+  maxCompletionTokens: z.coerce.number().int()
+    .min(MIN_COMPLETION_TOKEN_BUDGET)
+    .max(MAX_COMPLETION_TOKEN_BUDGET)
+    .optional()
 });
 
 export const generateRequestSchema = z.object({

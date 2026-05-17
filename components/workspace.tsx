@@ -6,12 +6,15 @@ import { ChatInput } from "@/components/chat-input";
 import { KnowledgeImportPanel } from "@/components/knowledge-import-panel";
 import { ProviderSettingsDialog } from "@/components/provider-settings-dialog";
 import { VariantCard } from "@/components/variant-card";
-import { WorkspaceMemoryPanel } from "@/components/workspace-memory-panel";
 import {
+  COMPLETION_TOKEN_BUDGET_STEP,
   DEFAULT_AI_INTERVENTION,
+  DEFAULT_COMPLETION_TOKEN_BUDGET,
   DEFAULT_EXPLANATION_MODES,
   DEFAULT_RETRIEVAL_MODE,
-  DEFAULT_VARIANTS_COUNT
+  DEFAULT_VARIANTS_COUNT,
+  MAX_COMPLETION_TOKEN_BUDGET,
+  MIN_COMPLETION_TOKEN_BUDGET
 } from "@/lib/config/constants";
 import type { ApiResult } from "@/lib/types/api";
 import type {
@@ -27,6 +30,7 @@ import type { PersonaProfile } from "@/lib/types/persona";
 import type { ProviderEndpointOverrides, PublicModelProfile } from "@/lib/types/provider";
 import type { SourceRef } from "@/lib/types/retrieval";
 import type { KnowledgeImportInput, KnowledgeImportResult } from "@/lib/types/knowledge-import";
+import type { ProviderConnectionTestResult } from "@/lib/services/provider-connection-service";
 import {
   createLocalWorkspaceProfile,
   createFeedbackEntry,
@@ -70,13 +74,16 @@ const providerSettingsStorageKey = "wenyan-agent:provider-settings:v1";
 type ProviderSettingsState = {
   openaiBaseUrl: string;
   anthropicBaseUrl: string;
+  maxCompletionTokens: number;
 };
 
 type WorkspaceView = "workbench" | "knowledge" | "memory" | "providers";
+type MemoryView = "history" | "favorites";
 
 const emptyProviderSettings: ProviderSettingsState = {
   openaiBaseUrl: "",
-  anthropicBaseUrl: ""
+  anthropicBaseUrl: "",
+  maxCompletionTokens: DEFAULT_COMPLETION_TOKEN_BUDGET
 };
 
 const text = {
@@ -277,6 +284,21 @@ function trimStoredValue(value: unknown): string {
   return typeof value === "string" ? value.trim().replace(/\/+$/u, "") : "";
 }
 
+function clampCompletionTokenBudget(value: unknown): number {
+  const numeric = typeof value === "number" ? value : Number(value);
+
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_COMPLETION_TOKEN_BUDGET;
+  }
+
+  const stepped = Math.round(numeric / COMPLETION_TOKEN_BUDGET_STEP) * COMPLETION_TOKEN_BUDGET_STEP;
+  return Math.min(MAX_COMPLETION_TOKEN_BUDGET, Math.max(MIN_COMPLETION_TOKEN_BUDGET, stepped));
+}
+
+function formatTokenBudget(value: number): string {
+  return `${Math.round(value / 1024)}k`;
+}
+
 function readStoredProviderSettings(): ProviderSettingsState {
   try {
     const raw = window.localStorage.getItem(providerSettingsStorageKey);
@@ -287,7 +309,8 @@ function readStoredProviderSettings(): ProviderSettingsState {
     const parsed = JSON.parse(raw) as Partial<ProviderSettingsState>;
     return {
       openaiBaseUrl: trimStoredValue(parsed.openaiBaseUrl),
-      anthropicBaseUrl: trimStoredValue(parsed.anthropicBaseUrl)
+      anthropicBaseUrl: trimStoredValue(parsed.anthropicBaseUrl),
+      maxCompletionTokens: clampCompletionTokenBudget(parsed.maxCompletionTokens)
     };
   } catch {
     return emptyProviderSettings;
@@ -300,7 +323,8 @@ function getProviderDefaults(providers: PublicModelProfile[]): ProviderSettingsS
 
   return {
     openaiBaseUrl: openai?.baseUrl ?? "",
-    anthropicBaseUrl: anthropic?.baseUrl ?? ""
+    anthropicBaseUrl: anthropic?.baseUrl ?? "",
+    maxCompletionTokens: DEFAULT_COMPLETION_TOKEN_BUDGET
   };
 }
 
@@ -314,6 +338,8 @@ function toRequestProviderOverrides(value: ProviderSettingsState): ProviderEndpo
   if (value.anthropicBaseUrl) {
     overrides.anthropicBaseUrl = value.anthropicBaseUrl;
   }
+
+  overrides.maxCompletionTokens = clampCompletionTokenBudget(value.maxCompletionTokens);
 
   return Object.keys(overrides).length ? overrides : undefined;
 }
@@ -475,6 +501,7 @@ export function Workspace() {
   const [historyEntries, setHistoryEntries] = useState<QuestionHistoryEntry[]>([]);
   const [favorites, setFavorites] = useState<FavoriteAnswer[]>([]);
   const [feedbackEntries, setFeedbackEntries] = useState<FeedbackEntry[]>([]);
+  const [memoryView, setMemoryView] = useState<MemoryView>("history");
   const [favoritePersonaFilter, setFavoritePersonaFilter] = useState("");
   const [favoriteTopicFilter, setFavoriteTopicFilter] = useState("");
   const [knowledgeRefs, setKnowledgeRefs] = useState<SourceRef[]>([]);
@@ -484,10 +511,12 @@ export function Workspace() {
   const [result, setResult] = useState<GenerateResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [connectionTest, setConnectionTest] = useState<ProviderConnectionTestResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingKnowledge, setIsSearchingKnowledge] = useState(false);
   const [isImportingKnowledge, setIsImportingKnowledge] = useState(false);
   const [isReindexingKnowledge, setIsReindexingKnowledge] = useState(false);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
@@ -568,7 +597,29 @@ export function Workspace() {
     writeStorageValue(profilesStorageKey, profiles);
   }, [hasLoadedMemory, profiles]);
 
+  useEffect(() => {
+    if (!hasLoadedMemory || memoryView !== "history" || historyEntries.length || !favorites.length) {
+      return;
+    }
+
+    setMemoryView("favorites");
+  }, [favorites.length, hasLoadedMemory, historyEntries.length, memoryView]);
+
+  useEffect(() => {
+    setConnectionTest(null);
+  }, [providerId]);
+
   const selectedProvider = providerId ? providers.find((provider) => provider.id === providerId) : null;
+  const selectedProviderBaseUrl = selectedProvider?.id === "openai" && providerSettings.openaiBaseUrl
+    ? providerSettings.openaiBaseUrl
+    : selectedProvider?.id === "anthropic" && providerSettings.anthropicBaseUrl
+      ? providerSettings.anthropicBaseUrl
+      : selectedProvider?.baseUrl ?? providerDefaults.openaiBaseUrl ?? "http://localhost:11434/v1";
+  const connectionStatusDetail = isTestingConnection
+    ? "正在测试连接..."
+    : connectionTest
+      ? connectionTest.detail
+      : `${formatProvider(selectedProvider?.driver)} · ${selectedProvider?.configured ? text.configured : text.unavailable}`;
   const activeProfile = profiles.find((profile) => profile.id === activeProfileId) ?? profiles[0] ?? null;
   const validationCandidates: Array<string | null> = [
     query.trim().length > 0 && query.trim().length < 8 ? text.queryTooShort : null,
@@ -578,6 +629,23 @@ export function Workspace() {
   ];
   const validationMessages = validationCandidates.filter((message): message is string => Boolean(message));
   const filteredFavorites = filterFavoriteAnswers(favorites, favoritePersonaFilter, favoriteTopicFilter);
+
+  const persistProviderSettings = (value: ProviderSettingsState) => {
+    setProviderSettings(value);
+    writeStorageValue(providerSettingsStorageKey, value);
+    setConnectionTest(null);
+  };
+
+  const updateCompletionTokenBudget = (value: number) => {
+    persistProviderSettings({
+      ...providerSettings,
+      maxCompletionTokens: clampCompletionTokenBudget(value)
+    });
+  };
+
+  const resetProviderSettings = () => {
+    persistProviderSettings(emptyProviderSettings);
+  };
 
   const persistActiveProfile = () => {
     if (!activeProfileId) {
@@ -597,6 +665,7 @@ export function Workspace() {
     setHistoryEntries(readProfileHistory(profile.id, []));
     setFavorites(readProfileFavorites(profile.id, []));
     setFeedbackEntries(readProfileFeedback(profile.id, []));
+    setMemoryView("history");
     setFavoritePersonaFilter("");
     setFavoriteTopicFilter("");
   };
@@ -657,6 +726,44 @@ export function Workspace() {
       setError(cause instanceof Error ? cause.message : text.generationFailed);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleTestProviderConnection = async () => {
+    setConnectionTest(null);
+    setIsTestingConnection(true);
+
+    try {
+      const response = await fetch("/api/providers/test", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          providerId: providerId || null,
+          providerOverrides: toRequestProviderOverrides(providerSettings)
+        })
+      });
+
+      const payload = (await response.json()) as ApiResult<ProviderConnectionTestResult>;
+      if (!payload.ok) {
+        throw new Error(payload.error);
+      }
+
+      setConnectionTest(payload.data);
+    } catch (cause) {
+      setConnectionTest({
+        ok: false,
+        configured: false,
+        providerId: providerId || "",
+        provider: selectedProvider?.label ?? "当前模型",
+        driver: selectedProvider?.driver ?? "mock",
+        baseUrl: selectedProvider?.baseUrl,
+        maxCompletionTokens: providerSettings.maxCompletionTokens,
+        detail: cause instanceof Error ? cause.message : "连接测试失败。"
+      });
+    } finally {
+      setIsTestingConnection(false);
     }
   };
 
@@ -736,9 +843,10 @@ export function Workspace() {
     setRetrievalMode(entry.retrievalMode);
     setPersonaId(entry.personaId);
     setProviderId(entry.providerId);
-    setProviderSettings({
+    persistProviderSettings({
       openaiBaseUrl: entry.providerOverrides?.openaiBaseUrl ?? "",
-      anthropicBaseUrl: entry.providerOverrides?.anthropicBaseUrl ?? ""
+      anthropicBaseUrl: entry.providerOverrides?.anthropicBaseUrl ?? "",
+      maxCompletionTokens: clampCompletionTokenBudget(entry.providerOverrides?.maxCompletionTokens)
     });
     setUserContext(entry.userContext);
     setActionMessage(text.historyApplied);
@@ -1308,36 +1416,72 @@ export function Workspace() {
             </div>
 
             <div className="history-toolbar">
-              <div className="segmented-row history-tabs">
-                <button type="button" className="chip chip-active">全部</button>
-                <button type="button" className="chip">已收藏</button>
+              <div className="segmented-row history-tabs" role="tablist" aria-label="历史收藏视图">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={memoryView === "history"}
+                  className={`chip ${memoryView === "history" ? "chip-active" : ""}`}
+                  onClick={() => setMemoryView("history")}
+                >
+                  历史
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={memoryView === "favorites"}
+                  className={`chip ${memoryView === "favorites" ? "chip-active" : ""}`}
+                  onClick={() => setMemoryView("favorites")}
+                >
+                  已收藏
+                </button>
               </div>
               <div className="summary-actions">
-                <button type="button" className="small-button" onClick={handleExportProfileBackup}>导出选中</button>
-                <button type="button" className="small-button" onClick={handleClearHistory} disabled={!historyEntries.length}>批量删除</button>
+                <button type="button" className="small-button" onClick={handleExportProfileBackup}>备份配置</button>
+                {memoryView === "history" ? (
+                  <button type="button" className="small-button" onClick={handleClearHistory} disabled={!historyEntries.length}>
+                    清空历史
+                  </button>
+                ) : null}
               </div>
             </div>
 
             <section className="history-table">
               <div className="history-table-head">
                 <span />
-                <span>标题 / 摘要</span>
-                <span>研习模型</span>
+                <span>{memoryView === "history" ? "标题 / 摘要" : "文言 / 原题"}</span>
+                <span>角色</span>
                 <span>日期</span>
                 <span>操作</span>
               </div>
-              {historyEntries.length ? historyEntries.map((entry) => (
-                <article key={entry.id} className="history-row">
-                  <input type="checkbox" aria-label="选择历史记录" />
-                  <button type="button" className="history-title" onClick={() => handleUseHistory(entry)}>
-                    <strong>{entry.normalizedQuery}</strong>
-                    <span>{entry.topics.length ? entry.topics.join("、") : "文言问答记录"}</span>
-                  </button>
-                  <span>{entry.personaName ?? text.genericPersona}</span>
-                  <span>{formatShortDate(entry.createdAt)}</span>
-                  <button type="button" className="ghost-button" onClick={() => setHistoryEntries((current) => current.filter((item) => item.id !== entry.id))}>删除</button>
-                </article>
-              )) : (
+              {memoryView === "history" && historyEntries.length ? historyEntries.map((entry) => (
+                  <article key={entry.id} className="history-row">
+                    <input type="checkbox" aria-label="选择历史记录" />
+                    <button type="button" className="history-title" onClick={() => handleUseHistory(entry)}>
+                      <strong>{entry.normalizedQuery}</strong>
+                      <span>{entry.topics.length ? entry.topics.join("、") : "文言问答记录"}</span>
+                    </button>
+                    <span>{entry.personaName ?? text.genericPersona}</span>
+                    <span>{formatShortDate(entry.createdAt)}</span>
+                    <button type="button" className="ghost-button" onClick={() => setHistoryEntries((current) => current.filter((item) => item.id !== entry.id))}>删除</button>
+                  </article>
+                )) : null}
+              {memoryView === "favorites" && filteredFavorites.length ? filteredFavorites.map((favorite) => (
+                  <article key={favorite.favoriteKey} className="history-row favorite-row">
+                    <input type="checkbox" aria-label="选择收藏记录" />
+                    <button type="button" className="history-title" onClick={() => handleUseFavoriteQuery(favorite)}>
+                      <strong>{favorite.classicalText}</strong>
+                      <span>{favorite.normalizedQuery || favorite.query}</span>
+                    </button>
+                    <span>{favorite.personaName ?? text.genericPersona}</span>
+                    <span>{formatShortDate(favorite.createdAt)}</span>
+                    <div className="history-row-actions">
+                      <button type="button" className="ghost-button" onClick={() => handleExportFavorite(favorite)}>导出</button>
+                      <button type="button" className="ghost-button" onClick={() => setFavorites((current) => current.filter((item) => item.favoriteKey !== favorite.favoriteKey))}>移除</button>
+                    </div>
+                  </article>
+                )) : null}
+              {memoryView === "history" && !historyEntries.length ? (
                 <article className="history-row history-row-empty">
                   <span />
                   <div className="history-title">
@@ -1348,38 +1492,65 @@ export function Workspace() {
                   <span>—</span>
                   <span>—</span>
                 </article>
-              )}
+              ) : null}
+              {memoryView === "favorites" && !filteredFavorites.length ? (
+                <article className="history-row history-row-empty">
+                  <span />
+                  <div className="history-title">
+                    <strong>暂无收藏内容</strong>
+                    <span>在工作台收藏回答后，会出现在此处。</span>
+                  </div>
+                  <span>—</span>
+                  <span>—</span>
+                  <span>—</span>
+                </article>
+              ) : null}
             </section>
 
             <details className="profile-disclosure">
-              <summary>本地配置档与收藏管理</summary>
-              <WorkspaceMemoryPanel
-                profiles={profiles}
-                activeProfileId={activeProfileId}
-                profileNameDraft={profileNameDraft}
-                historyEntries={historyEntries}
-                favorites={filteredFavorites}
-                personas={personas}
-                personaFilter={favoritePersonaFilter}
-                topicFilter={favoriteTopicFilter}
-                onProfileChange={handleSelectProfile}
-                onProfileNameDraftChange={setProfileNameDraft}
-                onCreateProfile={handleCreateProfile}
-                onRenameProfile={handleRenameProfile}
-                onDeleteProfile={handleDeleteProfile}
-                onExportProfileBackup={handleExportProfileBackup}
-                onImportProfileBackup={(file) => {
-                  void handleImportProfileBackup(file);
-                }}
-                onPersonaFilterChange={setFavoritePersonaFilter}
-                onTopicFilterChange={setFavoriteTopicFilter}
-                onUseHistory={handleUseHistory}
-                onRemoveHistory={(id) => setHistoryEntries((current) => current.filter((entry) => entry.id !== id))}
-                onClearHistory={handleClearHistory}
-                onUseFavoriteQuery={handleUseFavoriteQuery}
-                onRemoveFavorite={(favoriteKey) => setFavorites((current) => current.filter((item) => item.favoriteKey !== favoriteKey))}
-                onExportFavorite={handleExportFavorite}
-              />
+              <summary>本地配置档</summary>
+              <section className="panel memory-panel">
+                <div className="profile-grid">
+                  <select
+                    className="field-input field-select"
+                    value={activeProfileId}
+                    onChange={(event) => handleSelectProfile(event.target.value)}
+                  >
+                    {profiles.map((profile) => (
+                      <option key={profile.id} value={profile.id}>
+                        {profile.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    className="field-input"
+                    value={profileNameDraft}
+                    onChange={(event) => setProfileNameDraft(event.target.value)}
+                    placeholder="配置档名称"
+                    maxLength={40}
+                  />
+                </div>
+                <div className="memory-actions">
+                  <button type="button" className="ghost-button" onClick={handleCreateProfile}>新建</button>
+                  <button type="button" className="ghost-button" onClick={handleRenameProfile}>重命名</button>
+                  <button type="button" className="ghost-button" onClick={handleDeleteProfile}>删除</button>
+                  <button type="button" className="ghost-button" onClick={handleExportProfileBackup}>备份</button>
+                  <label className="ghost-button file-button">
+                    导入
+                    <input
+                      type="file"
+                      accept="application/json,.json"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) {
+                          void handleImportProfileBackup(file);
+                          event.target.value = "";
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              </section>
             </details>
           </section>
         ) : null}
@@ -1405,26 +1576,48 @@ export function Workspace() {
                   </label>
                   <label className="field-group">
                     <span className="field-label">API 基础 URL</span>
-                    <input className="field-input" value={selectedProvider?.baseUrl ?? providerSettings.openaiBaseUrl ?? providerDefaults.openaiBaseUrl ?? "http://localhost:11434/v1"} readOnly />
+                    <input className="field-input" value={selectedProviderBaseUrl} readOnly />
                   </label>
                 </section>
 
                 <section className="provider-config-section">
                   <p className="eyebrow">模型参数</p>
-                  <div className="provider-slider-row">
-                    <span>4k</span>
-                    <div className="stitch-range"><span className="stitch-range-fill stitch-range-balanced" /><span className="stitch-range-thumb stitch-range-thumb-balanced" /></div>
-                    <span>32k</span>
-                  </div>
-                  <p className="provider-help">文言文分析推荐使用较大的上下文以包含充分的注释参考。</p>
+                  <label className="provider-token-field" htmlFor="provider-token-budget">
+                    <span className="section-title-row">
+                      <span>最大输出 Token</span>
+                      <span className="range-value">{formatTokenBudget(providerSettings.maxCompletionTokens)}</span>
+                    </span>
+                    <span className="provider-slider-row">
+                      <span>{formatTokenBudget(MIN_COMPLETION_TOKEN_BUDGET)}</span>
+                      <input
+                        id="provider-token-budget"
+                        className="provider-token-range"
+                        type="range"
+                        min={MIN_COMPLETION_TOKEN_BUDGET}
+                        max={MAX_COMPLETION_TOKEN_BUDGET}
+                        step={COMPLETION_TOKEN_BUDGET_STEP}
+                        value={providerSettings.maxCompletionTokens}
+                        onChange={(event) => updateCompletionTokenBudget(Number(event.target.value))}
+                      />
+                      <span>{formatTokenBudget(MAX_COMPLETION_TOKEN_BUDGET)}</span>
+                    </span>
+                  </label>
+                  <p className="provider-help">此值会随生成请求发送给模型，用于限制单次回复长度；上下文窗口仍以所选模型服务端能力为准。</p>
                 </section>
 
-                <section className="provider-connection-card">
+                <section className={`provider-connection-card ${connectionTest ? (connectionTest.ok ? "provider-connection-ok" : "provider-connection-error") : ""}`}>
                   <div>
                     <strong>连接状态</strong>
-                    <p>{formatProvider(selectedProvider?.driver)} · {selectedProvider?.configured ? text.configured : text.unavailable}</p>
+                    <p>{connectionStatusDetail}</p>
                   </div>
-                  <button type="button" className="small-button" onClick={() => setIsSettingsOpen(true)}>测试连接</button>
+                  <button
+                    type="button"
+                    className="small-button"
+                    onClick={handleTestProviderConnection}
+                    disabled={isTestingConnection}
+                  >
+                    {isTestingConnection ? "测试中..." : "测试连接"}
+                  </button>
                 </section>
 
                 <div className="provider-card-grid">
@@ -1444,8 +1637,8 @@ export function Workspace() {
               <footer className="provider-config-footer">
                 <span>配置保存在当前浏览器本地。</span>
                 <div>
-                  <button type="button" className="secondary-button compact-button" onClick={() => setProviderSettings(emptyProviderSettings)}>取消</button>
-                  <button type="button" className="primary-button compact-button" onClick={() => setIsSettingsOpen(true)}>保存配置</button>
+                  <button type="button" className="secondary-button compact-button" onClick={resetProviderSettings}>清空覆盖</button>
+                  <button type="button" className="primary-button compact-button" onClick={() => setIsSettingsOpen(true)}>编辑接口</button>
                 </div>
               </footer>
             </section>
@@ -1458,8 +1651,10 @@ export function Workspace() {
         defaults={providerDefaults}
         onClose={() => setIsSettingsOpen(false)}
         onSave={(value) => {
-          setProviderSettings(value);
-          writeStorageValue(providerSettingsStorageKey, value);
+          persistProviderSettings({
+            ...providerSettings,
+            ...value
+          });
           setIsSettingsOpen(false);
         }}
       />

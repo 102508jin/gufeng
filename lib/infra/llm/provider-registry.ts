@@ -82,6 +82,14 @@ function normalizeMaxCompletionTokens(value: number | undefined, baseUrl: string
   return baseUrl?.includes("mimo") || baseUrl?.includes("xiaomimimo") ? 1024 : undefined;
 }
 
+function normalizeOverrideMaxCompletionTokens(value: number | undefined): number | undefined {
+  if (Number.isFinite(value) && value && value > 0) {
+    return Math.floor(value);
+  }
+
+  return undefined;
+}
+
 function parseCustomProfiles(): ModelProfile[] {
   if (!env.modelProfilesJson.trim()) {
     return [];
@@ -208,6 +216,7 @@ export function listPublicModelProfiles(): PublicModelProfile[] {
     driver: profile.driver,
     model: profile.model,
     baseUrl: profile.baseUrl,
+    maxCompletionTokens: profile.maxCompletionTokens,
     configured: isProfileConfigured(profile),
     isDefault: profile.id === env.defaultProviderId
   }));
@@ -221,17 +230,20 @@ export function applyRequestScopedProviderOverrides(
     return profile;
   }
 
+  const maxCompletionTokens = normalizeOverrideMaxCompletionTokens(overrides.maxCompletionTokens);
+  const profileWithTokenBudget = maxCompletionTokens ? { ...profile, maxCompletionTokens } : profile;
+
   if (profile.id === "openai") {
     const baseUrl = normalizeBaseUrl(overrides.openaiBaseUrl);
-    return baseUrl ? { ...profile, baseUrl } : profile;
+    return baseUrl ? { ...profileWithTokenBudget, baseUrl } : profileWithTokenBudget;
   }
 
   if (profile.id === "anthropic") {
     const baseUrl = normalizeBaseUrl(overrides.anthropicBaseUrl);
-    return baseUrl ? { ...profile, baseUrl } : profile;
+    return baseUrl ? { ...profileWithTokenBudget, baseUrl } : profileWithTokenBudget;
   }
 
-  return profile;
+  return profileWithTokenBudget;
 }
 
 export function resolveModelProfile(

@@ -12,6 +12,9 @@ Request body:
   "inputMode": "auto",
   "personaId": "zhuge-liang",
   "providerId": "ollama",
+  "providerOverrides": {
+    "maxCompletionTokens": 16384
+  },
   "variantsCount": 3,
   "explanationModes": ["literal", "free", "gloss"],
   "aiIntervention": "balanced",
@@ -28,6 +31,7 @@ Optional fields:
 
 - `aiIntervention`: AI intervention level, one of `conservative`, `balanced`, `creative`; default `balanced`.
 - `retrievalMode`: knowledge retrieval depth, one of `off`, `focused`, `auto`, `broad`; default `auto`.
+- `providerOverrides`: request-scoped model endpoint overrides. `openaiBaseUrl` applies to the built-in `openai` profile, `anthropicBaseUrl` applies to the built-in `anthropic` profile, and `maxCompletionTokens` must be between 4096 and 32768.
 - `userContext`: local user profile with `displayName`, `useCase`, and `preference`.
 
 Response shape:
@@ -39,7 +43,7 @@ Response shape:
 - `retrievalRefs[]`
 - `debug`
 
-`debug` includes `aiIntervention`, `retrievalMode`, `userContextApplied`, `primaryProviderId`, `fallbackProviderId`, and `fallbackReason` for request-level traceability.
+`debug` includes `aiIntervention`, `retrievalMode`, `userContextApplied`, `maxCompletionTokens`, `primaryProviderId`, `fallbackProviderId`, and `fallbackReason` for request-level traceability.
 
 ## GET /api/personas
 
@@ -47,11 +51,30 @@ Returns all available persona profiles from the local corpus.
 
 ## GET /api/providers
 
-Returns all runtime-selectable model profiles for the frontend. Each item includes `id`, `label`, `driver`, `model`, `configured`, and `isDefault`.
+Returns all runtime-selectable model profiles for the frontend. Each item includes `id`, `label`, `driver`, `model`, `baseUrl`, `maxCompletionTokens`, `configured`, and `isDefault`.
+
+## POST /api/providers/test
+
+Tests the selected model connection with the current `providerId` and optional `providerOverrides`.
+
+Request body:
+
+```json
+{
+  "providerId": "ollama",
+  "providerOverrides": {
+    "maxCompletionTokens": 8192
+  }
+}
+```
+
+The `mock` provider does not make external requests; OpenAI-compatible / Anthropic providers check `${baseUrl}/models`, and Ollama checks `${baseUrl}/api/tags`. The response never includes API keys.
+
+Response data includes `ok`, `configured`, `providerId`, `provider`, `driver`, optional `baseUrl`, optional `maxCompletionTokens`, and `detail`.
 
 ## POST /api/knowledge/reindex
 
-Rebuilds the local index state file and persisted vector index from the processed corpus. The response includes `personas`, `knowledge`, `vectorDocuments`, `embeddingProvider`, and `updatedAt`.
+Rebuilds the local index state file and persisted vector index from the processed corpus. The response includes `personas`, `knowledge`, `vectorDocuments`, `externalVectorStore`, `externalVectorDocuments`, `embeddingProvider`, and `updatedAt`.
 
 ## POST /api/knowledge/import
 

@@ -12,6 +12,9 @@
   "inputMode": "auto",
   "personaId": "zhuge-liang",
   "providerId": "ollama",
+  "providerOverrides": {
+    "maxCompletionTokens": 16384
+  },
   "variantsCount": 3,
   "explanationModes": ["literal", "free", "gloss"],
   "aiIntervention": "balanced",
@@ -28,6 +31,7 @@
 
 - `aiIntervention`: AI 介入强度, 可选 `conservative`, `balanced`, `creative`, 默认 `balanced`
 - `retrievalMode`: 知识库检索深度, 可选 `off`, `focused`, `auto`, `broad`, 默认 `auto`
+- `providerOverrides`: 当前请求的模型接口覆盖项. `openaiBaseUrl` 只作用于内置 `openai` profile, `anthropicBaseUrl` 只作用于内置 `anthropic` profile, `maxCompletionTokens` 范围为 4096 到 32768
 - `userContext`: 本地用户画像, 支持 `displayName`, `useCase`, `preference`
 
 &#x4E3B;&#x8981; &#x8FD4;&#x56DE; &#x5B57;&#x6BB5;:
@@ -39,7 +43,7 @@
 - `retrievalRefs[]`
 - `debug`
 
-`debug` 会返回 `aiIntervention`, `retrievalMode`, `userContextApplied`, `primaryProviderId`, `fallbackProviderId`, `fallbackReason`, 便于排查本次生成是否使用了用户偏好、RAG 设置和 provider fallback.
+`debug` 会返回 `aiIntervention`, `retrievalMode`, `userContextApplied`, `maxCompletionTokens`, `primaryProviderId`, `fallbackProviderId`, `fallbackReason`, 便于排查本次生成是否使用了用户偏好、RAG 设置、模型 token 预算和 provider fallback.
 
 ## GET /api/personas
 
@@ -47,11 +51,30 @@
 
 ## GET /api/providers
 
-&#x8FD4;&#x56DE; &#x524D;&#x7AEF; &#x53EF;&#x5207;&#x6362; &#x7684; &#x6A21;&#x578B; profile &#x5217;&#x8868;, &#x6BCF;&#x9879; &#x5305;&#x542B; `id`, `label`, `driver`, `model`, `configured`, `isDefault`.
+&#x8FD4;&#x56DE; &#x524D;&#x7AEF; &#x53EF;&#x5207;&#x6362; &#x7684; &#x6A21;&#x578B; profile &#x5217;&#x8868;, &#x6BCF;&#x9879; &#x5305;&#x542B; `id`, `label`, `driver`, `model`, `baseUrl`, `maxCompletionTokens`, `configured`, `isDefault`.
+
+## POST /api/providers/test
+
+按当前 `providerId` 和可选 `providerOverrides` 测试模型连接.
+
+请求体:
+
+```json
+{
+  "providerId": "ollama",
+  "providerOverrides": {
+    "maxCompletionTokens": 8192
+  }
+}
+```
+
+`mock` provider 不访问外部网络; OpenAI-compatible / Anthropic 会检查 `${baseUrl}/models`, Ollama 会检查 `${baseUrl}/api/tags`. 返回值不会包含 API key.
+
+返回 `data` 包含 `ok`, `configured`, `providerId`, `provider`, `driver`, 可选 `baseUrl`, 可选 `maxCompletionTokens`, `detail`.
 
 ## POST /api/knowledge/reindex
 
-根据 processed corpus 重建本地 index state file 和持久化 vector index. 返回 `personas`, `knowledge`, `vectorDocuments`, `embeddingProvider`, `updatedAt`.
+根据 processed corpus 重建本地 index state file 和持久化 vector index. 返回 `personas`, `knowledge`, `vectorDocuments`, `externalVectorStore`, `externalVectorDocuments`, `embeddingProvider`, `updatedAt`.
 
 ## POST /api/knowledge/import
 

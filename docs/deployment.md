@@ -52,6 +52,8 @@ GET /api/health
 
 The response should return `status: "ok"`. A `degraded` status means the corpus, model profiles, embedding provider, or vector index needs attention before release.
 
+8. For a non-mock model profile, test the effective provider from the UI model settings page or with `POST /api/providers/test`. The response reports connection status and never returns API keys.
+
 For Chroma-backed retrieval, start Chroma before `npm run reindex`. Reindexing still writes the local vector index for fallback, then upserts knowledge chunks into the configured Chroma collection.
 
 ## Docker Deployment
@@ -88,12 +90,14 @@ The image rebuilds the processed corpus and local vector index during build. Reb
 - `npm run eval:quality` passes all fixed evaluation cases.
 - `npm run build` passes.
 - `GET /api/health` returns `ok`.
+- `POST /api/providers/test` succeeds for the release provider, unless the release intentionally uses `mock`.
 - Docker image builds successfully if container deployment is required.
 
 ## Privacy and Secrets
 
 - Do not commit `.env`, `.env.local`, API keys, tokens, cookies, or private user backups.
 - Use `MODEL_PROFILES_JSON` with `apiKeyEnv`; do not place inline keys in JSON.
+- Browser-side provider overrides are local-only and should not be treated as a secure secret store.
 - Use synthetic evaluation cases and sample corpus entries for tests.
 - Keep local profile data in browser `localStorage`; do not add remote sync unless the product direction changes.
 

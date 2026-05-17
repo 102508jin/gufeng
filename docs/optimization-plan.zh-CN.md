@@ -150,13 +150,14 @@
 - 已增加 `npm run verify`, 串联 ingestion、reindex、test、quality eval 和 build.
 - 已增强 `/api/health`, 返回 corpus、model profile、embedding provider 和 vector index 新鲜度.
 - 已增加外部模型失败时的 mock fallback, 并在 debug 中返回 primary/fallback provider 和失败原因.
+- 已支持浏览器本地覆盖最大输出 token 预算, 并新增 `/api/providers/test` 连接测试接口.
 - 已增加部署检查文档和 Dockerfile, 支持本地默认离线部署.
 
 操作步骤:
 
 1. 已建立固定评测集, 覆盖学习、处世、规划和文言输入.
 2. 已增加自动评分维度: 贴题度、文言自然度、解释清晰度、引用一致性.
-3. 已具备 provider timeout 和失败 fallback; provider profile 默认 temperature、最大 token 等细粒度策略待扩展.
+3. 已具备 provider timeout、失败 fallback 和请求级最大输出 token 覆盖; provider profile 默认 temperature 等细粒度策略待扩展.
 4. 保存每次生成的 prompt 摘要、provider、耗时、失败原因和命中来源.
 5. 增加回归测试脚本, 在上线前比较新旧模型输出质量.
 

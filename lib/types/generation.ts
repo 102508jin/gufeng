@@ -64,6 +64,7 @@ export type GenerateResponse = {
     aiIntervention?: AiInterventionMode;
     retrievalMode?: RetrievalMode;
     userContextApplied?: boolean;
+    maxCompletionTokens?: number;
   };
 };
 

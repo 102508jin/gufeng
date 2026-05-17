@@ -4,6 +4,7 @@ export type EmbeddingDriver = "local" | "openai-compatible";
 export type ProviderEndpointOverrides = {
   openaiBaseUrl?: string;
   anthropicBaseUrl?: string;
+  maxCompletionTokens?: number;
 };
 
 export type ModelProfile = {
@@ -24,6 +25,7 @@ export type PublicModelProfile = {
   driver: ModelDriver;
   model?: string;
   baseUrl?: string;
+  maxCompletionTokens?: number;
   configured: boolean;
   isDefault: boolean;
 };

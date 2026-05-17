@@ -49,7 +49,8 @@ async function requestOllama(profile: ModelProfile, prompt: string, options?: Mo
       think: false,
       format,
       options: {
-        temperature: options?.temperature ?? 0.6
+        temperature: options?.temperature ?? 0.6,
+        ...(profile.maxCompletionTokens ? { num_predict: profile.maxCompletionTokens } : {})
       }
     })
   });

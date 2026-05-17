@@ -13,6 +13,7 @@ Wenyan Agent is a Next.js application for generating classical Chinese answers f
 - Supports persona-style output based on local historical source snippets.
 - Can run with `mock`, local Ollama, OpenAI-compatible APIs, or Anthropic / Claude.
 - Supports per-request driver switching from the UI and API.
+- Provides browser-local provider endpoint overrides, max output token budget control, and connection testing.
 - Stores a local user profile and response preferences in browser `localStorage`.
 - Adds per-request AI intervention control: conservative, balanced, or creative.
 - Adds RAG retrieval control: off, focused, standard, or broad.
@@ -30,7 +31,9 @@ Wenyan Agent is a Next.js application for generating classical Chinese answers f
 - Frontend stack: Next.js 15 + React 19 + TypeScript
 - Validation: Zod
 - Local retrieval: file-backed seed corpus under `data/`
+- Vector retrieval: offline local vector index by default, optional Chroma HTTP store with local fallback
 - Local model runtime: tested with Ollama and `qwen3:4b`
+- Provider reliability: external model failures fall back to deterministic `mock` output with debug metadata
 - Branch workflow: `dev` for active development, `main` for stable promotion
 
 ## Quick Start
@@ -93,7 +96,7 @@ MODEL_PROFILES_JSON=[{"id":"vllm","label":"vLLM","driver":"openai-compatible","b
 DEFAULT_PROVIDER_ID=vllm
 ```
 
-Custom profile secrets must be referenced with `apiKeyEnv`; inline `apiKey` values in `MODEL_PROFILES_JSON` are ignored.
+Custom profile secrets must be referenced with `apiKeyEnv`; inline `apiKey` values in `MODEL_PROFILES_JSON` are ignored. Profiles may also set `maxCompletionTokens`, and the browser model settings page can override that token budget per request.
 
 4. If you use Ollama, prepare the model first.
 
@@ -164,19 +167,28 @@ cmd /c npm run verify
 - `DEFAULT_EXPLANATION_MODES`: comma-separated explanation modes
 - `MODEL_REQUEST_TIMEOUT_MS`: timeout for each external model request
 - `EMBEDDING_PROVIDER`: `local` or `openai-compatible`; defaults to offline local hashing
+- `EMBEDDING_PROVIDER_LABEL`: UI / health label for the active embedding provider
 - `EMBEDDING_MODEL`: model name for OpenAI-compatible embedding providers
 - `EMBEDDING_API_BASE_URL`: base URL for an OpenAI-compatible `/embeddings` endpoint
 - `EMBEDDING_API_KEY`: optional for local compatible servers, required for `api.openai.com`
 - `EMBEDDING_DIMENSIONS`: vector size for the local hashing embedding provider
+- `VECTOR_STORE`: `local` or `chroma`; defaults to local in-memory search backed by `data/processed/vector-index.json`
+- `CHROMA_BASE_URL`: Chroma HTTP API base URL when `VECTOR_STORE=chroma`
+- `CHROMA_TENANT`, `CHROMA_DATABASE`, `CHROMA_COLLECTION`: Chroma namespace settings
+- `CHROMA_TOKEN`: optional Chroma auth token, sent as `x-chroma-token`
 
 ## Driver Notes
 
 - `openai-compatible` covers OpenAI-style `/chat/completions` endpoints, including custom API gateways and local engines that expose the same protocol.
-- `ollama` uses `/api/generate`.
-- `anthropic` uses `/v1/messages`.
+- Request-scoped provider overrides support `openaiBaseUrl`, `anthropicBaseUrl`, and `maxCompletionTokens`; the browser model settings page stores these locally.
+- `openai-compatible` receives `max_completion_tokens`, `anthropic` receives `max_tokens`, and `ollama` receives `num_predict` when a token budget is configured.
+- `ollama` uses `/api/generate` for generation and `/api/tags` for connection tests.
+- `anthropic` uses `/v1/messages` for generation and `/v1/models` for connection tests.
 - `EMBEDDING_PROVIDER=openai-compatible` uses an OpenAI-style `/embeddings` endpoint; the default `local` provider is deterministic and offline.
 - Custom profiles should use `apiKeyEnv` instead of inline `apiKey`.
 - `GET /api/providers` returns the runtime-selectable driver list for the frontend.
+- `POST /api/providers/test` checks the selected provider without returning secrets.
+- If a selected external provider fails during generation, the service falls back to the `mock` provider and reports `primaryProviderId`, `fallbackProviderId`, and `fallbackReason` in `debug`.
 
 ## Project Structure
 

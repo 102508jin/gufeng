@@ -27,7 +27,7 @@ Embedding generation now goes through an `EmbeddingProvider` abstraction. The de
 
 - `LocalSourceRetriever` loads local knowledge entries through `dataRepository.listKnowledge()` and ranks them with the configured vector store.
 - `/api/knowledge/search?q=...&topK=...` can be used to preview RAG matches before generation.
-- `/api/knowledge/reindex` writes `data/processed/index-state.json` and `data/processed/vector-index.json`.
+- `/api/knowledge/reindex` writes `data/processed/index-state.json` and `data/processed/vector-index.json`; the response includes local vector count plus `externalVectorStore` and `externalVectorDocuments`.
 - Search responses include source, license, chunk id, score, and excerpt data so citations stay traceable.
 - `VECTOR_STORE=local` uses `InMemoryVectorStore` and reuses persisted document vectors when the embedding provider fingerprint and content hash match.
 - `VECTOR_STORE=chroma` uses the Chroma HTTP API for knowledge search, with local vector search as a fallback if Chroma is unavailable.

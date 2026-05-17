@@ -1555,6 +1555,12 @@ blockquote {
   height: 18px;
 }
 
+.history-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .history-title {
   display: grid;
   gap: 8px;
@@ -1649,6 +1655,16 @@ blockquote {
   align-items: center;
 }
 
+.provider-token-field {
+  display: grid;
+  gap: 12px;
+}
+
+.provider-token-range {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
 .provider-help {
   margin: 0;
   color: var(--muted);
@@ -1667,6 +1683,16 @@ blockquote {
 .provider-connection-card p {
   margin: 4px 0 0;
   color: var(--muted);
+}
+
+.provider-connection-ok {
+  border-color: rgba(45, 122, 76, 0.34);
+  background: rgba(239, 249, 241, 0.82);
+}
+
+.provider-connection-error {
+  border-color: rgba(150, 55, 45, 0.34);
+  background: rgba(255, 243, 239, 0.86);
 }
 
 .provider-config-footer {

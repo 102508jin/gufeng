@@ -27,7 +27,7 @@ Embedding 生成已通过 `EmbeddingProvider` 抽象接入. 默认使用本地 h
 
 - `LocalSourceRetriever` 会从 `dataRepository.listKnowledge()` 读取本地知识条目, 再交给当前配置的 vector store 排序.
 - `/api/knowledge/search?q=...&topK=...` 可用于生成前验证 RAG 命中片段.
-- `/api/knowledge/reindex` 会写入 `data/processed/index-state.json` 和 `data/processed/vector-index.json`.
+- `/api/knowledge/reindex` 会写入 `data/processed/index-state.json` 和 `data/processed/vector-index.json`; 返回本地向量数量以及 `externalVectorStore`, `externalVectorDocuments`.
 - 查询响应会包含 source, license, chunk id, score 和 excerpt, 保证引用可追溯.
 - `VECTOR_STORE=local` 使用 `InMemoryVectorStore`, 并在 embedding provider fingerprint 和 content hash 匹配时复用已持久化的文档向量.
 - `VECTOR_STORE=chroma` 使用 Chroma HTTP API 检索知识库; Chroma 不可用时会回退到本地向量检索.

@@ -10,23 +10,25 @@ The project uses a stable five-layer structure:
 - `lib/infra/` isolates external dependencies like LLM providers, file-backed repositories, logging, and vector search adapters.
 - `data/processed/` stores the local RAG seed corpus for personas and explanation knowledge.
 
-The default runtime uses the `mock` provider so the end-to-end flow works before API credentials are configured. Switching to OpenAI-compatible or Ollama-compatible models should only require environment changes and provider-level refinement.
+The default runtime uses the `mock` provider so the end-to-end flow works before API credentials are configured. Switching to OpenAI-compatible, Ollama-compatible, Anthropic, or custom OpenAI-compatible profiles is driven by environment configuration plus request-scoped browser overrides.
 
 ## Current User Flow
 
-1. `components/workspace.tsx` owns the question, persona, provider, local user profile, AI intervention level, and RAG retrieval depth.
+1. `components/workspace.tsx` owns the question, persona, provider, local user profile, AI intervention level, RAG retrieval depth, provider endpoint overrides, and max output token budget.
 2. The local user profile, recent question history, and favorite answers are stored only in browser `localStorage`; each generation request sends the profile as `userContext`.
-3. `/api/generate` validates the payload with `generateRequestSchema`, then delegates to `GenerateService`.
-4. `GenerateService` resolves the provider, normalizes input, retrieves persona context, searches the knowledge corpus, and orchestrates generation and explanation.
-5. `GenerationContext` carries `aiIntervention`, `retrievalMode`, and `userContext` for prompt building and fallback generation.
-6. `/api/knowledge/search` reuses `KnowledgeService` and `LocalSourceRetriever` so the UI can preview knowledge matches before generation.
+3. Provider settings are stored in browser `localStorage`; each generation request may send `providerOverrides` for built-in endpoint URLs and `maxCompletionTokens`.
+4. `/api/generate` validates the payload with `generateRequestSchema`, then delegates to `GenerateService`.
+5. `GenerateService` resolves the provider, applies request-scoped overrides, normalizes input, retrieves persona context, searches the knowledge corpus, and orchestrates generation and explanation.
+6. `GenerationContext` carries `aiIntervention`, `retrievalMode`, and `userContext` for prompt building and fallback generation.
+7. `/api/knowledge/search` reuses `KnowledgeService` and `LocalSourceRetriever` so the UI can preview knowledge matches before generation.
+8. `/api/providers/test` resolves the same effective provider and performs a lightweight metadata request without returning secrets.
 
 ## Local Workspace Memory
 
 - `lib/utils/workspace-memory.ts` owns history, favorites, export formatting, and storage guards.
 - User management is designed for pure local deployment: no login and no external server.
 - `LocalWorkspaceProfile` represents a local profile; each profile has isolated `userContext`, history, and favorites.
-- History keeps the latest 20 entries with the question, generation settings, persona, provider, topics, and normalized query.
+- History keeps the latest 20 entries with the question, generation settings, persona, provider, provider overrides, topics, and normalized query.
 - Favorite answers store the classical text, explanations, sources, and topics; the UI can filter by persona and topic.
 - Current results can be exported as Markdown / JSON, and individual favorites can be exported as Markdown.
 - Profiles can be exported and imported as JSON backups for offline migration.
@@ -45,6 +47,8 @@ The default runtime uses the `mock` provider so the end-to-end flow works before
 - `aiIntervention=conservative` lowers model temperature and asks the model to stay closer to the question and sources.
 - `aiIntervention=creative` raises generation temperature while still forbidding fake citations.
 - The mock provider remains deterministic and reflects the intervention level in style notes.
+- External provider failures fall back to the `mock` provider; the response debug block records the primary provider, fallback provider, and failure reason.
+- `maxCompletionTokens` is carried on the effective `ModelProfile`: OpenAI-compatible drivers receive `max_completion_tokens`, Anthropic receives `max_tokens`, and Ollama receives `num_predict`.
 - Knowledge retrieval uses the `EmbeddingProvider` abstraction. The default local hashing provider is offline and deterministic; OpenAI-compatible embedding endpoints can be enabled through env vars.
 - `npm run reindex` writes a local `data/processed/vector-index.json`; retrieval reuses indexed vectors only when provider fingerprint and document content hash still match.
 - `VECTOR_STORE=chroma` switches knowledge retrieval to Chroma and upserts chunks during reindex while preserving the local vector index as fallback.

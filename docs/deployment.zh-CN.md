@@ -52,6 +52,8 @@ GET /api/health
 
 返回结果应为 `status: "ok"`. 如果是 `degraded`, 说明 corpus、模型配置、embedding provider 或 vector index 需要处理后再发布.
 
+8. 如果发布使用非 mock 模型, 在 UI 的模型设置页或通过 `POST /api/providers/test` 测试有效 provider. 响应只返回连接状态, 不返回 API key.
+
 使用 Chroma 检索时, 先启动 Chroma 再执行 `npm run reindex`. Reindex 仍会写入本地 vector index 作为 fallback, 然后把知识 chunk upsert 到配置的 Chroma collection.
 
 ## Docker 部署
@@ -88,12 +90,14 @@ docker run --rm -p 3000:3000 `
 - `npm run eval:quality` 固定评测集全部通过.
 - `npm run build` 通过.
 - `GET /api/health` 返回 `ok`.
+- 除非发布目标就是 `mock`, 否则 `POST /api/providers/test` 对发布 provider 测试通过.
 - 如果需要容器部署, Docker image 能成功构建.
 
 ## 隐私与密钥
 
 - 不提交 `.env`, `.env.local`, API key, token, cookie 或用户私有备份.
 - `MODEL_PROFILES_JSON` 使用 `apiKeyEnv` 引用密钥, 不写内联 key.
+- 浏览器端 provider 覆盖项只作为本地便利配置, 不应视作安全密钥存储.
 - 测试使用合成评测集和 sample corpus, 不使用真实用户输入或私有语料.
 - 本地配置档数据继续保存在浏览器 `localStorage`; 除非产品方向改变, 不增加远端同步.
 

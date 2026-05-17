@@ -10,23 +10,25 @@
 - `lib/infra/` : &#x9694;&#x79BB; provider, repository, logging, index adapter &#x7B49; &#x5916;&#x90E8; &#x4F9D;&#x8D56;
 - `data/processed/` : &#x5B58;&#x653E; &#x672C;&#x5730; RAG &#x79CD;&#x5B50; &#x8BED;&#x6599;
 
-&#x9ED8;&#x8BA4; runtime &#x4F7F;&#x7528; `mock` provider, &#x56E0;&#x6B64; &#x5728; API key &#x6216; &#x672C;&#x5730; model &#x672A;&#x914D;&#x7F6E; &#x65F6; &#x4E5F;&#x80FD; &#x8DD1;&#x901A; &#x5B8C;&#x6574; &#x6D41;&#x7A0B;. &#x5207;&#x6362; &#x5230; OpenAI-compatible &#x6216; Ollama &#x65F6;, &#x4E3B;&#x8981; &#x53EA;&#x9700; &#x8C03;&#x6574; env &#x548C; provider &#x5C42;.
+&#x9ED8;&#x8BA4; runtime &#x4F7F;&#x7528; `mock` provider, &#x56E0;&#x6B64; &#x5728; API key &#x6216; &#x672C;&#x5730; model &#x672A;&#x914D;&#x7F6E; &#x65F6; &#x4E5F;&#x80FD; &#x8DD1;&#x901A; &#x5B8C;&#x6574; &#x6D41;&#x7A0B;. 切换 OpenAI-compatible、Ollama、Anthropic 或自定义 OpenAI-compatible profile 主要通过 env 配置和请求级浏览器覆盖完成.
 
 ## 当前用户链路
 
-1. `components/workspace.tsx` 维护问题、角色、provider、本地用户画像、AI 介入强度和 RAG 检索深度.
+1. `components/workspace.tsx` 维护问题、角色、provider、本地用户画像、AI 介入强度、RAG 检索深度、provider 接口覆盖和最大输出 token 预算.
 2. 本地用户画像、最近提问历史和收藏回答只保存在浏览器 `localStorage`, 不进入服务端持久化; 请求时用户画像作为 `userContext` 发送给 `/api/generate`.
-3. `/api/generate` 使用 `generateRequestSchema` 校验请求, 再交给 `GenerateService`.
-4. `GenerateService` 完成 provider 解析、输入归一化、persona 检索、知识库检索和生成/解释编排.
-5. `GenerationContext` 会携带 `aiIntervention`, `retrievalMode`, `userContext`, 由 prompt builder 和 generator 使用.
-6. `/api/knowledge/search` 复用 `KnowledgeService` 和 `LocalSourceRetriever`, 用于生成前预检知识库命中.
+3. Provider 设置也保存在浏览器 `localStorage`; 生成请求可携带 `providerOverrides`, 覆盖内置接口 URL 和 `maxCompletionTokens`.
+4. `/api/generate` 使用 `generateRequestSchema` 校验请求, 再交给 `GenerateService`.
+5. `GenerateService` 完成 provider 解析、请求级覆盖应用、输入归一化、persona 检索、知识库检索和生成/解释编排.
+6. `GenerationContext` 会携带 `aiIntervention`, `retrievalMode`, `userContext`, 由 prompt builder 和 generator 使用.
+7. `/api/knowledge/search` 复用 `KnowledgeService` 和 `LocalSourceRetriever`, 用于生成前预检知识库命中.
+8. `/api/providers/test` 使用同一套有效 provider 解析逻辑做轻量 metadata 请求, 响应不返回密钥.
 
 ## 本地工作台记忆
 
 - `lib/utils/workspace-memory.ts` 负责历史、收藏、导出和序列化校验.
 - 用户体系按纯本地部署设计, 不做登录、不连接外部服务器.
 - `LocalWorkspaceProfile` 表示本机配置档, 每个配置档独立保存 `userContext`, 历史和收藏.
-- 历史记录最多保留 20 条, 包含问题、生成设置、角色、provider、主题和归一化问题.
+- 历史记录最多保留 20 条, 包含问题、生成设置、角色、provider、provider 覆盖项、主题和归一化问题.
 - 收藏回答保存文言正文、解释、来源和主题, UI 支持按角色与主题过滤.
 - 当前结果可导出 Markdown / JSON, 单条收藏可导出 Markdown.
 - 配置档可导出 / 导入 JSON 备份, 便于离线迁移.
@@ -45,6 +47,8 @@
 - `aiIntervention=conservative` 会降低模型温度并要求更贴近问题与来源.
 - `aiIntervention=creative` 会提高生成温度, 但仍要求不可伪造引用.
 - mock provider 走确定性 fallback, 仍会在 style notes 中反映介入强度.
+- 外部 provider 生成失败时会回退到 `mock`; 响应 debug 中记录 primary provider、fallback provider 和失败原因.
+- `maxCompletionTokens` 会进入有效 `ModelProfile`: OpenAI-compatible 下发 `max_completion_tokens`, Anthropic 下发 `max_tokens`, Ollama 下发 `num_predict`.
 - 知识库检索使用 `EmbeddingProvider` 抽象. 默认本地 hashing provider 离线且确定; 可通过 env 切换到 OpenAI-compatible embedding endpoint.
 - `npm run reindex` 会写入本地 `data/processed/vector-index.json`; 检索只在 provider fingerprint 和文档 content hash 仍匹配时复用索引向量.
 - `VECTOR_STORE=chroma` 会把知识库检索切换到 Chroma, 并在 reindex 时 upsert chunks, 同时保留本地 vector index 作为 fallback.

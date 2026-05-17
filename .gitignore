@@ -12,3 +12,5 @@ coverage
 *.sqlite3
 data/processed/index-state.json
 gcm-diagnose.log
+.playwright-cli/
+output/playwright/

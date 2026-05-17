@@ -77,6 +77,23 @@ describe("provider registry", () => {
     }).baseUrl).toBe("http://127.0.0.1:8080/v1");
   });
 
+  it("applies request-scoped max completion token overrides to the selected profile", async () => {
+    const { applyRequestScopedProviderOverrides } = await import("@/lib/infra/llm/provider-registry");
+    const profile: ModelProfile = {
+      id: "openai",
+      label: "OpenAI Compatible",
+      driver: "openai-compatible",
+      model: "gpt-4.1-mini",
+      baseUrl: "https://api.openai.com/v1",
+      apiKey: "test-key",
+      maxCompletionTokens: 1024
+    };
+
+    expect(applyRequestScopedProviderOverrides(profile, {
+      maxCompletionTokens: 8192
+    }).maxCompletionTokens).toBe(8192);
+  });
+
   it("leaves unrelated providers unchanged when request-scoped overrides are present", async () => {
     const { applyRequestScopedProviderOverrides } = await import("@/lib/infra/llm/provider-registry");
     const mockProfile: ModelProfile = {

@@ -37,7 +37,7 @@ export class AnthropicProvider implements ModelProvider {
         model: this.profile.model,
         system: options?.systemPrompt,
         temperature: options?.temperature ?? 0.6,
-        max_tokens: 1200,
+        max_tokens: this.profile.maxCompletionTokens ?? 1200,
         messages: [
           { role: "user", content: prompt }
         ]

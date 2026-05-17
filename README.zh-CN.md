@@ -12,6 +12,7 @@
 - &#x9644;&#x5E26; &#x9010;&#x53E5; &#x89E3;&#x6790;, &#x610F;&#x8BD1; &#x9610;&#x91CA;, &#x8BCD;&#x4E49; &#x6CE8;&#x91CA;
 - &#x53EF;&#x5207;&#x6362; `mock`, `ollama`, `openai-compatible`, `anthropic` provider
 - &#x652F;&#x6301; &#x5728; UI &#x548C; API &#x4E2D; &#x6309; &#x8BF7;&#x6C42; &#x9009;&#x62E9; &#x6A21;&#x578B;&#x9A71;&#x52A8;
+- 支持浏览器本地接口覆盖、最大输出 token 预算调节和连接测试
 - 支持本地用户画像偏好, 自动保存到浏览器 `localStorage`
 - 支持 AI 介入强度: 稳妥 / 平衡 / 创作
 - 支持 RAG 知识库检索深度: 关闭 / 精准 / 标准 / 广搜
@@ -22,6 +23,15 @@
 - 支持工作台导入本地 TXT / JSON 知识库文档
 - 支持对单条回答做本地反馈: 有用、不准、太长、太文
 - `npm run dev` 会自动探测空闲端口, 不再固定占用 3000
+
+## 当前状态
+
+- 前端栈: Next.js 15 + React 19 + TypeScript
+- 校验: Zod
+- 本地检索: `data/` 下的文件型种子语料
+- 向量检索: 默认离线本地向量索引, 可选 Chroma HTTP store, Chroma 不可用时回退本地检索
+- provider 可靠性: 外部模型失败时回退到确定性的 `mock` 输出, 并在 debug 中给出 fallback 信息
+- 分支流程: `dev` 日常开发, `main` 稳定推广
 
 ## &#x5FEB;&#x901F;&#x5F00;&#x59CB;
 
@@ -79,7 +89,9 @@ MODEL_PROFILES_JSON=[{"id":"vllm","label":"vLLM","driver":"openai-compatible","b
 DEFAULT_PROVIDER_ID=vllm
 ```
 
-自定义 profile 的密钥请使用 `apiKeyEnv` 引用环境变量; `MODEL_PROFILES_JSON` 中的内联 `apiKey` 会被忽略.
+自定义 profile 的密钥请使用 `apiKeyEnv` 引用环境变量; `MODEL_PROFILES_JSON` 中的内联 `apiKey` 会被忽略. Profile 可设置 `maxCompletionTokens`, 浏览器端模型设置页也可以按请求覆盖该 token 预算.
+
+请求级 provider 覆盖支持 `openaiBaseUrl`, `anthropicBaseUrl`, `maxCompletionTokens`. OpenAI-compatible 会收到 `max_completion_tokens`, Anthropic 会收到 `max_tokens`, Ollama 会收到 `num_predict`.
 
 ## Embedding 配置
 
@@ -95,6 +107,23 @@ EMBEDDING_API_KEY=your_api_key
 ```
 
 本地兼容服务可省略 `EMBEDDING_API_KEY`; 使用 `api.openai.com` 时必须配置 key.
+
+## 向量存储配置
+
+默认 `VECTOR_STORE=local`, 使用 `data/processed/vector-index.json` 和本地内存检索.
+
+如需使用 Chroma:
+
+```env
+VECTOR_STORE=chroma
+CHROMA_BASE_URL=http://127.0.0.1:8000
+CHROMA_TENANT=default_tenant
+CHROMA_DATABASE=default_database
+CHROMA_COLLECTION=wenyan_knowledge
+CHROMA_TOKEN=
+```
+
+切换 Chroma 后需执行 `npm run reindex`, 以创建/更新 collection; 本地 vector index 仍会写入作为 fallback.
 
 4. &#x5982;&#x679C; &#x4F7F;&#x7528; Ollama, &#x5148; &#x542F;&#x52A8; &#x670D;&#x52A1; &#x5E76; &#x51C6;&#x5907; &#x6A21;&#x578B;
 
@@ -129,6 +158,23 @@ cmd /c npm run test
 cmd /c npm run eval:quality
 cmd /c npm run verify
 ```
+
+## 环境变量索引
+
+- `MODEL_PROVIDER`, `DEFAULT_PROVIDER_ID`, `MODEL_PROFILES_JSON`
+- `MODEL_NAME`, `OPENAI_API_BASE_URL`, `OPENAI_API_KEY`, `OPENAI_PROVIDER_LABEL`
+- `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `OLLAMA_PROVIDER_LABEL`
+- `ANTHROPIC_BASE_URL`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_PROVIDER_LABEL`
+- `DEFAULT_VARIANTS_COUNT`, `DEFAULT_EXPLANATION_MODES`, `MODEL_REQUEST_TIMEOUT_MS`
+- `EMBEDDING_PROVIDER`, `EMBEDDING_PROVIDER_LABEL`, `EMBEDDING_MODEL`, `EMBEDDING_API_BASE_URL`, `EMBEDDING_API_KEY`, `EMBEDDING_DIMENSIONS`
+- `VECTOR_STORE`, `CHROMA_BASE_URL`, `CHROMA_TENANT`, `CHROMA_DATABASE`, `CHROMA_COLLECTION`, `CHROMA_TOKEN`
+
+## Driver 说明
+
+- `GET /api/providers` 返回前端可切换的模型 profile 列表.
+- `POST /api/providers/test` 测试当前模型连接, 响应不包含密钥.
+- `mock` provider 不需要外部连接, 可用于离线验证.
+- 外部 provider 生成失败时, 服务会回退到 `mock`, 并在 `debug` 中返回 `primaryProviderId`, `fallbackProviderId`, `fallbackReason`.
 
 ## &#x6587;&#x6863;&#x7D22;&#x5F15;
 
