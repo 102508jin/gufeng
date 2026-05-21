@@ -294,6 +294,16 @@ blockquote {
   color: var(--primary);
 }
 
+.top-action-row button:disabled {
+  cursor: wait;
+  opacity: 0.64;
+}
+
+.top-action-row .top-action-active {
+  background: var(--surface-muted);
+  color: var(--primary);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1183,9 +1193,62 @@ blockquote {
 }
 
 .toast-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   border-color: rgba(67, 107, 77, 0.24);
   background: var(--success-soft);
   color: var(--success);
+  overflow: hidden;
+  animation: toast-panel-enter 180ms ease-out;
+  transition:
+    opacity 260ms ease,
+    transform 260ms ease;
+}
+
+.toast-panel-exit {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(48px);
+}
+
+.toast-message {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.toast-close-button {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(67, 107, 77, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--success);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.toast-close-button:hover {
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--primary);
+}
+
+@keyframes toast-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .empty-panel {
@@ -1349,6 +1412,115 @@ blockquote {
 .modal-card {
   width: min(680px, 100%);
   padding: 22px;
+}
+
+.workspace-dialog {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+}
+
+.workspace-dialog .panel-heading {
+  align-items: flex-start;
+}
+
+.workspace-dialog .panel-heading .secondary-button {
+  width: auto;
+  min-width: 96px;
+}
+
+.config-dialog {
+  width: min(820px, 100%);
+}
+
+.dialog-section-grid,
+.dialog-action-grid,
+.dialog-health-card {
+  margin-top: 18px;
+}
+
+.dialog-section-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dialog-info-card,
+.dialog-health-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 250, 247, 0.88);
+  padding: 16px;
+}
+
+.dialog-info-card h3,
+.dialog-info-card p,
+.dialog-health-card h3,
+.dialog-health-card p {
+  margin: 0;
+}
+
+.dialog-info-card h3,
+.dialog-health-card h3 {
+  color: var(--primary);
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+.dialog-info-card p:not(.eyebrow) {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.dialog-action-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dialog-action-grid .small-button {
+  justify-content: center;
+  width: 100%;
+}
+
+.dialog-info-grid {
+  display: grid;
+  grid-template-columns: minmax(118px, 0.34fr) minmax(0, 1fr);
+  gap: 12px 18px;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 250, 247, 0.86);
+  padding: 16px;
+}
+
+.dialog-info-grid span {
+  color: var(--muted);
+}
+
+.dialog-info-grid strong {
+  min-width: 0;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.compact-info-grid {
+  margin-top: 14px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.breakable-text {
+  overflow-wrap: anywhere;
+}
+
+.config-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .modal-actions {
@@ -1813,6 +1985,10 @@ blockquote {
   .section-page-side {
     position: static;
   }
+
+  .dialog-section-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 680px) {
@@ -1841,6 +2017,29 @@ blockquote {
   .top-search {
     min-width: 0;
     flex: 1;
+  }
+
+  .modal-overlay {
+    padding: 14px;
+  }
+
+  .workspace-dialog {
+    max-height: calc(100vh - 28px);
+    padding: 18px;
+  }
+
+  .dialog-info-grid,
+  .compact-info-grid,
+  .dialog-action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toast-panel {
+    align-items: flex-start;
+  }
+
+  .config-status-row {
+    display: grid;
   }
 
   .sidebar-brand {

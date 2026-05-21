@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 
 import { ChatInput } from "@/components/chat-input";
+import { ConfigOverviewDialog } from "@/components/config-overview-dialog";
+import { HelpCenterDialog } from "@/components/help-center-dialog";
 import { KnowledgeImportPanel } from "@/components/knowledge-import-panel";
 import { ProviderSettingsDialog } from "@/components/provider-settings-dialog";
 import { VariantCard } from "@/components/variant-card";
@@ -30,6 +32,7 @@ import type { PersonaProfile } from "@/lib/types/persona";
 import type { ProviderEndpointOverrides, PublicModelProfile } from "@/lib/types/provider";
 import type { SourceRef } from "@/lib/types/retrieval";
 import type { KnowledgeImportInput, KnowledgeImportResult } from "@/lib/types/knowledge-import";
+import type { HealthStatus } from "@/lib/services/health-service";
 import type { ProviderConnectionTestResult } from "@/lib/services/provider-connection-service";
 import {
   createLocalWorkspaceProfile,
@@ -70,6 +73,8 @@ const favoritesStorageKey = "wenyan-agent:favorites:v1";
 const profilesStorageKey = "wenyan-agent:profiles:v1";
 const activeProfileStorageKey = "wenyan-agent:active-profile:v1";
 const providerSettingsStorageKey = "wenyan-agent:provider-settings:v1";
+const toastAutoDismissMs = 4000;
+const toastExitAnimationMs = 260;
 
 type ProviderSettingsState = {
   openaiBaseUrl: string;
@@ -79,6 +84,13 @@ type ProviderSettingsState = {
 
 type WorkspaceView = "workbench" | "knowledge" | "memory" | "providers";
 type MemoryView = "history" | "favorites";
+
+type DismissibleToastProps = {
+  message: string;
+  className?: string;
+  autoDismissMs?: number;
+  onDismiss: () => void;
+};
 
 const emptyProviderSettings: ProviderSettingsState = {
   openaiBaseUrl: "",
@@ -118,6 +130,9 @@ const text = {
   queryTooLong: "\u63d0\u95ee\u8f83\u957f\uff0c\u5efa\u8bae\u538b\u7f29\u5230 800 \u5b57\u4ee5\u5185\u3002",
   preferenceEmpty: "\u53ef\u586b\u5199\u7528\u9014\u6216\u504f\u597d\uff0c\u4fbf\u4e8e\u8f93\u51fa\u66f4\u8d34\u5408\u573a\u666f\u3002",
   providerNotConfigured: "\u5f53\u524d\u6a21\u578b\u9a71\u52a8\u4e0d\u53ef\u7528\uff0c\u5c06\u8ddf\u968f\u9ed8\u8ba4\u53ef\u7528\u914d\u7f6e\u3002",
+  workspaceRefreshed: "页面数据已刷新。",
+  workspaceRefreshFailed: "页面刷新失败。",
+  sampleApplied: "已填入示例问题。",
   heroEyebrow: "\u53e4\u98ce\u95ee\u7b54",
   heroTitle: "\u6587\u8a00\u6587\u56de\u7b54\u667a\u80fd\u4f53",
   heroCopy: "\u767d\u8bdd\u6216\u6587\u8a00\u63d0\u95ee\uff0c\u53ef\u9009\u89d2\u8272\u98ce\u683c\u3001AI \u4ecb\u5165\u5f3a\u5ea6\u4e0e\u672c\u5730 RAG \u77e5\u8bc6\u5e93\u3002",
@@ -223,6 +238,57 @@ function formatShortDate(value: string) {
   });
 }
 
+function DismissibleToast(props: DismissibleToastProps) {
+  const [isLeaving, setIsLeaving] = useState(false);
+
+  useEffect(() => {
+    setIsLeaving(false);
+  }, [props.message]);
+
+  useEffect(() => {
+    if (isLeaving) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setIsLeaving(true);
+    }, props.autoDismissMs ?? toastAutoDismissMs);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [isLeaving, props.autoDismissMs, props.message]);
+
+  useEffect(() => {
+    if (!isLeaving) {
+      return;
+    }
+
+    const timer = window.setTimeout(props.onDismiss, toastExitAnimationMs);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [isLeaving, props.onDismiss]);
+
+  return (
+    <div
+      className={["panel toast-panel", props.className, isLeaving ? "toast-panel-exit" : ""].filter(Boolean).join(" ")}
+      role="status"
+      aria-live="polite"
+    >
+      <span className="toast-message">{props.message}</span>
+      <button
+        type="button"
+        className="toast-close-button"
+        aria-label="关闭提示"
+        onClick={() => setIsLeaving(true)}
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
 function parseStoredUserContext(value: string | null): UserContext {
   if (!value) {
     return {};
@@ -297,6 +363,43 @@ function clampCompletionTokenBudget(value: unknown): number {
 
 function formatTokenBudget(value: number): string {
   return `${Math.round(value / 1024)}k`;
+}
+
+async function readApiData<T>(url: string, fallbackError: string): Promise<T> {
+  const response = await fetch(url);
+  const payload = (await response.json()) as ApiResult<T>;
+
+  if (!payload.ok) {
+    throw new Error(payload.error || fallbackError);
+  }
+
+  return payload.data;
+}
+
+async function fetchHealthStatus(): Promise<HealthStatus | null> {
+  try {
+    return await readApiData<HealthStatus>("/api/health", "健康状态加载失败。");
+  } catch {
+    return null;
+  }
+}
+
+async function fetchWorkspaceData(): Promise<{
+  personas: PersonaProfile[];
+  providers: PublicModelProfile[];
+  healthStatus: HealthStatus | null;
+}> {
+  const [personas, providers, healthStatus] = await Promise.all([
+    readApiData<PersonaProfile[]>("/api/personas", text.loadPersonasFailed),
+    readApiData<PublicModelProfile[]>("/api/providers", text.loadProvidersFailed),
+    fetchHealthStatus()
+  ]);
+
+  return {
+    personas,
+    providers,
+    healthStatus
+  };
 }
 
 function readStoredProviderSettings(): ProviderSettingsState {
@@ -509,48 +612,51 @@ export function Workspace() {
   const [knowledgeImportError, setKnowledgeImportError] = useState<string | null>(null);
   const [knowledgeImportSummary, setKnowledgeImportSummary] = useState<string | null>(null);
   const [result, setResult] = useState<GenerateResponse | null>(null);
+  const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [connectionTest, setConnectionTest] = useState<ProviderConnectionTestResult | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingKnowledge, setIsSearchingKnowledge] = useState(false);
   const [isImportingKnowledge, setIsImportingKnowledge] = useState(false);
   const [isReindexingKnowledge, setIsReindexingKnowledge] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isConfigOverviewOpen, setIsConfigOverviewOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const applyWorkspaceData = (data: Awaited<ReturnType<typeof fetchWorkspaceData>>, hydrateProviderSettings = false) => {
+    setPersonas(data.personas);
+    setProviders(data.providers);
+    setProviderDefaults(getProviderDefaults(data.providers));
+    setHealthStatus(data.healthStatus);
+
+    if (hydrateProviderSettings) {
+      setProviderSettings(readStoredProviderSettings());
+    }
+
+    setProviderId((current) => {
+      const currentProvider = current ? data.providers.find((provider) => provider.id === current && provider.configured) : null;
+      if (currentProvider) {
+        return current;
+      }
+
+      const defaultProvider = data.providers.find((provider) => provider.isDefault && provider.configured)
+        ?? data.providers.find((provider) => provider.configured);
+
+      return defaultProvider?.id ?? "";
+    });
+  };
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadInitialData() {
       try {
-        const [personaResponse, providerResponse] = await Promise.all([
-          fetch("/api/personas"),
-          fetch("/api/providers")
-        ]);
-        const personaPayload = (await personaResponse.json()) as ApiResult<PersonaProfile[]>;
-        const providerPayload = (await providerResponse.json()) as ApiResult<PublicModelProfile[]>;
-
-        if (!personaPayload.ok) {
-          throw new Error(personaPayload.error || text.loadPersonasFailed);
-        }
-
-        if (!providerPayload.ok) {
-          throw new Error(providerPayload.error || text.loadProvidersFailed);
-        }
-
+        const data = await fetchWorkspaceData();
         if (!cancelled) {
-          setPersonas(personaPayload.data);
-          setProviders(providerPayload.data);
-          setProviderDefaults(getProviderDefaults(providerPayload.data));
-          setProviderSettings(readStoredProviderSettings());
-
-          const defaultProvider = providerPayload.data.find((provider) => provider.isDefault && provider.configured)
-            ?? providerPayload.data.find((provider) => provider.configured);
-
-          if (defaultProvider) {
-            setProviderId(defaultProvider.id);
-          }
+          applyWorkspaceData(data, true);
         }
       } catch (cause) {
         if (!cancelled) {
@@ -615,12 +721,14 @@ export function Workspace() {
     : selectedProvider?.id === "anthropic" && providerSettings.anthropicBaseUrl
       ? providerSettings.anthropicBaseUrl
       : selectedProvider?.baseUrl ?? providerDefaults.openaiBaseUrl ?? "http://localhost:11434/v1";
+  const overviewProviderBaseUrl = selectedProvider?.driver === "mock" ? "" : selectedProviderBaseUrl;
   const connectionStatusDetail = isTestingConnection
     ? "正在测试连接..."
     : connectionTest
       ? connectionTest.detail
       : `${formatProvider(selectedProvider?.driver)} · ${selectedProvider?.configured ? text.configured : text.unavailable}`;
   const activeProfile = profiles.find((profile) => profile.id === activeProfileId) ?? profiles[0] ?? null;
+  const selectedPersona = personaId ? personas.find((persona) => persona.id === personaId) : null;
   const validationCandidates: Array<string | null> = [
     query.trim().length > 0 && query.trim().length < 8 ? text.queryTooShort : null,
     query.length > 800 ? text.queryTooLong : null,
@@ -645,6 +753,31 @@ export function Workspace() {
 
   const resetProviderSettings = () => {
     persistProviderSettings(emptyProviderSettings);
+  };
+
+  const handleRefreshWorkspace = async () => {
+    setIsRefreshing(true);
+    setError(null);
+    setActionMessage(null);
+
+    try {
+      const data = await fetchWorkspaceData();
+      applyWorkspaceData(data);
+      setActionMessage(text.workspaceRefreshed);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : text.workspaceRefreshFailed);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleOpenConfigOverview = () => {
+    setIsConfigOverviewOpen(true);
+    void fetchHealthStatus().then((status) => {
+      if (status) {
+        setHealthStatus(status);
+      }
+    });
   };
 
   const persistActiveProfile = () => {
@@ -1138,9 +1271,38 @@ export function Workspace() {
               <span className="sr-only">搜索</span>
               <input placeholder="搜索..." />
             </label>
-            <button type="button" aria-label="同步状态">↻</button>
-            <button type="button" aria-label="帮助">?</button>
-            <button type="button" aria-label="本地配置档">◎</button>
+            <button
+              type="button"
+              aria-label="页面刷新"
+              title="页面刷新"
+              className={isRefreshing ? "top-action-active" : ""}
+              onClick={() => {
+                void handleRefreshWorkspace();
+              }}
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? "…" : "↻"}
+            </button>
+            <button
+              type="button"
+              aria-label="帮助中心"
+              title="帮助中心"
+              className={isHelpOpen ? "top-action-active" : ""}
+              onClick={() => setIsHelpOpen(true)}
+              aria-pressed={isHelpOpen}
+            >
+              ?
+            </button>
+            <button
+              type="button"
+              aria-label="配置呈现"
+              title="配置呈现"
+              className={isConfigOverviewOpen ? "top-action-active" : ""}
+              onClick={handleOpenConfigOverview}
+              aria-pressed={isConfigOverviewOpen}
+            >
+              ◎
+            </button>
           </div>
         </header>
 
@@ -1186,7 +1348,13 @@ export function Workspace() {
 
             <section className="results-column workspace-main">
               {error ? <div className="panel error-panel">{error}</div> : null}
-              {actionMessage ? <div className="panel toast-panel">{actionMessage}</div> : null}
+              {actionMessage ? (
+                <DismissibleToast
+                  key={actionMessage}
+                  message={actionMessage}
+                  onDismiss={() => setActionMessage(null)}
+                />
+              ) : null}
 
               {isSubmitting ? (
                 <section className="panel empty-panel generating-panel" aria-live="polite">
@@ -1319,7 +1487,14 @@ export function Workspace() {
                 </details>
               </div>
 
-              {actionMessage ? <div className="panel toast-panel section-toast">{actionMessage}</div> : null}
+              {actionMessage ? (
+                <DismissibleToast
+                  key={actionMessage}
+                  message={actionMessage}
+                  className="section-toast"
+                  onDismiss={() => setActionMessage(null)}
+                />
+              ) : null}
               {knowledgeImportSummary ? <p className="inline-success section-inline-message">{knowledgeImportSummary}</p> : null}
 
               <section className="stitch-table-panel">
@@ -1644,6 +1819,43 @@ export function Workspace() {
             </section>
           </section>
         ) : null}
+
+        <HelpCenterDialog
+          open={isHelpOpen}
+          onClose={() => setIsHelpOpen(false)}
+          onUseSample={() => {
+            setQuery(starterQuestion);
+            setActiveView("workbench");
+            setActionMessage(text.sampleApplied);
+          }}
+          onOpenKnowledge={() => setActiveView("knowledge")}
+          onOpenProviders={() => setActiveView("providers")}
+          onOpenMemory={() => setActiveView("memory")}
+        />
+
+        <ConfigOverviewDialog
+          open={isConfigOverviewOpen}
+          activeProfileName={activeProfile?.name ?? ""}
+          selectedProvider={selectedProvider}
+          selectedProviderBaseUrl={overviewProviderBaseUrl}
+          connectionStatusDetail={connectionStatusDetail}
+          maxCompletionTokensLabel={formatTokenBudget(providerSettings.maxCompletionTokens)}
+          aiInterventionLabel={formatAiIntervention(aiIntervention)}
+          retrievalModeLabel={formatRetrievalMode(retrievalMode)}
+          personaName={selectedPersona?.name ?? text.genericPersona}
+          historyCount={historyEntries.length}
+          favoriteCount={favorites.length}
+          feedbackCount={feedbackEntries.length}
+          healthStatus={healthStatus}
+          isTestingConnection={isTestingConnection}
+          onClose={() => setIsConfigOverviewOpen(false)}
+          onTestConnection={() => {
+            void handleTestProviderConnection();
+          }}
+          onOpenProviders={() => setActiveView("providers")}
+          onExportProfileBackup={handleExportProfileBackup}
+          onOpenKnowledge={() => setActiveView("knowledge")}
+        />
 
         <ProviderSettingsDialog
         open={isSettingsOpen}
